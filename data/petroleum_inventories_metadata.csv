@@ -1,0 +1,43 @@
+column,product,series_id,region,units,frequency,source,product_code,region_code
+crude_US,Crude Oil (excl. SPR),WCESTUS1,U.S. Total,Million Barrels,Weekly,EIA Weekly Petroleum Status Report,,
+crude_PADD1,Crude Oil (excl. SPR),WCESTP11,PADD 1,Million Barrels,Weekly,EIA Weekly Petroleum Status Report,,
+crude_PADD2,Crude Oil (excl. SPR),WCESTP21,PADD 2,Million Barrels,Weekly,EIA Weekly Petroleum Status Report,,
+crude_PADD3,Crude Oil (excl. SPR),WCESTP31,PADD 3,Million Barrels,Weekly,EIA Weekly Petroleum Status Report,,
+crude_PADD4,Crude Oil (excl. SPR),WCESTP41,PADD 4,Million Barrels,Weekly,EIA Weekly Petroleum Status Report,,
+crude_PADD5,Crude Oil (excl. SPR),WCESTP51,PADD 5,Million Barrels,Weekly,EIA Weekly Petroleum Status Report,,
+total_gasoline_US,Total Motor Gasoline,,U.S. Total,Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPM0,NUS
+total_gasoline_PADD1,Total Motor Gasoline,,PADD 1 (East Coast),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPM0,R10
+total_gasoline_PADD2,Total Motor Gasoline,,PADD 2 (Midwest),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPM0,R20
+total_gasoline_PADD3,Total Motor Gasoline,,PADD 3 (Gulf Coast),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPM0,R30
+total_gasoline_PADD4,Total Motor Gasoline,,PADD 4 (Rocky Mountain),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPM0,R40
+total_gasoline_PADD5,Total Motor Gasoline,,PADD 5 (West Coast),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPM0,R50
+distillate_US,Distillate Fuel Oil,,U.S. Total,Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPD0,NUS
+distillate_PADD1,Distillate Fuel Oil,,PADD 1 (East Coast),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPD0,R10
+distillate_PADD2,Distillate Fuel Oil,,PADD 2 (Midwest),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPD0,R20
+distillate_PADD3,Distillate Fuel Oil,,PADD 3 (Gulf Coast),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPD0,R30
+distillate_PADD4,Distillate Fuel Oil,,PADD 4 (Rocky Mountain),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPD0,R40
+distillate_PADD5,Distillate Fuel Oil,,PADD 5 (West Coast),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPD0,R50
+jet_fuel_US,Kerosene-Type Jet Fuel,,U.S. Total,Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPJK,NUS
+jet_fuel_PADD1,Kerosene-Type Jet Fuel,,PADD 1 (East Coast),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPJK,R10
+jet_fuel_PADD2,Kerosene-Type Jet Fuel,,PADD 2 (Midwest),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPJK,R20
+jet_fuel_PADD3,Kerosene-Type Jet Fuel,,PADD 3 (Gulf Coast),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPJK,R30
+jet_fuel_PADD4,Kerosene-Type Jet Fuel,,PADD 4 (Rocky Mountain),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPJK,R40
+jet_fuel_PADD5,Kerosene-Type Jet Fuel,,PADD 5 (West Coast),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPJK,R50
+residual_US,Residual Fuel Oil,,U.S. Total,Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPPR,NUS
+residual_PADD1,Residual Fuel Oil,,PADD 1 (East Coast),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPPR,R10
+residual_PADD2,Residual Fuel Oil,,PADD 2 (Midwest),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPPR,R20
+residual_PADD3,Residual Fuel Oil,,PADD 3 (Gulf Coast),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPPR,R30
+residual_PADD4,Residual Fuel Oil,,PADD 4 (Rocky Mountain),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPPR,R40
+residual_PADD5,Residual Fuel Oil,,PADD 5 (West Coast),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPPR,R50
+propane_US,Propane/Propylene,,U.S. Total,Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPLLPZ,NUS
+propane_PADD1,Propane/Propylene,,PADD 1 (East Coast),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPLLPZ,R10
+propane_PADD2,Propane/Propylene,,PADD 2 (Midwest),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPLLPZ,R20
+propane_PADD3,Propane/Propylene,,PADD 3 (Gulf Coast),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPLLPZ,R30
+propane_PADD4,Propane/Propylene,,PADD 4 (Rocky Mountain),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPLLPZ,R40
+propane_PADD5,Propane/Propylene,,PADD 5 (West Coast),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPLLPZ,R50
+ngl_US,NGLs (excl. Propane),,U.S. Total,Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPL0XP,NUS
+ngl_PADD1,NGLs (excl. Propane),,PADD 1 (East Coast),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPL0XP,R10
+ngl_PADD2,NGLs (excl. Propane),,PADD 2 (Midwest),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPL0XP,R20
+ngl_PADD3,NGLs (excl. Propane),,PADD 3 (Gulf Coast),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPL0XP,R30
+ngl_PADD4,NGLs (excl. Propane),,PADD 4 (Rocky Mountain),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPL0XP,R40
+ngl_PADD5,NGLs (excl. Propane),,PADD 5 (West Coast),Million Barrels,Weekly,EIA Petroleum Weekly Stocks,EPL0XP,R50

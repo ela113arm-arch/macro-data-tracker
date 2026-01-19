@@ -1,0 +1,2870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U.S. Macro Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        :root {
+            --navy: #1a2942;
+            --navy-light: #2d4a6f;
+            --gold: #b8860b;
+            --text-primary: #1a1a1a;
+            --text-secondary: #5a6a7a;
+            --bg-primary: #f8f9fa;
+            --bg-card: #ffffff;
+            --border: #e2e8f0;
+            --positive: #0d7d4d;
+            --negative: #c41e3a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .header {
+            background: var(--navy);
+            color: white;
+            padding: 20px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left h1 {
+            font-size: 22px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .header-left p {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+
+        .header-right {
+            text-align: right;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .nav {
+            background: var(--navy-light);
+            padding: 0 32px;
+            display: flex;
+            gap: 0;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.7);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            color: white;
+            border-bottom-color: var(--gold);
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 24px 32px;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 16px 20px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .stat-value.positive { color: var(--positive); }
+        .stat-value.negative { color: var(--negative); }
+
+        .stat-change {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .section {
+            margin-bottom: 32px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--navy);
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--navy);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .section-subtitle {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: linear-gradient(to right, var(--navy), var(--navy-light));
+            color: white;
+            padding: 10px 16px;
+            font-size: 12px;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header .source {
+            font-size: 10px;
+            opacity: 0.7;
+            font-weight: 400;
+        }
+
+        .card-body {
+            padding: 12px;
+        }
+
+        .card.span-2 { grid-column: span 2; }
+        .card.span-3 { grid-column: span 3; }
+        .card.span-4 { grid-column: span 4; }
+
+        .chart { height: 280px; }
+        .chart-lg { height: 350px; }
+        .chart-desc { font-size: 11px; color: #64748b; margin-top: 8px; line-height: 1.4; padding: 0 4px; }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .category-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .category-header {
+            background: var(--navy);
+            color: white;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .category-header h3 {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .category-header .balance {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .category-header .balance.positive { color: #4ade80; }
+        .category-header .balance.negative { color: #f87171; }
+
+        .category-body {
+            padding: 12px;
+        }
+
+        .category-stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 12px;
+            background: #f8f9fa;
+            border-top: 1px solid var(--border);
+        }
+
+        .category-stat {
+            text-align: center;
+        }
+
+        .category-stat .label {
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .category-stat .value {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .category-stat .value.exp { color: var(--positive); }
+        .category-stat .value.imp { color: var(--negative); }
+
+        .source-tag {
+            display: inline-block;
+            font-size: 9px;
+            color: var(--text-secondary);
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-top: 8px;
+        }
+
+        .footer {
+            background: var(--navy);
+            color: rgba(255,255,255,0.6);
+            padding: 16px 32px;
+            font-size: 11px;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        @media (max-width: 1400px) {
+            .stats-row { grid-template-columns: repeat(3, 1fr); }
+            .grid-4 { grid-template-columns: repeat(2, 1fr); }
+            .category-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 900px) {
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+            .card.span-2, .card.span-3, .card.span-4 { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <h1>U.S. MACRO DASHBOARD</h1>
+            <p>Economic Indicators & Trade Analysis</p>
+        </div>
+        <div class="header-right">
+            <div id="last-updated">Loading...</div>
+            <div id="refresh-status" style="display:none;margin-top:6px;font-size:11px;color:#64748b;"></div>
+            <button id="refresh-btn" onclick="refreshData()" style="margin-top:8px;padding:6px 14px;background:#b8860b;color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:6px;">
+                <span id="refresh-spinner" style="display:none;width:12px;height:12px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;"></span>
+                <span id="refresh-text">Refresh Data</span>
+            </button>
+            <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+        </div>
+    </div>
+
+    <div class="nav">
+        <div class="nav-item active" data-section="overview">Overview</div>
+        <div class="nav-item" data-section="markets">Markets</div>
+        <div class="nav-item" data-section="rates">Rates & Yields</div>
+        <div class="nav-item" data-section="gdp">GDP</div>
+        <div class="nav-item" data-section="consumer">Consumer</div>
+        <div class="nav-item" data-section="trade">Trade by Category</div>
+        <div class="nav-item" data-section="petroleum">Petroleum</div>
+        <div class="nav-item" data-section="treasury">Treasury</div>
+        <div class="nav-item" data-section="labor">Labor & Inflation</div>
+    </div>
+
+    <div class="container">
+        <!-- Key Metrics -->
+        <div class="stats-row" data-page="overview gdp">
+            <div class="stat-card">
+                <div class="stat-label">Real GDP</div>
+                <div class="stat-value" id="gdp-value">--</div>
+                <div class="stat-change">Billions USD (SAAR)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">GDP Growth</div>
+                <div class="stat-value" id="gdp-growth">--</div>
+                <div class="stat-change">QoQ Annualized</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Exports</div>
+                <div class="stat-value positive" id="exports-value">--</div>
+                <div class="stat-change">Goods + Services</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Imports</div>
+                <div class="stat-value negative" id="imports-value">--</div>
+                <div class="stat-change">Goods + Services</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Trade Balance</div>
+                <div class="stat-value" id="balance-value">--</div>
+                <div class="stat-change">Goods + Services</div>
+            </div>
+        </div>
+
+        <!-- Markets Section -->
+        <div class="section" data-page="overview markets">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Market Prices</div>
+                    <div class="section-subtitle">Daily prices with 30-day moving average - 3 year history</div>
+                </div>
+            </div>
+            <div class="grid-3" id="market-charts">
+                <!-- Will be populated by JS -->
+            </div>
+        </div>
+
+        <!-- Oil & Gas Stocks Section -->
+        <div class="section" data-page="markets petroleum">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">WTI vs Oil & Gas Stocks</div>
+                    <div class="section-subtitle">Normalized prices (base=100) - Top 20 US oil & gas companies vs WTI crude</div>
+                </div>
+            </div>
+            <div class="card span-4">
+                <div class="card-header">
+                    <span>WTI Crude Oil vs Major Oil & Gas Stocks (Normalized)</span>
+                    <span class="source">Yahoo Finance</span>
+                </div>
+                <div class="card-body">
+                    <div id="oil-stocks-chart" class="chart-lg"><div class="loading">Loading...</div></div>
+                    <div class="chart-desc">All prices normalized to 100 at start of period for comparison. WTI shown as thick black line.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GDP Section -->
+        <div class="section" data-page="overview gdp">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">GDP Growth Contributions</div>
+                    <div class="section-subtitle">Percentage point contributions to real GDP growth (SAAR)</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span>Contributions to Real GDP Growth by Component</span>
+                    <span class="source">Source: BEA NIPA Table 1.1.2 | FRED</span>
+                </div>
+                <div class="card-body">
+                    <div id="contributions-chart" class="chart-lg"><div class="loading">Loading...</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trade Overview -->
+        <div class="section" data-page="overview trade">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Trade Overview</div>
+                    <div class="section-subtitle">U.S. goods and services trade flows (Billions USD, SAAR)</div>
+                </div>
+            </div>
+            <div class="grid-3">
+                <div class="card">
+                    <div class="card-header">
+                        <span>Total Exports vs Imports</span>
+                        <span class="source">BEA NIPA</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="trade-chart" class="chart"><div class="loading">Loading...</div></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span>Trade Balance (Net Exports)</span>
+                        <span class="source">BEA NIPA</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="balance-chart" class="chart"><div class="loading">Loading...</div></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span>Goods vs Services Balance</span>
+                        <span class="source">BEA NIPA</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="goods-services-chart" class="chart"><div class="loading">Loading...</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trade by Category - Export vs Import Comparison -->
+        <div class="section" data-page="overview trade">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Trade by Category: Exports vs Imports</div>
+                    <div class="section-subtitle">Side-by-side comparison of U.S. exports and imports by goods category (Billions USD, SAAR)</div>
+                </div>
+            </div>
+
+            <div class="category-grid" id="category-charts">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Detailed Trade Categories (BEA ITA) -->
+        <div class="section" data-page="overview trade">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Detailed Trade: Pharma, Metals, Semiconductors & More</div>
+                    <div class="section-subtitle">Granular trade categories from BEA International Transactions Accounts (Billions USD, SAAR)</div>
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <span>Exports by Category</span>
+                        <span class="source">BEA ITA API</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="detailed-exports-chart" class="chart-lg"><div class="loading">Loading...</div></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span>Imports by Category</span>
+                        <span class="source">BEA ITA API</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="detailed-imports-chart" class="chart-lg"><div class="loading">Loading...</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Petroleum Inventories & Supply/Demand -->
+        <div class="section" data-page="overview petroleum">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">U.S. Petroleum Inventories & Supply/Demand</div>
+                    <div class="section-subtitle">Left: Weekly stocks vs 5-year range | Right: Latest month supply/demand balance (Million Barrels)</div>
+                </div>
+            </div>
+            <div id="petroleum-section">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Treasury Tax Withholding -->
+        <div class="section" data-page="overview treasury">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Treasury Tax Withholding</div>
+                    <div class="section-subtitle">Daily withheld income and employment taxes from U.S. Treasury (Millions USD)</div>
+                </div>
+            </div>
+
+            <!-- Treasury Stats Row -->
+            <div class="stats-row" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-label">Latest Daily</div>
+                    <div class="stat-value" id="treasury-daily">--</div>
+                    <div class="stat-change">Million USD</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">7-Day Average</div>
+                    <div class="stat-value" id="treasury-7d-avg">--</div>
+                    <div class="stat-change">Million USD</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Month-to-Date</div>
+                    <div class="stat-value" id="treasury-mtd">--</div>
+                    <div class="stat-change">Million USD</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Fiscal Year-to-Date</div>
+                    <div class="stat-value" id="treasury-fytd">--</div>
+                    <div class="stat-change">Billion USD</div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <span>Daily Withholding (Last 90 Days)</span>
+                        <span class="source">Treasury Fiscal Data</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="treasury-daily-chart" class="chart-lg"><div class="loading">Loading...</div></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span>Year-over-Year Comparison (MTD)</span>
+                        <span class="source">Treasury Fiscal Data</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="treasury-yoy-chart" class="chart-lg"><div class="loading">Loading...</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cumulative Daily Withholding Chart - Full Width -->
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-header">
+                    <span>Cumulative Daily Withholding by Year</span>
+                    <span class="source">Treasury Fiscal Data</span>
+                </div>
+                <div class="card-body">
+                    <div id="treasury-year-checkboxes" style="margin-bottom: 12px; display: flex; gap: 16px; flex-wrap: wrap;">
+                        <!-- Checkboxes will be populated by JS -->
+                    </div>
+                    <div id="treasury-fytd-chart" class="chart-lg"><div class="loading">Loading...</div></div>
+                    <div id="treasury-year-summary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 16px;">
+                        <!-- Summary cards will be populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-header">
+                    <span>Daily Withholding by Weekday</span>
+                    <span class="source">Treasury Fiscal Data</span>
+                </div>
+                <div class="card-body">
+                    <div id="treasury-weekday-chart" class="chart-lg"><div class="loading">Loading...</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Labor & Inflation Section -->
+        <div class="section" data-page="overview labor">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Transportation</div>
+                    <div class="section-subtitle">Air passenger miles and vehicle miles traveled - Monthly range charts</div>
+                </div>
+            </div>
+            <div class="grid-3" id="transportation-charts">
+                <!-- Will be populated by JS -->
+            </div>
+        </div>
+
+        <div class="section" data-page="overview labor petroleum">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">US Refinery Runs</div>
+                    <div class="section-subtitle">Refinery utilization and crude inputs from EIA PSM - Monthly range charts</div>
+                </div>
+            </div>
+            <div class="grid-3" id="refinery-charts">
+                <!-- Will be populated by JS -->
+            </div>
+        </div>
+
+        <div class="section" data-page="overview labor">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Employment</div>
+                    <div class="section-subtitle">Nonfarm payrolls by state - Monthly range charts (thousands)</div>
+                </div>
+            </div>
+            <div class="grid-3" id="employment-charts">
+                <!-- Will be populated by JS -->
+            </div>
+        </div>
+
+        <div class="section" data-page="labor">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Job Openings & Labor Turnover (JOLTS)</div>
+                    <div class="section-subtitle">Monthly job openings, hires, quits, layoffs (thousands)</div>
+                </div>
+            </div>
+            <div class="grid-2" id="jolts-charts">
+                <!-- Will be populated by JS -->
+            </div>
+        </div>
+
+        <div class="section" data-page="overview labor">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Consumer Price Index (CPI)</div>
+                    <div class="section-subtitle">Year-over-year inflation by category (%)</div>
+                </div>
+            </div>
+            <div class="grid-3" id="cpi-charts">
+                <!-- Will be populated by JS -->
+            </div>
+        </div>
+
+        <div class="section" data-page="labor">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Producer Price Index (PPI)</div>
+                    <div class="section-subtitle">Year-over-year producer inflation by category (%)</div>
+                </div>
+            </div>
+            <div class="grid-3" id="ppi-charts">
+                <!-- Will be populated by JS -->
+            </div>
+        </div>
+
+        <!-- Treasury Yields Section -->
+        <div class="section" data-page="overview rates">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Treasury Yields & Yield Curve</div>
+                    <div class="section-subtitle">Daily Treasury yields and key spreads - recession indicators</div>
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <span>Treasury Yield Curve</span>
+                        <span class="source">FRED</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="yield-curve-chart" class="chart"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">2-Year, 5-Year, 10-Year, and 30-Year Treasury yields</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span>Yield Curve Spread (2s10s)</span>
+                        <span class="source">FRED</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="yield-spread-chart" class="chart"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">10Y-2Y spread - negative values indicate yield curve inversion (recession signal)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Jobless Claims Section -->
+        <div class="section" data-page="overview labor rates">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Initial Jobless Claims</div>
+                    <div class="section-subtitle">Weekly unemployment insurance claims - leading labor market indicator</div>
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <span>Initial Claims (Weekly)</span>
+                        <span class="source">FRED / DOL</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="initial-claims-chart" class="chart"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">Weekly initial unemployment claims with 4-week moving average</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span>Continued Claims</span>
+                        <span class="source">FRED / DOL</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="continued-claims-chart" class="chart"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">Continuing claims - people receiving unemployment benefits</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ISM PMI Section -->
+        <div class="section" data-page="overview consumer">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">ISM Manufacturing PMI</div>
+                    <div class="section-subtitle">Purchasing Managers Index - leading economic indicator (50+ = expansion)</div>
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <span>ISM Manufacturing PMI & Components</span>
+                        <span class="source">FRED / ISM</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="ism-pmi-chart" class="chart"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">PMI, New Orders, Production - values above 50 indicate expansion</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span>ISM Services vs Manufacturing</span>
+                        <span class="source">FRED / ISM</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="ism-services-chart" class="chart"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">Comparing manufacturing and services sector activity</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Housing Section -->
+        <div class="section" data-page="consumer">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Housing Market</div>
+                    <div class="section-subtitle">Housing starts, sales, prices, and mortgage rates</div>
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <span>Housing Starts & Building Permits</span>
+                        <span class="source">FRED / Census</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="housing-starts-chart" class="chart"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">Thousands of units, seasonally adjusted annual rate</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span>Home Sales</span>
+                        <span class="source">FRED / NAR / Census</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="home-sales-chart" class="chart"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">Existing and new home sales (millions/thousands SAAR)</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span>Home Prices (Case-Shiller)</span>
+                        <span class="source">FRED / S&P</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="home-prices-chart" class="chart"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">Case-Shiller US National Home Price Index (YoY %)</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span>Mortgage Rates</span>
+                        <span class="source">FRED / Freddie Mac</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="mortgage-rates-chart" class="chart"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">30-year and 15-year fixed mortgage rates (%)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Retail Sales Section -->
+        <div class="section" data-page="consumer">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Retail Sales</div>
+                    <div class="section-subtitle">Monthly retail and food services sales</div>
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <span>Retail Sales (Total & Ex-Auto)</span>
+                        <span class="source">FRED / Census</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="retail-sales-chart" class="chart"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">Millions of dollars, seasonally adjusted</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span>Retail Sales YoY Change</span>
+                        <span class="source">FRED / Census</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="retail-sales-yoy-chart" class="chart"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">Year-over-year percentage change</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Consumer Sentiment Section -->
+        <div class="section" data-page="overview consumer">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Consumer Sentiment</div>
+                    <div class="section-subtitle">University of Michigan and Conference Board surveys</div>
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <span>U of Michigan Consumer Sentiment</span>
+                        <span class="source">FRED / UMich</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="umich-sentiment-chart" class="chart"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">Consumer sentiment index (1966 = 100)</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span>Inflation Expectations</span>
+                        <span class="source">FRED / UMich</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="inflation-expectations-chart" class="chart"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">U of Michigan 1-year inflation expectations (%)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Credit Spreads Section -->
+        <div class="section" data-page="markets rates">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Credit Spreads</div>
+                    <div class="section-subtitle">High yield vs investment grade bond ETFs - financial stress indicator</div>
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <span>Bond ETF Prices (HYG, LQD, TLT)</span>
+                        <span class="source">Yahoo Finance</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="credit-etfs-chart" class="chart"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">High yield (HYG), Investment grade (LQD), Long-term Treasury (TLT)</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span>HYG/LQD Ratio</span>
+                        <span class="source">Yahoo Finance</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="credit-ratio-chart" class="chart"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">High yield to investment grade ratio - lower = wider spreads/more stress</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dollar Index Section -->
+        <div class="section" data-page="markets">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">US Dollar Index (DXY)</div>
+                    <div class="section-subtitle">Trade-weighted dollar index with moving averages</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span>DXY with 50-day and 200-day Moving Averages</span>
+                    <span class="source">Yahoo Finance</span>
+                </div>
+                <div class="card-body">
+                    <div id="dxy-chart" class="chart-lg"><div class="loading">Loading...</div></div>
+                    <div class="chart-desc">US Dollar Index - measures USD strength against basket of major currencies</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Natural Gas Inventories Section -->
+        <div class="section" data-page="petroleum">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Natural Gas Inventories</div>
+                    <div class="section-subtitle">Weekly US natural gas storage - seasonal range chart</div>
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <span>Natural Gas Storage (BCF)</span>
+                        <span class="source">EIA</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="natgas-storage-chart" class="chart"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">US working natural gas in storage (billion cubic feet)</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span>Weekly Storage Change</span>
+                        <span class="source">EIA</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="natgas-change-chart" class="chart"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">Week-over-week change in storage (BCF)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Baltic Dry Index Section -->
+        <div class="section" data-page="markets">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Baltic Dry Index / Shipping</div>
+                    <div class="section-subtitle">Global shipping activity indicator via ETF proxy</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span>BDRY ETF (Baltic Dry Index Proxy)</span>
+                    <span class="source">Yahoo Finance</span>
+                </div>
+                <div class="card-body">
+                    <div id="baltic-dry-chart" class="chart-lg"><div class="loading">Loading...</div></div>
+                    <div class="chart-desc">Breakwave Dry Bulk Shipping ETF - tracks Baltic Dry Index (global trade activity)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Data: BEA NIPA via FRED (quarterly) | EIA Petroleum Weekly Stocks (weekly) | Treasury Fiscal Data (daily) | All trade values in Billions USD (SAAR)
+    </div>
+
+    <script>
+        // Navigation handling
+        function showSection(section) {
+            // Update nav active state
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.section === section);
+            });
+
+            // Show/hide sections based on data-page attribute
+            document.querySelectorAll('[data-page]').forEach(el => {
+                const pages = el.dataset.page.split(' ');
+                el.style.display = pages.includes(section) ? '' : 'none';
+            });
+
+            // Trigger resize for Plotly charts to render correctly
+            setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+        }
+
+        // Add click handlers to nav items
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => showSection(item.dataset.section));
+        });
+
+        // Refresh data function with loading indicator and auto-reload
+        async function refreshData() {
+            const btn = document.getElementById('refresh-btn');
+            const spinner = document.getElementById('refresh-spinner');
+            const text = document.getElementById('refresh-text');
+            const status = document.getElementById('refresh-status');
+
+            // Get current timestamp to detect when refresh completes
+            const statusRes = await fetch('/api/status');
+            const statusData = await statusRes.json();
+            const startTime = statusData.last_updated;
+
+            // Show loading state
+            btn.disabled = true;
+            btn.style.opacity = '0.8';
+            spinner.style.display = 'block';
+            text.textContent = 'Starting...';
+            status.style.display = 'block';
+            status.style.color = '#64748b';
+            status.textContent = 'Initializing data refresh...';
+
+            try {
+                const res = await fetch('/api/refresh', { method: 'POST' });
+                const data = await res.json();
+
+                if (data.success) {
+                    text.textContent = 'Refreshing...';
+                    btn.style.background = '#0d7d4d';
+                    status.textContent = 'Fetching data from APIs (this takes 2-3 min)...';
+
+                    // Poll for completion
+                    let elapsed = 0;
+                    const pollInterval = setInterval(async () => {
+                        elapsed += 5;
+                        status.textContent = `Fetching data... ${Math.floor(elapsed / 60)}:${(elapsed % 60).toString().padStart(2, '0')} elapsed`;
+
+                        try {
+                            const checkRes = await fetch('/api/status');
+                            const checkData = await checkRes.json();
+
+                            if (checkData.last_updated !== startTime) {
+                                // Refresh complete!
+                                clearInterval(pollInterval);
+                                spinner.style.display = 'none';
+                                text.textContent = 'Done!';
+                                status.style.color = '#059669';
+                                status.textContent = `Refresh complete! Updated: ${new Date(checkData.last_updated).toLocaleString()}`;
+
+                                // Reload charts after short delay
+                                setTimeout(() => {
+                                    status.textContent = 'Reloading charts...';
+                                    location.reload();
+                                }, 1500);
+                            }
+                        } catch (e) {
+                            // Ignore polling errors
+                        }
+
+                        // Timeout after 5 minutes
+                        if (elapsed > 300) {
+                            clearInterval(pollInterval);
+                            spinner.style.display = 'none';
+                            text.textContent = 'Refresh Data';
+                            btn.style.background = '#b8860b';
+                            btn.disabled = false;
+                            btn.style.opacity = '1';
+                            status.style.color = '#d97706';
+                            status.textContent = 'Refresh may still be running. Try reloading the page.';
+                        }
+                    }, 5000);
+                } else {
+                    throw new Error(data.message || 'Unknown error');
+                }
+            } catch (e) {
+                spinner.style.display = 'none';
+                text.textContent = 'Failed';
+                btn.style.background = '#c41e3a';
+                status.style.color = '#dc2626';
+                status.textContent = 'Error: ' + e.message;
+
+                setTimeout(() => {
+                    text.textContent = 'Refresh Data';
+                    btn.style.background = '#b8860b';
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                }, 3000);
+            }
+        }
+
+        const colors = {
+            navy: '#1a2942',
+            navyLight: '#2d4a6f',
+            gold: '#b8860b',
+            blue: '#2563eb',
+            green: '#0d7d4d',
+            red: '#c41e3a',
+            gray: '#64748b',
+            purple: '#7c3aed',
+            orange: '#ea580c',
+            teal: '#0891b2',
+            slate: '#475569',
+            emerald: '#059669',
+            rose: '#e11d48'
+        };
+
+        const baseLayout = {
+            paper_bgcolor: '#ffffff',
+            plot_bgcolor: '#ffffff',
+            font: { family: 'Segoe UI, sans-serif', size: 11, color: '#5a6a7a' },
+            margin: { t: 10, r: 20, b: 50, l: 55 },
+            xaxis: { gridcolor: '#e2e8f0', linecolor: '#e2e8f0', tickfont: { size: 10 }, tickangle: -45 },
+            yaxis: { gridcolor: '#e2e8f0', linecolor: '#e2e8f0', tickfont: { size: 10 } },
+            showlegend: false,
+            hovermode: 'x unified'
+        };
+
+        const fmt = (n, d=1) => n?.toLocaleString(undefined, {minimumFractionDigits: d, maximumFractionDigits: d}) ?? '--';
+
+        /**
+         * Build a Range Chart - shows 5-year historical range vs current year
+         *
+         * @param {Object} config
+         * @param {Array} config.data - Array of data objects
+         * @param {string} config.valueField - Field name for the value to plot
+         * @param {string} config.dateField - Field name for date (default: 'date')
+         * @param {string} config.interval - 'weekly' | 'monthly' | 'quarterly'
+         * @param {string} config.containerId - DOM element ID to render chart
+         * @param {string} config.title - Chart title (optional)
+         * @param {string} config.yAxisLabel - Y-axis label (default: 'Value')
+         * @param {number} config.rangeYears - Number of years for range (default: 5)
+         * @param {Object} config.colors - Custom colors { range, avg, current }
+         */
+        function buildRangeChart(config) {
+            const {
+                data,
+                valueField,
+                dateField = 'date',
+                interval = 'weekly',
+                containerId,
+                title = '',
+                yAxisLabel = 'Value',
+                rangeYears = 5,
+                colors: customColors = {}
+            } = config;
+
+            const chartColors = {
+                range: customColors.range || 'rgba(100, 116, 139, 0.25)',
+                avg: customColors.avg || '#64748b',
+                priorYear: customColors.priorYear || '#2563eb',
+                current: customColors.current || '#dc2626'
+            };
+
+            // Find the most recent year with data (may not be current calendar year)
+            const yearsInData = [...new Set(data.map(d => new Date(d[dateField]).getFullYear()))].sort((a, b) => b - a);
+            const latestYearWithData = yearsInData[0] || new Date().getFullYear();
+            const currentYear = latestYearWithData;
+            const priorYear = currentYear - 1;
+
+            // Interval configuration
+            const intervalConfig = {
+                weekly: {
+                    getPeriod: (d) => {
+                        const date = new Date(d);
+                        const start = new Date(date.getFullYear(), 0, 1);
+                        const week = Math.ceil(((date - start) / 86400000 + start.getDay() + 1) / 7);
+                        return Math.min(week, 52);
+                    },
+                    maxPeriod: 52,
+                    tickvals: [1, 5, 9, 14, 18, 23, 27, 31, 36, 40, 44, 49],
+                    ticktext: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    xTitle: 'Week'
+                },
+                monthly: {
+                    getPeriod: (d) => new Date(d).getMonth() + 1,
+                    maxPeriod: 12,
+                    tickvals: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+                    ticktext: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    xTitle: 'Month'
+                },
+                quarterly: {
+                    getPeriod: (d) => Math.ceil((new Date(d).getMonth() + 1) / 3),
+                    maxPeriod: 4,
+                    tickvals: [1, 2, 3, 4],
+                    ticktext: ['Q1', 'Q2', 'Q3', 'Q4'],
+                    xTitle: 'Quarter'
+                }
+            };
+
+            const intv = intervalConfig[interval];
+            if (!intv) {
+                console.error('Invalid interval:', interval);
+                return;
+            }
+
+            // Group data by period
+            const periodData = {};
+            for (const row of data) {
+                const date = row[dateField];
+                const value = row[valueField];
+                const year = new Date(date).getFullYear();
+                const period = intv.getPeriod(date);
+
+                if (!period || period > intv.maxPeriod || value === undefined || value === null) continue;
+
+                if (!periodData[period]) {
+                    periodData[period] = { historical: [], current: null, priorYear: null };
+                }
+
+                // 5-year range = years before prior year, excluding 2020 (COVID outlier)
+                if (year >= currentYear - rangeYears - 1 && year < priorYear && year !== 2020) {
+                    periodData[period].historical.push(value);
+                }
+                if (year === priorYear) {
+                    periodData[period].priorYear = value;
+                }
+                if (year === currentYear) {
+                    periodData[period].current = value;
+                }
+            }
+
+            // Calculate min, max, avg for each period
+            const periods = Object.keys(periodData).map(Number).sort((a, b) => a - b);
+            const minValues = [], maxValues = [], avgValues = [], currentValues = [], priorYearValues = [], validPeriods = [];
+
+            for (const period of periods) {
+                const hist = periodData[period].historical;
+                if (hist.length > 0) {
+                    validPeriods.push(period);
+                    minValues.push(Math.min(...hist));
+                    maxValues.push(Math.max(...hist));
+                    avgValues.push(hist.reduce((a, b) => a + b, 0) / hist.length);
+                    priorYearValues.push(periodData[period].priorYear);
+                    currentValues.push(periodData[period].current);
+                }
+            }
+
+            // Build traces
+            const rangeLabel = `${rangeYears}yr Range (excl. 2020)`;
+            const traces = [
+                {
+                    x: validPeriods,
+                    y: maxValues,
+                    name: `${rangeYears}yr Max`,
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { width: 0 },
+                    showlegend: false,
+                    hoverinfo: 'skip'
+                },
+                {
+                    x: validPeriods,
+                    y: minValues,
+                    name: rangeLabel,
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { width: 0 },
+                    fill: 'tonexty',
+                    fillcolor: chartColors.range,
+                    showlegend: true,
+                    hoverinfo: 'skip'
+                },
+                {
+                    x: validPeriods,
+                    y: avgValues,
+                    name: `${rangeYears}yr Avg`,
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { color: chartColors.avg, width: 2, dash: 'dash' },
+                    showlegend: true
+                },
+                {
+                    x: validPeriods.filter((_, i) => priorYearValues[i] !== null),
+                    y: priorYearValues.filter(v => v !== null),
+                    name: priorYear.toString(),
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { color: chartColors.priorYear, width: 2.5 },
+                    showlegend: true
+                },
+                {
+                    x: validPeriods.filter((_, i) => currentValues[i] !== null),
+                    y: currentValues.filter(v => v !== null),
+                    name: currentYear.toString(),
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    line: { color: chartColors.current, width: 2.5 },
+                    marker: { color: chartColors.current, size: 5 },
+                    showlegend: true
+                }
+            ];
+
+            const layout = {
+                paper_bgcolor: '#ffffff',
+                plot_bgcolor: '#ffffff',
+                font: { family: 'Segoe UI, sans-serif', size: 11, color: '#5a6a7a' },
+                margin: { t: title ? 30 : 10, r: 20, b: 50, l: 55 },
+                title: title ? { text: title, font: { size: 13 } } : undefined,
+                showlegend: true,
+                legend: { orientation: 'h', y: -0.2, font: { size: 9 } },
+                hovermode: 'x unified',
+                xaxis: {
+                    tickvals: intv.tickvals,
+                    ticktext: intv.ticktext,
+                    tickangle: 0,
+                    range: [0.5, intv.maxPeriod + 0.5],
+                    gridcolor: '#e2e8f0',
+                    title: { text: intv.xTitle, font: { size: 10 } }
+                },
+                yaxis: {
+                    gridcolor: '#e2e8f0',
+                    title: { text: yAxisLabel, font: { size: 10 } }
+                }
+            };
+
+            // Render if containerId provided
+            if (containerId) {
+                Plotly.newPlot(containerId, traces, layout);
+            }
+
+            // Return data for custom use
+            return { traces, layout, validPeriods, minValues, maxValues, avgValues, priorYearValues, currentValues, currentYear, priorYear };
+        }
+
+        // Category definitions with FRED series IDs
+        const categories = [
+            {
+                key: 'capital',
+                name: 'Capital Goods',
+                expSeries: 'A640RC1Q027SBEA',
+                impSeries: 'A650RC1Q027SBEA',
+                color: colors.blue,
+                desc: 'Machinery, equipment, computers, aircraft'
+            },
+            {
+                key: 'consumer',
+                name: 'Consumer Goods',
+                expSeries: 'A642RC1Q027SBEA',
+                impSeries: 'A652RC1Q027SBEA',
+                color: colors.purple,
+                desc: 'Household goods, apparel, electronics'
+            },
+            {
+                key: 'automotive',
+                name: 'Automotive',
+                expSeries: 'B641RC1Q027SBEA',
+                impSeries: 'B651RC1Q027SBEA',
+                color: colors.orange,
+                desc: 'Vehicles, engines, parts'
+            },
+            {
+                key: 'industrial',
+                name: 'Industrial Supplies',
+                expSeries: 'A639RC1Q027SBEA',
+                impSeries: 'LA0000041Q027SBEA',
+                color: colors.slate,
+                desc: 'Raw materials, chemicals, metals'
+            },
+            {
+                key: 'foods',
+                name: 'Foods & Beverages',
+                expSeries: 'B638RC1Q027SBEA',
+                impSeries: 'B647RC1Q027SBEA',
+                color: colors.emerald,
+                desc: 'Agricultural products, food, beverages'
+            },
+            {
+                key: 'petroleum',
+                name: 'Petroleum',
+                expSeries: 'LA0000061Q027SBEA',
+                impSeries: 'B648RC1Q027SBEA',
+                color: colors.rose,
+                desc: 'Crude oil, refined products'
+            },
+            {
+                key: 'computers',
+                name: 'Computers & Electronics',
+                expSeries: 'B850RC1Q027SBEA',
+                impSeries: 'B852RC1Q027SBEA',
+                color: colors.teal,
+                desc: 'Computers, peripherals, parts'
+            },
+            {
+                key: 'aircraft',
+                name: 'Aircraft',
+                expSeries: 'B688RC1Q027SBEA',
+                impSeries: 'B932RC1Q027SBEA',
+                color: colors.gold,
+                desc: 'Civilian aircraft, engines, parts'
+            }
+        ];
+
+        // Load GDP contributions
+        async function loadContributions() {
+            const res = await fetch('/api/gdp-contributions');
+            const data = await res.json();
+            if (!data.length) return;
+
+            const quarters = data.map(d => d.quarter);
+            const components = [
+                { key: 'pce_goods', name: 'PCE: Goods', color: '#1e40af' },
+                { key: 'pce_services', name: 'PCE: Services', color: '#3b82f6' },
+                { key: 'nonres_investment', name: 'Business Investment', color: '#64748b' },
+                { key: 'res_investment', name: 'Residential', color: '#f59e0b' },
+                { key: 'inventories', name: 'Inventories', color: '#93c5fd' },
+                { key: 'net_exports', name: 'Net Exports', color: '#0d7d4d' },
+                { key: 'government', name: 'Government', color: '#1a2942' }
+            ];
+
+            const traces = components.map(c => ({
+                x: quarters, y: data.map(d => d[c.key]), name: c.name, type: 'bar', marker: { color: c.color }
+            }));
+
+            traces.push({
+                x: quarters, y: data.map(d => d.total_gdp), name: 'Total GDP Growth',
+                type: 'scatter', mode: 'lines+markers', line: { color: '#c41e3a', width: 3 }, marker: { size: 6 }
+            });
+
+            const latest = data[data.length - 1];
+            document.getElementById('gdp-growth').textContent = `${latest.total_gdp >= 0 ? '+' : ''}${fmt(latest.total_gdp)}%`;
+            document.getElementById('gdp-growth').className = `stat-value ${latest.total_gdp >= 0 ? 'positive' : 'negative'}`;
+
+            Plotly.newPlot('contributions-chart', traces, {
+                ...baseLayout,
+                barmode: 'relative',
+                showlegend: true,
+                legend: { orientation: 'h', y: -0.2, font: { size: 10 } },
+                yaxis: { ...baseLayout.yaxis, zeroline: true, zerolinecolor: '#1a2942', title: { text: 'Percentage Points', font: { size: 11 } } }
+            });
+        }
+
+        async function loadGDP() {
+            const res = await fetch('/api/gdp/components');
+            const data = await res.json();
+            if (!data.length) return;
+            document.getElementById('gdp-value').textContent = fmt(data[data.length - 1].gdp, 0);
+        }
+
+        async function loadTrade() {
+            const res = await fetch('/api/trade/detail');
+            const data = await res.json();
+            if (!data.length) return;
+
+            const quarters = data.map(d => d.quarter);
+            const latest = data[data.length - 1];
+
+            document.getElementById('exports-value').textContent = fmt(latest.total_exports, 0);
+            document.getElementById('imports-value').textContent = fmt(latest.total_imports, 0);
+            document.getElementById('balance-value').textContent = (latest.trade_balance >= 0 ? '+' : '') + fmt(latest.trade_balance, 0);
+            document.getElementById('balance-value').className = `stat-value ${latest.trade_balance >= 0 ? 'positive' : 'negative'}`;
+
+            Plotly.newPlot('trade-chart', [
+                { x: quarters, y: data.map(d => d.total_exports), name: 'Exports', line: { color: colors.green, width: 2 } },
+                { x: quarters, y: data.map(d => d.total_imports), name: 'Imports', line: { color: colors.red, width: 2 } }
+            ], { ...baseLayout, showlegend: true, legend: { orientation: 'h', y: -0.2 }, yaxis: { ...baseLayout.yaxis, title: { text: 'Billions USD', font: { size: 11 } } } });
+
+            Plotly.newPlot('balance-chart', [{
+                x: quarters, y: data.map(d => d.trade_balance), type: 'bar',
+                marker: { color: data.map(d => d.trade_balance >= 0 ? colors.green : colors.red) }
+            }], { ...baseLayout, yaxis: { ...baseLayout.yaxis, zeroline: true, zerolinecolor: '#1a2942', title: { text: 'Billions USD', font: { size: 11 } } } });
+
+            Plotly.newPlot('goods-services-chart', [
+                { x: quarters, y: data.map(d => d.goods_balance), name: 'Goods', type: 'bar', marker: { color: colors.navy } },
+                { x: quarters, y: data.map(d => d.services_balance), name: 'Services', type: 'bar', marker: { color: colors.gold } }
+            ], { ...baseLayout, barmode: 'group', showlegend: true, legend: { orientation: 'h', y: -0.2 }, yaxis: { ...baseLayout.yaxis, zeroline: true, zerolinecolor: '#1a2942', title: { text: 'Billions USD', font: { size: 11 } } } });
+        }
+
+        async function loadTradeCategories() {
+            const res = await fetch('/api/trade/categories');
+            const data = await res.json();
+            if (!data.length) return;
+
+            const quarters = data.map(d => d.quarter);
+            const latest = data[data.length - 1];
+            const container = document.getElementById('category-charts');
+            container.innerHTML = '';
+
+            // Create a card for each category
+            for (const cat of categories) {
+                const expKey = `exp_${cat.key}`;
+                const impKey = `imp_${cat.key}`;
+                const balKey = `bal_${cat.key}`;
+
+                const latestExp = latest[expKey] || 0;
+                const latestImp = latest[impKey] || 0;
+                const latestBal = latestExp - latestImp;
+
+                const card = document.createElement('div');
+                card.className = 'category-card';
+                card.innerHTML = `
+                    <div class="category-header">
+                        <div>
+                            <h3>${cat.name}</h3>
+                            <div style="font-size: 10px; opacity: 0.7; margin-top: 2px;">${cat.desc}</div>
+                        </div>
+                        <div class="balance ${latestBal >= 0 ? 'positive' : 'negative'}">
+                            Balance: ${latestBal >= 0 ? '+' : ''}${fmt(latestBal, 1)}B
+                        </div>
+                    </div>
+                    <div class="category-body">
+                        <div id="cat-chart-${cat.key}" style="height: 200px;"></div>
+                        <div class="source-tag">Export: ${cat.expSeries} | Import: ${cat.impSeries} | Source: BEA NIPA via FRED</div>
+                    </div>
+                    <div class="category-stats">
+                        <div class="category-stat">
+                            <div class="label">Exports</div>
+                            <div class="value exp">${fmt(latestExp, 1)}B</div>
+                        </div>
+                        <div class="category-stat">
+                            <div class="label">Imports</div>
+                            <div class="value imp">${fmt(latestImp, 1)}B</div>
+                        </div>
+                        <div class="category-stat">
+                            <div class="label">Balance</div>
+                            <div class="value" style="color: ${latestBal >= 0 ? colors.green : colors.red}">${latestBal >= 0 ? '+' : ''}${fmt(latestBal, 1)}B</div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+
+                // Create chart for this category
+                setTimeout(() => {
+                    Plotly.newPlot(`cat-chart-${cat.key}`, [
+                        { x: quarters, y: data.map(d => d[expKey]), name: 'Exports', line: { color: colors.green, width: 2 } },
+                        { x: quarters, y: data.map(d => d[impKey]), name: 'Imports', line: { color: colors.red, width: 2 } }
+                    ], {
+                        ...baseLayout,
+                        margin: { t: 10, r: 15, b: 40, l: 50 },
+                        showlegend: true,
+                        legend: { orientation: 'h', y: -0.25, font: { size: 9 } },
+                        yaxis: { ...baseLayout.yaxis, title: { text: 'Bil. USD', font: { size: 10 } } }
+                    });
+                }, 200);
+            }
+        }
+
+        // Detailed trade categories (BEA ITA)
+        const detailedCategories = [
+            { key: 'pharma', name: 'Pharmaceuticals', color: colors.purple },
+            { key: 'gold', name: 'Gold (Nonmonetary)', color: colors.gold },
+            { key: 'precious_metals', name: 'Precious Metals (excl. Gold)', color: '#c0c0c0' },
+            { key: 'semiconductors', name: 'Semiconductors', color: colors.teal },
+            { key: 'telecom', name: 'Telecom Equipment', color: colors.blue },
+            { key: 'chemicals', name: 'Chemicals (excl. Pharma)', color: colors.emerald },
+            { key: 'steel', name: 'Iron & Steel', color: colors.slate },
+            { key: 'apparel', name: 'Apparel & Footwear', color: colors.rose }
+        ];
+
+        async function loadDetailedTrade() {
+            const res = await fetch('/api/trade/detailed');
+            const data = await res.json();
+            if (!data.length) return;
+
+            const quarters = data.map(d => d.quarter);
+
+            // Create exports chart - all categories
+            const exportTraces = detailedCategories.map(cat => ({
+                x: quarters,
+                y: data.map(d => d[`exp_${cat.key}`]),
+                name: cat.name,
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: cat.color, width: 2 }
+            }));
+
+            Plotly.newPlot('detailed-exports-chart', exportTraces, {
+                ...baseLayout,
+                showlegend: true,
+                legend: { orientation: 'h', y: -0.15, font: { size: 9 } },
+                yaxis: { ...baseLayout.yaxis, title: { text: 'Billions USD', font: { size: 11 } } }
+            });
+
+            // Create imports chart - all categories
+            const importTraces = detailedCategories.map(cat => ({
+                x: quarters,
+                y: data.map(d => d[`imp_${cat.key}`]),
+                name: cat.name,
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: cat.color, width: 2 }
+            }));
+
+            Plotly.newPlot('detailed-imports-chart', importTraces, {
+                ...baseLayout,
+                showlegend: true,
+                legend: { orientation: 'h', y: -0.15, font: { size: 9 } },
+                yaxis: { ...baseLayout.yaxis, title: { text: 'Billions USD', font: { size: 11 } } }
+            });
+        }
+
+        // Petroleum inventory products with weekly balance data
+        // balanceKey maps to the product key in weekly_balance.csv
+        // isCrude determines supply/demand component names
+        const inventoryProducts = [
+            { key: 'crude_US', name: 'Crude Oil (excl. SPR) - U.S.', balanceKey: 'crude_US', isCrude: true, desc: 'Commercial crude oil stocks excluding Strategic Petroleum Reserve - key indicator of supply/demand balance' },
+            { key: 'crude_PADD1', name: 'Crude Oil - PADD 1 (East Coast)', balanceKey: 'crude_PADD1', isCrude: true, desc: 'East Coast crude stocks - imports-dependent region with limited refining capacity' },
+            { key: 'crude_PADD2', name: 'Crude Oil - PADD 2 (Midwest)', balanceKey: 'crude_PADD2', isCrude: true, desc: 'Midwest crude stocks including Cushing, OK - WTI pricing hub and major storage center' },
+            { key: 'crude_PADD3', name: 'Crude Oil - PADD 3 (Gulf Coast)', balanceKey: 'crude_PADD3', isCrude: true, desc: 'Gulf Coast crude stocks - largest US refining region, major import/export hub' },
+            { key: 'crude_PADD4', name: 'Crude Oil - PADD 4 (Rocky Mtn)', balanceKey: 'crude_PADD4', isCrude: true, desc: 'Rocky Mountain crude stocks - landlocked region with local production' },
+            { key: 'crude_PADD5', name: 'Crude Oil - PADD 5 (West Coast)', balanceKey: 'crude_PADD5', isCrude: true, desc: 'West Coast crude stocks - isolated market, California-centric refining' },
+            { key: 'total_gasoline_US', name: 'Motor Gasoline - U.S.', balanceKey: 'gasoline_US', isCrude: false, desc: 'Total motor gasoline inventories - tracks retail fuel supply, seasonal driving demand' },
+            { key: 'distillate_US', name: 'Distillate Fuel Oil - U.S.', balanceKey: 'distillate_US', isCrude: false, desc: 'Diesel and heating oil stocks - critical for trucking, agriculture, and winter heating' },
+            { key: 'jet_fuel_US', name: 'Jet Fuel - U.S.', balanceKey: 'jet_fuel_US', isCrude: false, desc: 'Aviation fuel inventories - tracks air travel demand and refinery kerosene output' },
+            { key: 'propane_US', name: 'Propane/Propylene - U.S.', balanceKey: 'propane_US', isCrude: false, desc: 'Propane stocks - heating fuel and petrochemical feedstock, seasonal demand' },
+            { key: 'ngl_US', name: 'NGLs (excl. Propane)', desc: 'Natural gas liquids excluding propane - ethane, butane for petrochemical industry' },
+        ];
+
+        // Month labels for week axis
+        const monthTicks = {
+            tickvals: [1, 5, 9, 14, 18, 23, 27, 31, 36, 40, 44, 49],
+            ticktext: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        };
+
+        async function loadPetroleumInventories() {
+            try {
+                const [invRes, wbRes] = await Promise.all([
+                    fetch('/api/petroleum/inventories'),
+                    fetch('/api/petroleum/weekly-balance')
+                ]);
+                const invData = await invRes.json();
+                const weeklyBalance = await wbRes.json();
+                if (!invData.length) return;
+
+            const currentYear = new Date().getFullYear();
+            const container = document.getElementById('petroleum-section');
+            if (!container) return;
+            container.innerHTML = '';
+
+            for (const product of inventoryProducts) {
+                // Calculate median for outlier filtering
+                const allValues = invData.map(r => r[product.key]).filter(v => v !== null && v !== undefined && v > 0);
+                allValues.sort((a, b) => a - b);
+                const median = allValues[Math.floor(allValues.length / 2)];
+                const minValid = median * 0.4;
+                const maxValid = median * 1.6;
+
+                // Group data by week number
+                const weekData = {};
+                for (const row of invData) {
+                    const week = row.week;
+                    const year = row.year;
+                    const value = row[product.key];
+
+                    if (!week || week > 52 || value === undefined || value === null) continue;
+                    if (value < minValid || value > maxValid) continue;
+
+                    if (!weekData[week]) {
+                        weekData[week] = { historical: [], current: null, priorYear: null };
+                    }
+
+                    // Prior year as separate line (e.g., 2025)
+                    const priorYear = currentYear - 1;
+                    // 5-year range = years before prior year, excluding 2020 (COVID outlier)
+                    if (year >= currentYear - 6 && year < priorYear && year !== 2020) {
+                        weekData[week].historical.push(value);
+                    }
+                    if (year === priorYear) {
+                        weekData[week].priorYear = value;
+                    }
+                    if (year === currentYear) {
+                        weekData[week].current = value;
+                    }
+                }
+
+                const priorYear = currentYear - 1;
+
+                // Calculate min, max, avg for each week
+                const weeks = Object.keys(weekData).map(Number).filter(w => w <= 52).sort((a, b) => a - b);
+                const minValues = [], maxValues = [], avgValues = [], currentValues = [], priorYearValues = [], validWeeks = [];
+
+                for (const week of weeks) {
+                    const hist = weekData[week].historical;
+                    if (hist.length > 0) {
+                        validWeeks.push(week);
+                        minValues.push(Math.min(...hist));
+                        maxValues.push(Math.max(...hist));
+                        avgValues.push(hist.reduce((a, b) => a + b, 0) / hist.length);
+                        priorYearValues.push(weekData[week].priorYear);
+                        currentValues.push(weekData[week].current);
+                    }
+                }
+
+                // Check if this product has weekly balance data with meaningful supply/demand components
+                const productBalance = weeklyBalance.filter(w => w.product === product.balanceKey);
+                const last4ProductWeeks = productBalance.slice(0, 4).reverse();
+                // Check if we have at least supply and demand data (not just one component)
+                const hasSupply = last4ProductWeeks.some(w =>
+                    (product.isCrude ? (w.production || w.imports) : (w.refinery_output || w.imports))
+                );
+                const hasDemand = last4ProductWeeks.some(w =>
+                    (product.isCrude ? (w.refinery_input || w.exports) : (w.product_supplied || w.exports))
+                );
+                const hasWeeklyBalance = product.balanceKey && last4ProductWeeks.length > 0 && hasSupply && hasDemand;
+
+                // Create row container
+                const row = document.createElement('div');
+                row.className = hasWeeklyBalance ? 'grid-2' : 'grid-3';
+                row.style.marginBottom = '20px';
+
+                // Create inventory card
+                const invCard = document.createElement('div');
+                invCard.className = 'card';
+                invCard.innerHTML = `
+                    <div class="card-header">
+                        <span>${product.name} - Inventory</span>
+                        <span class="source">EIA Weekly Stocks</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="inv-chart-${product.key}" class="chart"></div>
+                        ${product.desc ? `<div class="chart-desc">${product.desc}</div>` : ''}
+                    </div>
+                `;
+                row.appendChild(invCard);
+
+                // Create weekly supply/demand balance card
+                if (hasWeeklyBalance) {
+                    const sdCard = document.createElement('div');
+                    sdCard.className = 'card';
+                    sdCard.innerHTML = `
+                        <div class="card-header">
+                            <span>${product.name} - Weekly Supply/Demand</span>
+                            <span class="source">EIA WPSR (Last 4 weeks)</span>
+                        </div>
+                        <div class="card-body">
+                            <div id="sd-chart-${product.key}" class="chart"></div>
+                        </div>
+                    `;
+                    row.appendChild(sdCard);
+                }
+
+                container.appendChild(row);
+
+                // Build inventory traces
+                // 5-year range shown as shaded area, prior year (blue), current year (red)
+                const invTraces = [
+                    { x: validWeeks, y: maxValues, name: '5yr Max', type: 'scatter', mode: 'lines', line: { width: 0 }, showlegend: false, hoverinfo: 'skip' },
+                    { x: validWeeks, y: minValues, name: '5yr Range (excl. 2020)', type: 'scatter', mode: 'lines', line: { width: 0 }, fill: 'tonexty', fillcolor: 'rgba(100, 116, 139, 0.25)', showlegend: true, hoverinfo: 'skip' },
+                    { x: validWeeks, y: avgValues, name: '5yr Avg', type: 'scatter', mode: 'lines', line: { color: '#64748b', width: 2, dash: 'dash' }, showlegend: true },
+                    { x: validWeeks.filter((_, i) => priorYearValues[i] !== null), y: priorYearValues.filter(v => v !== null), name: priorYear.toString(), type: 'scatter', mode: 'lines', line: { color: '#2563eb', width: 2.5 }, showlegend: true },
+                    { x: validWeeks.filter((_, i) => currentValues[i] !== null), y: currentValues.filter(v => v !== null), name: currentYear.toString(), type: 'scatter', mode: 'lines+markers', line: { color: '#dc2626', width: 2.5 }, marker: { color: '#dc2626', size: 5 }, showlegend: true }
+                ];
+
+                setTimeout(() => {
+                    const chartEl = document.getElementById(`inv-chart-${product.key}`);
+                    if (!chartEl || validWeeks.length === 0) return;
+                    Plotly.newPlot(`inv-chart-${product.key}`, invTraces, {
+                        ...baseLayout,
+                        margin: { t: 10, r: 15, b: 40, l: 55 },
+                        showlegend: true,
+                        legend: { orientation: 'h', y: -0.2, font: { size: 9 } },
+                        xaxis: { ...baseLayout.xaxis, tickvals: monthTicks.tickvals, ticktext: monthTicks.ticktext, tickangle: 0, range: [1, 52] },
+                        yaxis: { ...baseLayout.yaxis, title: { text: 'Million Bbl', font: { size: 10 } } },
+                        hovermode: 'x unified'
+                    });
+
+                    // Build weekly supply/demand stacked bar
+                    if (hasWeeklyBalance) {
+                        // Create week labels (MM/DD format)
+                        const weekLabels = last4ProductWeeks.map(w => {
+                            const d = new Date(w.period);
+                            return `${d.getMonth()+1}/${d.getDate()}`;
+                        });
+
+                        const traces = [];
+
+                        if (product.isCrude) {
+                            // CRUDE: supply = production + imports, demand = refinery_input + exports
+                            // Supply side (blue shades) - POSITIVE
+                            if (last4ProductWeeks.some(w => w.production)) {
+                                traces.push({
+                                    name: 'Production',
+                                    x: weekLabels,
+                                    y: last4ProductWeeks.map(w => w.production || 0),
+                                    type: 'bar',
+                                    marker: { color: '#1e40af' },
+                                });
+                            }
+                            traces.push({
+                                name: 'Imports',
+                                x: weekLabels,
+                                y: last4ProductWeeks.map(w => w.imports || 0),
+                                type: 'bar',
+                                marker: { color: '#3b82f6' },
+                            });
+                            // SPR Release (only for crude_US)
+                            if (product.balanceKey === 'crude_US') {
+                                traces.push({
+                                    name: 'SPR Release',
+                                    x: weekLabels,
+                                    y: last4ProductWeeks.map(w => (w.spr_change || 0) < 0 ? Math.abs(w.spr_change) : 0),
+                                    type: 'bar',
+                                    marker: { color: '#93c5fd' },
+                                });
+                            }
+                            // Demand side (red shades) - NEGATIVE
+                            traces.push({
+                                name: 'Refinery Input',
+                                x: weekLabels,
+                                y: last4ProductWeeks.map(w => -(w.refinery_input || 0)),
+                                type: 'bar',
+                                marker: { color: '#991b1b' },
+                            });
+                            if (last4ProductWeeks.some(w => w.exports)) {
+                                traces.push({
+                                    name: 'Exports',
+                                    x: weekLabels,
+                                    y: last4ProductWeeks.map(w => -(w.exports || 0)),
+                                    type: 'bar',
+                                    marker: { color: '#dc2626' },
+                                });
+                            }
+                            // SPR Build (only for crude_US)
+                            if (product.balanceKey === 'crude_US') {
+                                traces.push({
+                                    name: 'SPR Build',
+                                    x: weekLabels,
+                                    y: last4ProductWeeks.map(w => (w.spr_change || 0) > 0 ? -w.spr_change : 0),
+                                    type: 'bar',
+                                    marker: { color: '#fca5a5' },
+                                });
+                            }
+
+                            // Calculate balance for crude
+                            const balanceValues = last4ProductWeeks.map(w => {
+                                const supply = (w.production || 0) + (w.imports || 0) + ((w.spr_change || 0) < 0 ? Math.abs(w.spr_change) : 0);
+                                const demand = (w.refinery_input || 0) + (w.exports || 0) + ((w.spr_change || 0) > 0 ? w.spr_change : 0);
+                                return supply - demand;
+                            });
+                            traces.push({
+                                name: 'Stock Chg',
+                                x: weekLabels,
+                                y: balanceValues,
+                                text: balanceValues.map(v => (v >= 0 ? '+' : '') + v.toFixed(2)),
+                                textposition: 'top center',
+                                type: 'scatter',
+                                mode: 'markers+text',
+                                marker: { color: balanceValues.map(v => v >= 0 ? '#059669' : '#dc2626'), size: 12, symbol: 'diamond', line: { color: '#000', width: 1 } },
+                                textfont: { size: 9, color: '#1a1a1a' },
+                            });
+                        } else {
+                            // PRODUCTS: supply = refinery_output + imports, demand = product_supplied + exports
+                            // Supply side (blue shades) - POSITIVE
+                            traces.push({
+                                name: 'Refinery Output',
+                                x: weekLabels,
+                                y: last4ProductWeeks.map(w => w.refinery_output || 0),
+                                type: 'bar',
+                                marker: { color: '#1e40af' },
+                            });
+                            traces.push({
+                                name: 'Imports',
+                                x: weekLabels,
+                                y: last4ProductWeeks.map(w => w.imports || 0),
+                                type: 'bar',
+                                marker: { color: '#3b82f6' },
+                            });
+                            // Demand side (red shades) - NEGATIVE
+                            traces.push({
+                                name: 'Product Supplied',
+                                x: weekLabels,
+                                y: last4ProductWeeks.map(w => -(w.product_supplied || 0)),
+                                type: 'bar',
+                                marker: { color: '#991b1b' },
+                            });
+                            traces.push({
+                                name: 'Exports',
+                                x: weekLabels,
+                                y: last4ProductWeeks.map(w => -(w.exports || 0)),
+                                type: 'bar',
+                                marker: { color: '#dc2626' },
+                            });
+
+                            // Calculate balance for products
+                            const balanceValues = last4ProductWeeks.map(w => {
+                                const supply = (w.refinery_output || 0) + (w.imports || 0);
+                                const demand = (w.product_supplied || 0) + (w.exports || 0);
+                                return supply - demand;
+                            });
+                            traces.push({
+                                name: 'Stock Chg',
+                                x: weekLabels,
+                                y: balanceValues,
+                                text: balanceValues.map(v => (v >= 0 ? '+' : '') + v.toFixed(2)),
+                                textposition: 'top center',
+                                type: 'scatter',
+                                mode: 'markers+text',
+                                marker: { color: balanceValues.map(v => v >= 0 ? '#059669' : '#dc2626'), size: 12, symbol: 'diamond', line: { color: '#000', width: 1 } },
+                                textfont: { size: 9, color: '#1a1a1a' },
+                            });
+                        }
+
+                        Plotly.newPlot(`sd-chart-${product.key}`, traces, {
+                            ...baseLayout,
+                            barmode: 'relative',
+                            showlegend: true,
+                            legend: { orientation: 'h', y: -0.2, font: { size: 8 } },
+                            margin: { t: 20, r: 15, b: 50, l: 55 },
+                            xaxis: { ...baseLayout.xaxis, title: { text: 'Week Ending', font: { size: 10 } }, tickangle: 0 },
+                            yaxis: { ...baseLayout.yaxis, title: { text: 'MMbpd', font: { size: 10 } }, zeroline: true, zerolinecolor: '#1a1a1a', zerolinewidth: 2 }
+                        });
+                    }
+                }, 200);
+            }
+            } catch (e) {
+                console.error('Error loading petroleum:', e);
+            }
+        }
+
+        async function loadTreasuryWithholding() {
+            try {
+                const res = await fetch('/api/treasury/withholding');
+                const data = await res.json();
+                if (!data.length) return;
+
+                // Sort by date
+                data.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                // Get latest values for stats
+                const latest = data[data.length - 1];
+                document.getElementById('treasury-daily').textContent = fmt(latest.daily_withholding, 0);
+                document.getElementById('treasury-7d-avg').textContent = fmt(latest.daily_7d_avg, 0);
+                document.getElementById('treasury-mtd').textContent = fmt(latest.mtd_withholding, 0);
+                document.getElementById('treasury-fytd').textContent = fmt(latest.fytd_withholding / 1000, 1);
+
+                // Last 90 days for daily chart
+                const last90 = data.slice(-90);
+                const dates = last90.map(d => d.date.split('T')[0]);
+                const dailyValues = last90.map(d => d.daily_withholding);
+                const avg7d = last90.map(d => d.daily_7d_avg);
+                const avg30d = last90.map(d => d.daily_30d_avg);
+
+                // Daily withholding chart
+                Plotly.newPlot('treasury-daily-chart', [
+                    {
+                        x: dates,
+                        y: dailyValues,
+                        name: 'Daily',
+                        type: 'bar',
+                        marker: { color: colors.navy }
+                    },
+                    {
+                        x: dates,
+                        y: avg7d,
+                        name: '7-Day Avg',
+                        type: 'scatter',
+                        mode: 'lines',
+                        line: { color: colors.gold, width: 2 }
+                    },
+                    {
+                        x: dates,
+                        y: avg30d,
+                        name: '30-Day Avg',
+                        type: 'scatter',
+                        mode: 'lines',
+                        line: { color: colors.red, width: 2, dash: 'dash' }
+                    }
+                ], {
+                    ...baseLayout,
+                    showlegend: true,
+                    legend: { orientation: 'h', y: -0.15, font: { size: 10 } },
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'Million USD', font: { size: 11 } } }
+                });
+
+                // Year-over-Year comparison by month
+                const byYearMonth = {};
+                for (const row of data) {
+                    const d = new Date(row.date);
+                    const year = d.getFullYear();
+                    const month = d.getMonth() + 1;
+                    const key = `${year}-${month}`;
+                    if (!byYearMonth[key]) {
+                        byYearMonth[key] = { year, month, mtd: 0 };
+                    }
+                    byYearMonth[key].mtd = Math.max(byYearMonth[key].mtd, row.mtd_withholding || 0);
+                }
+
+                // Get last 12 months for each year
+                const years = [...new Set(data.map(d => new Date(d.date).getFullYear()))].sort();
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+                const yoyTraces = years.slice(-3).map((year, i) => {
+                    const yearData = Object.values(byYearMonth).filter(d => d.year === year);
+                    yearData.sort((a, b) => a.month - b.month);
+                    return {
+                        x: yearData.map(d => monthNames[d.month - 1]),
+                        y: yearData.map(d => d.mtd / 1000),
+                        name: year.toString(),
+                        type: 'bar',
+                        marker: { color: i === 0 ? '#94a3b8' : i === 1 ? colors.navyLight : colors.navy }
+                    };
+                });
+
+                Plotly.newPlot('treasury-yoy-chart', yoyTraces, {
+                    ...baseLayout,
+                    barmode: 'group',
+                    showlegend: true,
+                    legend: { orientation: 'h', y: -0.15, font: { size: 10 } },
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'Billion USD (MTD)', font: { size: 11 } } }
+                });
+
+                // Cumulative daily ratable by year - INTERACTIVE
+                // Fixed color map by year for consistency
+                const yearColorMap = {
+                    '2024': '#64748b',
+                    '2025': '#b8860b',
+                    '2026': '#1a2942'
+                };
+
+                // Group data by year, calculate cumulative
+                const dailyByYear = {};
+                for (const row of data) {
+                    const d = new Date(row.date);
+                    const year = d.getFullYear();
+                    const startOfYear = new Date(year, 0, 1);
+                    const dayOfYear = Math.floor((d - startOfYear) / (1000 * 60 * 60 * 24)) + 1;
+
+                    if (!dailyByYear[year]) dailyByYear[year] = { minDay: dayOfYear, data: {}, total: 0, count: 0 };
+                    if (dayOfYear < dailyByYear[year].minDay) dailyByYear[year].minDay = dayOfYear;
+                    if (!dailyByYear[year].data[dayOfYear]) {
+                        dailyByYear[year].data[dayOfYear] = 0;
+                    }
+                    dailyByYear[year].data[dayOfYear] += row.daily_withholding || 0;
+                    dailyByYear[year].total += row.daily_withholding || 0;
+                    dailyByYear[year].count++;
+                }
+
+                // Get valid years (start in January)
+                const allValidYears = Object.keys(dailyByYear)
+                    .filter(year => dailyByYear[year].minDay <= 10)
+                    .sort();
+
+                // Create checkboxes
+                const checkboxContainer = document.getElementById('treasury-year-checkboxes');
+                checkboxContainer.innerHTML = allValidYears.map(year => `
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;">
+                        <input type="checkbox" value="${year}" class="treasury-year-cb" checked
+                               onchange="updateTreasuryChart()"
+                               style="width: 16px; height: 16px; accent-color: ${yearColorMap[year] || '#1a2942'};">
+                        <span style="color: ${yearColorMap[year] || '#1a2942'}; font-weight: 600;">${year}</span>
+                    </label>
+                `).join('');
+
+                // Build traces for each year (ONE trace per year with full arrays)
+                function buildYearTrace(year, yearInfo) {
+                    const dayNumbers = Object.keys(yearInfo.data).map(Number).sort((a, b) => a - b);
+                    const xValues = [];
+                    const yValues = [];
+                    let cumulative = 0;
+
+                    for (const day of dayNumbers) {
+                        cumulative += yearInfo.data[day];
+                        xValues.push(day);
+                        yValues.push(cumulative / 1000); // Convert to billions
+                    }
+
+                    return {
+                        x: xValues,
+                        y: yValues,
+                        name: String(year),
+                        type: 'scatter',
+                        mode: 'lines',
+                        line: { width: 3, color: yearColorMap[year] || '#1a2942' },
+                        hovertemplate: '<b>' + year + '</b><br>Day %{x}<br>$%{y:.1f}B<extra></extra>'
+                    };
+                }
+
+                // Store data globally
+                window.treasuryData = { dailyByYear, yearColorMap, buildYearTrace };
+
+                // Update chart function
+                window.updateTreasuryChart = function() {
+                    const { dailyByYear, yearColorMap, buildYearTrace } = window.treasuryData;
+                    const selectedYears = Array.from(document.querySelectorAll('.treasury-year-cb:checked')).map(cb => cb.value);
+
+                    // Build ONE trace per selected year
+                    const traces = selectedYears.map(year => buildYearTrace(year, dailyByYear[year]));
+
+                    const layout = {
+                        paper_bgcolor: '#ffffff',
+                        plot_bgcolor: '#ffffff',
+                        font: { family: 'Segoe UI, sans-serif', size: 11, color: '#5a6a7a' },
+                        margin: { t: 20, r: 20, b: 60, l: 60 },
+                        showlegend: true,
+                        legend: { orientation: 'h', y: -0.15, font: { size: 11 } },
+                        hovermode: 'x unified',
+                        xaxis: {
+                            title: { text: 'Day of Year', font: { size: 11 } },
+                            tickvals: [1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335],
+                            ticktext: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                            tickangle: 0,
+                            range: [1, 366],
+                            gridcolor: '#e2e8f0'
+                        },
+                        yaxis: {
+                            title: { text: 'Cumulative Withholding ($B)', font: { size: 11 } },
+                            gridcolor: '#e2e8f0'
+                        }
+                    };
+
+                    Plotly.newPlot('treasury-fytd-chart', traces, layout);
+
+                    // Update summary cards
+                    const summaryContainer = document.getElementById('treasury-year-summary');
+                    summaryContainer.innerHTML = selectedYears.map(year => {
+                        const info = dailyByYear[year];
+                        const totalB = (info.total / 1000).toFixed(1);
+                        const avgDaily = (info.total / info.count).toFixed(0);
+                        const color = yearColorMap[year] || '#1a2942';
+                        return `
+                            <div style="background: #f8f9fa; border-left: 4px solid ${color}; padding: 12px; border-radius: 4px;">
+                                <div style="font-size: 14px; font-weight: 600; color: ${color};">${year}</div>
+                                <div style="font-size: 20px; font-weight: 700; margin: 4px 0;">$${totalB}B</div>
+                                <div style="font-size: 11px; color: #64748b;">Avg: $${Number(avgDaily).toLocaleString()}M/day</div>
+                                <div style="font-size: 11px; color: #64748b;">${info.count} trading days</div>
+                            </div>
+                        `;
+                    }).join('');
+                };
+
+                // Initial render
+                updateTreasuryChart();
+
+                // Weekday distribution chart
+                const weekdayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                const weekdayData = {};
+                for (const row of last90) {
+                    const wd = row.weekday;
+                    if (!weekdayData[wd]) weekdayData[wd] = [];
+                    if (row.daily_withholding > 0) {
+                        weekdayData[wd].push(row.daily_withholding);
+                    }
+                }
+
+                const weekdayAvgs = weekdayNames.map((name, i) => {
+                    const vals = weekdayData[i] || [];
+                    return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+                });
+
+                Plotly.newPlot('treasury-weekday-chart', [{
+                    x: weekdayNames,
+                    y: weekdayAvgs,
+                    type: 'bar',
+                    marker: {
+                        color: weekdayAvgs.map((v, i) => i >= 5 ? '#94a3b8' : colors.navy)
+                    }
+                }], {
+                    ...baseLayout,
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'Avg Million USD', font: { size: 11 } } }
+                });
+
+            } catch (e) {
+                console.error('Error loading Treasury data:', e);
+            }
+        }
+
+        /**
+         * Generic helper to load range charts for a data category
+         * @param {Object} config
+         * @param {string} config.endpoint - API endpoint path (e.g., '/api/transportation')
+         * @param {string} config.containerId - DOM container ID
+         * @param {string} config.chartPrefix - Prefix for chart IDs
+         * @param {string} config.source - Data source label
+         * @param {string} config.yAxisLabel - Default y-axis label
+         * @param {string} config.interval - 'weekly', 'monthly', or 'quarterly' (default: 'monthly')
+         * @param {Array} config.metrics - Array of {key, name, desc, unit?, color?}
+         */
+        async function loadRangeCharts({ endpoint, containerId, chartPrefix, source, yAxisLabel, interval = 'monthly', metrics }) {
+            try {
+                const res = await fetch(endpoint);
+                const data = await res.json();
+                if (!data.length) return;
+
+                const container = document.getElementById(containerId);
+                if (!container) return;
+
+                container.innerHTML = metrics.map(m => `
+                    <div class="card">
+                        <div class="card-header">
+                            <span>${m.name}</span>
+                            <span class="source">${source}</span>
+                        </div>
+                        <div class="card-body">
+                            <div id="${chartPrefix}-${m.key}" class="chart"><div class="loading">Loading...</div></div>
+                            <div class="chart-desc">${m.desc}</div>
+                        </div>
+                    </div>
+                `).join('');
+
+                for (const m of metrics) {
+                    setTimeout(() => {
+                        buildRangeChart({
+                            data,
+                            valueField: m.key,
+                            dateField: 'date',
+                            interval,
+                            containerId: `${chartPrefix}-${m.key}`,
+                            yAxisLabel: m.unit || yAxisLabel,
+                            rangeYears: 5,
+                            colors: m.color ? { current: m.color } : undefined
+                        });
+                    }, 100);
+                }
+            } catch (e) {
+                console.error(`Error loading ${containerId}:`, e);
+            }
+        }
+
+        function loadTransportation() {
+            loadRangeCharts({
+                endpoint: '/api/transportation',
+                containerId: 'transportation-charts',
+                chartPrefix: 'transport-chart',
+                source: 'FRED / DOT',
+                yAxisLabel: 'Value',
+                metrics: [
+                    { key: 'vmt', name: 'Vehicle Miles Traveled', unit: 'Million Miles', desc: 'Total miles driven on US roads - indicator of consumer mobility, commuting, and freight activity' },
+                    { key: 'air_passengers', name: 'Air Load Factor', unit: '%', desc: 'Percentage of available airline seats filled - measures air travel demand and airline efficiency' },
+                    { key: 'rail_passengers', name: 'Rail Passenger Miles', unit: 'Million Miles', desc: 'Passenger miles on US railroads - tracks rail transit and Amtrak ridership trends' }
+                ]
+            });
+        }
+
+        function loadRefinery() {
+            loadRangeCharts({
+                endpoint: '/api/refinery',
+                containerId: 'refinery-charts',
+                chartPrefix: 'refinery-chart',
+                source: 'EIA PSM',
+                yAxisLabel: 'Mbpd',
+                metrics: [
+                    { key: 'crude_input', name: 'Crude Oil Net Input to Refineries', unit: 'Mbpd', desc: 'Crude oil processed by US refineries (thousand barrels per day) - primary measure of refining activity' }
+                ]
+            });
+        }
+
+        function loadEmployment() {
+            loadRangeCharts({
+                endpoint: '/api/employment',
+                containerId: 'employment-charts',
+                chartPrefix: 'emp-chart',
+                source: 'BLS via FRED',
+                yAxisLabel: 'Thousands',
+                metrics: [
+                    { key: 'us_total', name: 'US Total Nonfarm', desc: 'Total nonfarm payroll employment across all US industries' },
+                    { key: 'california', name: 'California', desc: 'Nonfarm payrolls in California, the largest state economy' },
+                    { key: 'texas', name: 'Texas', desc: 'Nonfarm payrolls in Texas, major energy and tech hub' },
+                    { key: 'new_york', name: 'New York', desc: 'Nonfarm payrolls in New York, financial services center' },
+                    { key: 'florida', name: 'Florida', desc: 'Nonfarm payrolls in Florida, tourism and retirement hub' },
+                    { key: 'illinois', name: 'Illinois', desc: 'Nonfarm payrolls in Illinois, Midwest manufacturing center' }
+                ]
+            });
+        }
+
+        function loadJOLTS() {
+            loadRangeCharts({
+                endpoint: '/api/jolts',
+                containerId: 'jolts-charts',
+                chartPrefix: 'jolts-chart',
+                source: 'BLS JOLTS via FRED',
+                yAxisLabel: 'Thousands',
+                metrics: [
+                    { key: 'job_openings', name: 'Job Openings', color: '#2563eb', desc: 'Total unfilled job positions - indicates labor demand and hiring intentions' },
+                    { key: 'hires', name: 'Hires', color: '#059669', desc: 'New employees added to payrolls - measures actual hiring activity' },
+                    { key: 'quits', name: 'Quits', color: '#d97706', desc: 'Voluntary separations - higher quits signal worker confidence in finding new jobs' },
+                    { key: 'layoffs', name: 'Layoffs & Discharges', color: '#dc2626', desc: 'Involuntary separations - indicates employer-initiated job losses' }
+                ]
+            });
+        }
+
+        function loadCPI() {
+            loadRangeCharts({
+                endpoint: '/api/cpi',
+                containerId: 'cpi-charts',
+                chartPrefix: 'cpi-chart',
+                source: 'BLS CPI via FRED',
+                yAxisLabel: 'YoY %',
+                metrics: [
+                    { key: 'cpi_all_yoy', name: 'CPI All Items', color: '#1a2942', desc: 'Year-over-year change in overall consumer prices - headline inflation measure' },
+                    { key: 'cpi_core_yoy', name: 'CPI Core', color: '#2563eb', desc: 'YoY inflation excluding food & energy - shows underlying price trends' },
+                    { key: 'cpi_food_yoy', name: 'Food', color: '#059669', desc: 'YoY change in food prices - groceries and dining out' },
+                    { key: 'cpi_energy_yoy', name: 'Energy', color: '#d97706', desc: 'YoY change in energy prices - gasoline, electricity, natural gas' },
+                    { key: 'cpi_shelter_yoy', name: 'Shelter', color: '#7c3aed', desc: 'YoY change in housing costs - rent and owners equivalent rent' },
+                    { key: 'cpi_medical_yoy', name: 'Medical Care', color: '#dc2626', desc: 'YoY change in healthcare costs - services and commodities' }
+                ]
+            });
+        }
+
+        function loadPPI() {
+            loadRangeCharts({
+                endpoint: '/api/ppi',
+                containerId: 'ppi-charts',
+                chartPrefix: 'ppi-chart',
+                source: 'BLS PPI via FRED',
+                yAxisLabel: 'YoY %',
+                metrics: [
+                    { key: 'ppi_final_demand_yoy', name: 'PPI Final Demand', color: '#1a2942', desc: 'YoY change in prices received by producers - leading indicator for consumer inflation' },
+                    { key: 'ppi_core_yoy', name: 'PPI Core', color: '#2563eb', desc: 'YoY producer inflation excluding food & energy - underlying wholesale price trends' },
+                    { key: 'ppi_goods_yoy', name: 'Goods', color: '#059669', desc: 'YoY change in prices for finished goods - manufacturing output prices' },
+                    { key: 'ppi_services_yoy', name: 'Services', color: '#d97706', desc: 'YoY change in service sector prices - transportation, warehousing, trade' },
+                    { key: 'ppi_foods_yoy', name: 'Foods', color: '#7c3aed', desc: 'YoY change in food producer prices - farm and processed food products' },
+                    { key: 'ppi_energy_yoy', name: 'Energy', color: '#dc2626', desc: 'YoY change in energy producer prices - oil, gas, electricity generation' }
+                ]
+            });
+        }
+
+        async function loadMarketPrices() {
+            try {
+                const res = await fetch('/api/market-prices');
+                const data = await res.json();
+                if (!data.length) return;
+
+                const container = document.getElementById('market-charts');
+                if (!container) return;
+
+                const markets = [
+                    { key: 'crude_oil', name: 'WTI Crude Oil', unit: '$/bbl', color: '#1a2942', desc: 'West Texas Intermediate crude oil futures - benchmark for US oil prices' },
+                    { key: 'nat_gas', name: 'Natural Gas (Henry Hub)', unit: '$/MMBtu', color: '#059669', desc: 'Henry Hub natural gas futures - US benchmark for natural gas pricing' },
+                    { key: 'sp500', name: 'S&P 500', unit: 'Index', color: '#2563eb', desc: 'S&P 500 stock market index - tracks 500 largest US public companies' },
+                    { key: 'gold', name: 'Gold', unit: '$/oz', color: '#d97706', desc: 'Gold futures - safe haven asset and inflation hedge' },
+                    { key: 'silver', name: 'Silver', unit: '$/oz', color: '#64748b', desc: 'Silver futures - precious metal with industrial applications' },
+                    { key: 'copper', name: 'Copper', unit: '$/lb', color: '#dc2626', desc: 'Copper futures - industrial metal, economic activity indicator' }
+                ];
+
+                container.innerHTML = markets.map(m => `
+                    <div class="card">
+                        <div class="card-header">
+                            <span>${m.name}</span>
+                            <span class="source">Yahoo Finance</span>
+                        </div>
+                        <div class="card-body">
+                            <div id="market-chart-${m.key}" class="chart"><div class="loading">Loading...</div></div>
+                            <div class="chart-desc">${m.desc}</div>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Build line charts with 30-day MA
+                for (const m of markets) {
+                    setTimeout(() => {
+                        const dates = data.map(d => d.date);
+                        const prices = data.map(d => d[m.key]);
+                        const ma30 = data.map(d => d[`${m.key}_ma30`]);
+
+                        const traces = [
+                            {
+                                x: dates,
+                                y: prices,
+                                name: m.name,
+                                type: 'scatter',
+                                mode: 'lines',
+                                line: { color: m.color, width: 1.5 }
+                            },
+                            {
+                                x: dates,
+                                y: ma30,
+                                name: '30-day MA',
+                                type: 'scatter',
+                                mode: 'lines',
+                                line: { color: m.color, width: 2.5, dash: 'dot' }
+                            }
+                        ];
+
+                        Plotly.newPlot(`market-chart-${m.key}`, traces, {
+                            ...baseLayout,
+                            showlegend: true,
+                            legend: { orientation: 'h', y: -0.15, font: { size: 9 } },
+                            xaxis: { ...baseLayout.xaxis, tickformat: '%b %Y' },
+                            yaxis: { ...baseLayout.yaxis, title: { text: m.unit, font: { size: 10 } } },
+                            hovermode: 'x unified'
+                        });
+                    }, 100);
+                }
+            } catch (e) {
+                console.error('Error loading market prices:', e);
+            }
+        }
+
+        async function loadOilStocks() {
+            try {
+                const res = await fetch('/api/oil-stocks');
+                const data = await res.json();
+                if (!data.length) return;
+
+                const chartEl = document.getElementById('oil-stocks-chart');
+                if (!chartEl) return;
+
+                // Stock symbols and colors (lighter colors for stocks, bold WTI)
+                const stocks = [
+                    { key: 'WTI', name: 'WTI Crude', color: '#000000', width: 4 },
+                    { key: 'XOM', name: 'Exxon', color: '#f87171' },
+                    { key: 'CVX', name: 'Chevron', color: '#60a5fa' },
+                    { key: 'COP', name: 'ConocoPhillips', color: '#4ade80' },
+                    { key: 'EOG', name: 'EOG', color: '#fbbf24' },
+                    { key: 'SLB', name: 'Schlumberger', color: '#a78bfa' },
+                    { key: 'MPC', name: 'Marathon Pet.', color: '#22d3d1' },
+                    { key: 'PSX', name: 'Phillips 66', color: '#f472b6' },
+                    { key: 'VLO', name: 'Valero', color: '#818cf8' },
+                    { key: 'OXY', name: 'Occidental', color: '#facc15' },
+                    { key: 'KMI', name: 'Kinder Morgan', color: '#4ade80' },
+                    { key: 'WMB', name: 'Williams', color: '#c084fc' },
+                    { key: 'HES', name: 'Hess', color: '#2dd4bf' },
+                    { key: 'DVN', name: 'Devon', color: '#fb7185' },
+                    { key: 'BKR', name: 'Baker Hughes', color: '#a5b4fc' },
+                    { key: 'HAL', name: 'Halliburton', color: '#fb923c' },
+                    { key: 'FANG', name: 'Diamondback', color: '#a3e635' },
+                    { key: 'CTRA', name: 'Coterra', color: '#22d3ee' },
+                    { key: 'MRO', name: 'Marathon Oil', color: '#fda4af' },
+                    { key: 'APA', name: 'APA Corp', color: '#c4b5fd' },
+                    { key: 'OVV', name: 'Ovintiv', color: '#5eead4' }
+                ];
+
+                const dates = data.map(d => d.date);
+                const traces = stocks.map(s => ({
+                    x: dates,
+                    y: data.map(d => d[`${s.key}_norm`]),
+                    name: s.name,
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { color: s.color, width: s.width || 1.5 },
+                    hovertemplate: `${s.name}: %{y:.1f}<extra></extra>`
+                })).filter(t => t.y.some(v => v !== null && v !== undefined));
+
+                Plotly.newPlot('oil-stocks-chart', traces, {
+                    ...baseLayout,
+                    showlegend: true,
+                    legend: { orientation: 'h', y: -0.15, font: { size: 8 }, itemwidth: 40 },
+                    xaxis: { ...baseLayout.xaxis, tickformat: '%b %Y' },
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'Normalized (100 = Start)', font: { size: 10 } } },
+                    hovermode: 'x unified',
+                    margin: { t: 10, r: 15, b: 80, l: 55 }
+                });
+            } catch (e) {
+                console.error('Error loading oil stocks:', e);
+            }
+        }
+
+        // Treasury Yields
+        async function loadTreasuryYields() {
+            try {
+                const res = await fetch('/api/treasury-yields');
+                const data = await res.json();
+                if (!data.length) return;
+
+                const dates = data.map(d => d.date);
+
+                // Yield Curve chart
+                Plotly.newPlot('yield-curve-chart', [
+                    { x: dates, y: data.map(d => d.yield_2yr), name: '2-Year', line: { color: '#3b82f6', width: 2 } },
+                    { x: dates, y: data.map(d => d.yield_5yr), name: '5-Year', line: { color: '#8b5cf6', width: 2 } },
+                    { x: dates, y: data.map(d => d.yield_10yr), name: '10-Year', line: { color: '#ef4444', width: 2 } },
+                    { x: dates, y: data.map(d => d.yield_30yr), name: '30-Year', line: { color: '#1a2942', width: 2 } }
+                ], {
+                    ...baseLayout,
+                    showlegend: true,
+                    legend: { orientation: 'h', y: -0.2, font: { size: 10 } },
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'Yield (%)', font: { size: 10 } } }
+                });
+
+                // Yield Spread chart
+                Plotly.newPlot('yield-spread-chart', [{
+                    x: dates,
+                    y: data.map(d => d.spread_2s10s),
+                    name: '2s10s Spread',
+                    type: 'scatter',
+                    mode: 'lines',
+                    fill: 'tozeroy',
+                    line: { color: '#1a2942', width: 2 },
+                    fillcolor: data.map(d => d.spread_2s10s >= 0 ? 'rgba(13, 125, 77, 0.3)' : 'rgba(196, 30, 58, 0.3)')
+                }, {
+                    x: dates,
+                    y: data.map(d => 0),
+                    name: 'Zero Line',
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { color: '#c41e3a', width: 1, dash: 'dash' },
+                    showlegend: false
+                }], {
+                    ...baseLayout,
+                    showlegend: false,
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'Spread (%)', font: { size: 10 } }, zeroline: true, zerolinecolor: '#c41e3a' }
+                });
+            } catch (e) {
+                console.error('Error loading treasury yields:', e);
+            }
+        }
+
+        // Jobless Claims
+        async function loadJoblessClaims() {
+            try {
+                const res = await fetch('/api/jobless-claims');
+                const data = await res.json();
+                if (!data.length) return;
+
+                const dates = data.map(d => d.date);
+
+                // Initial Claims chart
+                Plotly.newPlot('initial-claims-chart', [
+                    { x: dates, y: data.map(d => d.initial_claims), name: 'Initial Claims', line: { color: '#3b82f6', width: 1 } },
+                    { x: dates, y: data.map(d => d.initial_claims_4wma), name: '4-Week MA', line: { color: '#c41e3a', width: 2 } }
+                ], {
+                    ...baseLayout,
+                    showlegend: true,
+                    legend: { orientation: 'h', y: -0.2, font: { size: 10 } },
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'Claims (thousands)', font: { size: 10 } } }
+                });
+
+                // Continued Claims chart
+                Plotly.newPlot('continued-claims-chart', [{
+                    x: dates,
+                    y: data.map(d => d.continued_claims),
+                    name: 'Continued Claims',
+                    type: 'scatter',
+                    mode: 'lines',
+                    fill: 'tozeroy',
+                    line: { color: '#1a2942', width: 2 },
+                    fillcolor: 'rgba(26, 41, 66, 0.2)'
+                }], {
+                    ...baseLayout,
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'Claims (thousands)', font: { size: 10 } } }
+                });
+            } catch (e) {
+                console.error('Error loading jobless claims:', e);
+            }
+        }
+
+        // ISM PMI
+        async function loadISMPMI() {
+            try {
+                const res = await fetch('/api/ism-pmi');
+                const data = await res.json();
+                if (!data.length) return;
+
+                const dates = data.map(d => d.date);
+
+                // ISM PMI Components chart
+                Plotly.newPlot('ism-pmi-chart', [
+                    { x: dates, y: data.map(d => d.ism_mfg_pmi), name: 'PMI', line: { color: '#1a2942', width: 2 } },
+                    { x: dates, y: data.map(d => d.ism_mfg_new_orders), name: 'New Orders', line: { color: '#3b82f6', width: 1.5 } },
+                    { x: dates, y: data.map(d => d.ism_mfg_production), name: 'Production', line: { color: '#0d7d4d', width: 1.5 } },
+                    { x: dates, y: data.map(d => 50), name: '50 Line', line: { color: '#c41e3a', width: 1, dash: 'dash' }, showlegend: false }
+                ], {
+                    ...baseLayout,
+                    showlegend: true,
+                    legend: { orientation: 'h', y: -0.2, font: { size: 10 } },
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'Index', font: { size: 10 } } }
+                });
+
+                // ISM Services vs Manufacturing chart
+                Plotly.newPlot('ism-services-chart', [
+                    { x: dates, y: data.map(d => d.ism_mfg_pmi), name: 'Manufacturing', line: { color: '#1a2942', width: 2 } },
+                    { x: dates, y: data.map(d => d.ism_services), name: 'Services', line: { color: '#b8860b', width: 2 } },
+                    { x: dates, y: data.map(d => 50), name: '50 Line', line: { color: '#c41e3a', width: 1, dash: 'dash' }, showlegend: false }
+                ], {
+                    ...baseLayout,
+                    showlegend: true,
+                    legend: { orientation: 'h', y: -0.2, font: { size: 10 } },
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'Index', font: { size: 10 } } }
+                });
+            } catch (e) {
+                console.error('Error loading ISM PMI:', e);
+            }
+        }
+
+        // Housing
+        async function loadHousing() {
+            try {
+                const res = await fetch('/api/housing');
+                const data = await res.json();
+                if (!data.length) return;
+
+                const dates = data.map(d => d.date);
+
+                // Housing Starts & Permits
+                Plotly.newPlot('housing-starts-chart', [
+                    { x: dates, y: data.map(d => d.housing_starts), name: 'Starts', line: { color: '#1a2942', width: 2 } },
+                    { x: dates, y: data.map(d => d.building_permits), name: 'Permits', line: { color: '#b8860b', width: 2 } }
+                ], {
+                    ...baseLayout,
+                    showlegend: true,
+                    legend: { orientation: 'h', y: -0.2, font: { size: 10 } },
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'Thousands (SAAR)', font: { size: 10 } } }
+                });
+
+                // Home Sales
+                Plotly.newPlot('home-sales-chart', [
+                    { x: dates, y: data.map(d => d.existing_home_sales), name: 'Existing (M)', line: { color: '#1a2942', width: 2 } },
+                    { x: dates, y: data.map(d => d.new_home_sales ? d.new_home_sales / 1000 : null), name: 'New (M)', line: { color: '#b8860b', width: 2 } }
+                ], {
+                    ...baseLayout,
+                    showlegend: true,
+                    legend: { orientation: 'h', y: -0.2, font: { size: 10 } },
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'Millions (SAAR)', font: { size: 10 } } }
+                });
+
+                // Home Prices
+                Plotly.newPlot('home-prices-chart', [{
+                    x: dates,
+                    y: data.map(d => d.case_shiller_yoy),
+                    name: 'Case-Shiller YoY',
+                    type: 'scatter',
+                    mode: 'lines',
+                    fill: 'tozeroy',
+                    line: { color: '#1a2942', width: 2 },
+                    fillcolor: 'rgba(26, 41, 66, 0.2)'
+                }], {
+                    ...baseLayout,
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'YoY Change (%)', font: { size: 10 } }, zeroline: true }
+                });
+
+                // Mortgage Rates
+                Plotly.newPlot('mortgage-rates-chart', [
+                    { x: dates, y: data.map(d => d.mortgage_rate_30yr), name: '30-Year', line: { color: '#1a2942', width: 2 } },
+                    { x: dates, y: data.map(d => d.mortgage_rate_15yr), name: '15-Year', line: { color: '#b8860b', width: 2 } }
+                ], {
+                    ...baseLayout,
+                    showlegend: true,
+                    legend: { orientation: 'h', y: -0.2, font: { size: 10 } },
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'Rate (%)', font: { size: 10 } } }
+                });
+            } catch (e) {
+                console.error('Error loading housing:', e);
+            }
+        }
+
+        // Retail Sales
+        async function loadRetailSales() {
+            try {
+                const res = await fetch('/api/retail-sales');
+                const data = await res.json();
+                if (!data.length) return;
+
+                const dates = data.map(d => d.date);
+
+                // Retail Sales (Total & Ex-Auto)
+                Plotly.newPlot('retail-sales-chart', [
+                    { x: dates, y: data.map(d => d.retail_total), name: 'Total', line: { color: '#1a2942', width: 2 } },
+                    { x: dates, y: data.map(d => d.retail_ex_auto), name: 'Ex-Auto', line: { color: '#b8860b', width: 2 } }
+                ], {
+                    ...baseLayout,
+                    showlegend: true,
+                    legend: { orientation: 'h', y: -0.2, font: { size: 10 } },
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'Millions USD', font: { size: 10 } } }
+                });
+
+                // Retail Sales YoY
+                Plotly.newPlot('retail-sales-yoy-chart', [
+                    { x: dates, y: data.map(d => d.retail_total_yoy), name: 'Total YoY', line: { color: '#1a2942', width: 2 } },
+                    { x: dates, y: data.map(d => d.retail_ex_auto_yoy), name: 'Ex-Auto YoY', line: { color: '#b8860b', width: 2 } },
+                    { x: dates, y: data.map(d => 0), name: 'Zero', line: { color: '#c41e3a', width: 1, dash: 'dash' }, showlegend: false }
+                ], {
+                    ...baseLayout,
+                    showlegend: true,
+                    legend: { orientation: 'h', y: -0.2, font: { size: 10 } },
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'YoY Change (%)', font: { size: 10 } }, zeroline: true }
+                });
+            } catch (e) {
+                console.error('Error loading retail sales:', e);
+            }
+        }
+
+        // Consumer Sentiment
+        async function loadConsumerSentiment() {
+            try {
+                const res = await fetch('/api/consumer-sentiment');
+                const data = await res.json();
+                if (!data.length) return;
+
+                const dates = data.map(d => d.date);
+
+                // UMich Sentiment
+                Plotly.newPlot('umich-sentiment-chart', [{
+                    x: dates,
+                    y: data.map(d => d.umich_sentiment),
+                    name: 'Consumer Sentiment',
+                    type: 'scatter',
+                    mode: 'lines',
+                    fill: 'tozeroy',
+                    line: { color: '#1a2942', width: 2 },
+                    fillcolor: 'rgba(26, 41, 66, 0.2)'
+                }], {
+                    ...baseLayout,
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'Index (1966=100)', font: { size: 10 } } }
+                });
+
+                // Inflation Expectations
+                Plotly.newPlot('inflation-expectations-chart', [{
+                    x: dates,
+                    y: data.map(d => d.umich_expectations),
+                    name: 'Inflation Expectations',
+                    type: 'scatter',
+                    mode: 'lines',
+                    fill: 'tozeroy',
+                    line: { color: '#c41e3a', width: 2 },
+                    fillcolor: 'rgba(196, 30, 58, 0.2)'
+                }], {
+                    ...baseLayout,
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'Expected Inflation (%)', font: { size: 10 } } }
+                });
+            } catch (e) {
+                console.error('Error loading consumer sentiment:', e);
+            }
+        }
+
+        // Credit Spreads
+        async function loadCreditSpreads() {
+            try {
+                const res = await fetch('/api/credit-spreads');
+                const data = await res.json();
+                if (!data.length) return;
+
+                const dates = data.map(d => d.date);
+
+                // Bond ETF Prices
+                Plotly.newPlot('credit-etfs-chart', [
+                    { x: dates, y: data.map(d => d.hyg), name: 'HYG (High Yield)', line: { color: '#c41e3a', width: 2 } },
+                    { x: dates, y: data.map(d => d.lqd), name: 'LQD (Inv Grade)', line: { color: '#3b82f6', width: 2 } },
+                    { x: dates, y: data.map(d => d.tlt), name: 'TLT (Treasury)', line: { color: '#1a2942', width: 2 } }
+                ], {
+                    ...baseLayout,
+                    showlegend: true,
+                    legend: { orientation: 'h', y: -0.2, font: { size: 10 } },
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'Price ($)', font: { size: 10 } } }
+                });
+
+                // HYG/LQD Ratio
+                Plotly.newPlot('credit-ratio-chart', [{
+                    x: dates,
+                    y: data.map(d => d.hyg_lqd_ratio),
+                    name: 'HYG/LQD Ratio',
+                    type: 'scatter',
+                    mode: 'lines',
+                    fill: 'tozeroy',
+                    line: { color: '#1a2942', width: 2 },
+                    fillcolor: 'rgba(26, 41, 66, 0.2)'
+                }], {
+                    ...baseLayout,
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'Ratio', font: { size: 10 } } }
+                });
+            } catch (e) {
+                console.error('Error loading credit spreads:', e);
+            }
+        }
+
+        // Dollar Index
+        async function loadDXY() {
+            try {
+                const res = await fetch('/api/dxy');
+                const data = await res.json();
+                if (!data.length) return;
+
+                const dates = data.map(d => d.date);
+
+                Plotly.newPlot('dxy-chart', [
+                    { x: dates, y: data.map(d => d.dxy), name: 'DXY', line: { color: '#1a2942', width: 2 } },
+                    { x: dates, y: data.map(d => d.dxy_ma50), name: '50-Day MA', line: { color: '#b8860b', width: 1.5 } },
+                    { x: dates, y: data.map(d => d.dxy_ma200), name: '200-Day MA', line: { color: '#c41e3a', width: 1.5 } }
+                ], {
+                    ...baseLayout,
+                    showlegend: true,
+                    legend: { orientation: 'h', y: -0.15, font: { size: 10 } },
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'Index', font: { size: 10 } } }
+                });
+            } catch (e) {
+                console.error('Error loading DXY:', e);
+            }
+        }
+
+        // Natural Gas Inventories
+        async function loadNatGasInventories() {
+            try {
+                const res = await fetch('/api/natgas-inventories');
+                const data = await res.json();
+                if (!data.length) return;
+
+                const dates = data.map(d => d.date);
+
+                // Storage Level
+                Plotly.newPlot('natgas-storage-chart', [{
+                    x: dates,
+                    y: data.map(d => d.storage_bcf),
+                    name: 'Storage',
+                    type: 'scatter',
+                    mode: 'lines',
+                    fill: 'tozeroy',
+                    line: { color: '#1a2942', width: 2 },
+                    fillcolor: 'rgba(26, 41, 66, 0.2)'
+                }], {
+                    ...baseLayout,
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'BCF', font: { size: 10 } } }
+                });
+
+                // Weekly Change
+                Plotly.newPlot('natgas-change-chart', [{
+                    x: dates,
+                    y: data.map(d => d.storage_change),
+                    name: 'Weekly Change',
+                    type: 'bar',
+                    marker: { color: data.map(d => d.storage_change >= 0 ? '#0d7d4d' : '#c41e3a') }
+                }], {
+                    ...baseLayout,
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'BCF Change', font: { size: 10 } }, zeroline: true }
+                });
+            } catch (e) {
+                console.error('Error loading nat gas inventories:', e);
+            }
+        }
+
+        // Baltic Dry Index
+        async function loadBalticDry() {
+            try {
+                const res = await fetch('/api/baltic-dry');
+                const data = await res.json();
+                if (!data.length) return;
+
+                const dates = data.map(d => d.date);
+
+                Plotly.newPlot('baltic-dry-chart', [
+                    { x: dates, y: data.map(d => d.bdry), name: 'BDRY ETF', line: { color: '#1a2942', width: 2 } },
+                    { x: dates, y: data.map(d => d.bdry_ma30), name: '30-Day MA', line: { color: '#b8860b', width: 1.5 } }
+                ], {
+                    ...baseLayout,
+                    showlegend: true,
+                    legend: { orientation: 'h', y: -0.15, font: { size: 10 } },
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'Price ($)', font: { size: 10 } } }
+                });
+            } catch (e) {
+                console.error('Error loading Baltic Dry:', e);
+            }
+        }
+
+        async function loadStatus() {
+            const res = await fetch('/api/status');
+            const data = await res.json();
+            const date = new Date(data.last_updated);
+            document.getElementById('last-updated').textContent = `Updated: ${date.toLocaleDateString()}`;
+        }
+
+        // Initialize
+        loadStatus();
+        loadGDP();
+        loadContributions();
+        loadTrade();
+        loadTradeCategories();
+        loadDetailedTrade();
+        loadPetroleumInventories();
+        loadTreasuryWithholding();
+        loadTransportation();
+        loadRefinery();
+        loadEmployment();
+        loadJOLTS();
+        loadCPI();
+        loadPPI();
+        loadMarketPrices();
+        loadOilStocks();
+        loadTreasuryYields();
+        loadJoblessClaims();
+        loadISMPMI();
+        loadHousing();
+        loadRetailSales();
+        loadConsumerSentiment();
+        loadCreditSpreads();
+        loadDXY();
+        loadNatGasInventories();
+        loadBalticDry();
+
+        // Show overview section by default
+        showSection('overview');
+    </script>
+</body>
+</html>

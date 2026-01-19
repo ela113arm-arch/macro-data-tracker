@@ -1,0 +1,13 @@
+# API Keys - never commit
+config/api_keys.py
+
+# Python
+__pycache__/
+*.py[cod]
+.env
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/
