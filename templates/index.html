@@ -9,14 +9,17 @@
         :root {
             --navy: #1a2942;
             --navy-light: #2d4a6f;
-            --gold: #b8860b;
-            --text-primary: #1a1a1a;
-            --text-secondary: #5a6a7a;
-            --bg-primary: #f8f9fa;
+            --accent: #0066cc;
+            --text-primary: #111827;
+            --text-secondary: #4b5563;
+            --bg-primary: #f9fafb;
             --bg-card: #ffffff;
-            --border: #e2e8f0;
-            --positive: #0d7d4d;
-            --negative: #c41e3a;
+            --border: #d1d5db;
+            --positive: #10b981;
+            --positive-dark: #065f46;
+            --negative: #ef4444;
+            --negative-dark: #991b1b;
+            --warning: #f59e0b;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -39,15 +42,15 @@
         }
 
         .header-left h1 {
-            font-size: 22px;
-            font-weight: 500;
-            letter-spacing: 0.5px;
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
         }
 
         .header-left p {
-            font-size: 12px;
-            opacity: 0.7;
-            margin-top: 2px;
+            font-size: 13px;
+            opacity: 0.75;
+            margin-top: 4px;
         }
 
         .header-right {
@@ -60,22 +63,28 @@
             background: var(--navy-light);
             padding: 0 32px;
             display: flex;
-            gap: 0;
+            gap: 4px;
         }
 
         .nav-item {
             padding: 12px 20px;
-            color: rgba(255,255,255,0.7);
+            color: rgba(255,255,255,0.85);
             font-size: 13px;
             font-weight: 500;
             cursor: pointer;
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+            transition: all 0.15s ease;
         }
 
-        .nav-item:hover, .nav-item.active {
+        .nav-item:hover {
             color: white;
-            border-bottom-color: var(--gold);
+            background: rgba(255,255,255,0.08);
+        }
+
+        .nav-item.active {
+            color: white;
+            background: rgba(255,255,255,0.1);
+            border-bottom-color: var(--positive);
         }
 
         .container {
@@ -86,39 +95,42 @@
 
         .stats-row {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 16px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
             margin-bottom: 24px;
         }
 
         .stat-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 4px;
+            border-radius: 6px;
             padding: 16px 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
         }
 
         .stat-label {
-            font-size: 11px;
+            font-size: 12px;
             color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 6px;
+            font-weight: 600;
+            margin-bottom: 8px;
         }
 
         .stat-value {
-            font-size: 24px;
-            font-weight: 600;
+            font-size: 28px;
+            font-weight: 700;
             color: var(--text-primary);
+            line-height: 1.2;
         }
 
         .stat-value.positive { color: var(--positive); }
         .stat-value.negative { color: var(--negative); }
 
         .stat-change {
-            font-size: 11px;
+            font-size: 12px;
             color: var(--text-secondary);
-            margin-top: 4px;
+            margin-top: 6px;
         }
 
         .section {
@@ -129,22 +141,23 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
-            padding-bottom: 8px;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
             border-bottom: 2px solid var(--navy);
         }
 
         .section-title {
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 18px;
+            font-weight: 700;
             color: var(--navy);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: -0.3px;
         }
 
         .section-subtitle {
-            font-size: 12px;
+            font-size: 13px;
             color: var(--text-secondary);
+            margin-top: 4px;
         }
 
         .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
@@ -154,16 +167,17 @@
         .card {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 4px;
+            border-radius: 6px;
             overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
         }
 
         .card-header {
-            background: linear-gradient(to right, var(--navy), var(--navy-light));
+            background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
             color: white;
-            padding: 10px 16px;
-            font-size: 12px;
-            font-weight: 500;
+            padding: 14px 16px;
+            font-size: 13px;
+            font-weight: 600;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -171,12 +185,12 @@
 
         .card-header .source {
             font-size: 10px;
-            opacity: 0.7;
-            font-weight: 400;
+            opacity: 0.75;
+            font-weight: 500;
         }
 
         .card-body {
-            padding: 12px;
+            padding: 16px;
         }
 
         .card.span-2 { grid-column: span 2; }
@@ -185,7 +199,7 @@
 
         .chart { height: 280px; }
         .chart-lg { height: 350px; }
-        .chart-desc { font-size: 11px; color: #64748b; margin-top: 8px; line-height: 1.4; padding: 0 4px; }
+        .chart-desc { font-size: 12px; color: var(--text-secondary); margin-top: 8px; line-height: 1.5; padding: 0 4px; }
 
         .category-grid {
             display: grid;
@@ -290,36 +304,181 @@
             .stats-row { grid-template-columns: repeat(2, 1fr); }
             .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
             .card.span-2, .card.span-3, .card.span-4 { grid-column: span 1; }
+            .nav { display: none; }
+            .nav.mobile-open { display: flex; flex-direction: column; }
+            .hamburger { display: block !important; }
         }
+
+        /* Mobile hamburger menu */
+        .hamburger {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        /* Key metrics bar */
+        .key-metrics {
+            background: linear-gradient(to right, #1e3a5f, #2d4a6f);
+            padding: 14px 32px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .key-metric {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+        }
+
+        .key-metric-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            opacity: 0.85;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        .key-metric-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .key-metric-change {
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .key-metric-change.up { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+        .key-metric-change.down { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.4); }
+
+        .key-metric-spark {
+            width: 60px;
+            height: 24px;
+        }
+
+        @media (max-width: 1400px) {
+            .stats-row { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        @media (max-width: 1200px) {
+            .key-metrics { padding: 16px; gap: 16px; }
+            .key-metric { min-width: 150px; }
+        }
+
+        @media (max-width: 1024px) {
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .card.span-2 { grid-column: span 1; }
+        }
+
+        @media (max-width: 768px) {
+            .chart { height: 220px; }
+            .chart-lg { height: 280px; }
+        }
+
+        @media (max-width: 640px) {
+            .stats-row { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 600px) {
+            .key-metrics {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                padding: 12px 16px;
+            }
+            .key-metric-value { font-size: 16px; }
+        }
+
+        /* Deviation badge styles */
+        .deviation-badge {
+            display: inline-block;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+        .deviation-badge.high-pos { background: #dcfce7; color: #166534; }
+        .deviation-badge.low-pos { background: #fef9c3; color: #854d0e; }
+        .deviation-badge.neutral { background: #f1f5f9; color: #475569; }
+        .deviation-badge.low-neg { background: #fef3c7; color: #92400e; }
+        .deviation-badge.high-neg { background: #fee2e2; color: #991b1b; }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="header-left">
             <h1>U.S. MACRO DASHBOARD</h1>
-            <p>Economic Indicators & Trade Analysis</p>
+            <p>Economic Indicators & Energy Analysis</p>
         </div>
-        <div class="header-right">
-            <div id="last-updated">Loading...</div>
-            <div id="refresh-status" style="display:none;margin-top:6px;font-size:11px;color:#64748b;"></div>
-            <button id="refresh-btn" onclick="refreshData()" style="margin-top:8px;padding:6px 14px;background:#b8860b;color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:6px;">
-                <span id="refresh-spinner" style="display:none;width:12px;height:12px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;"></span>
-                <span id="refresh-text">Refresh Data</span>
-            </button>
+        <div class="header-right" style="display:flex;align-items:center;gap:16px;">
+            <button class="hamburger" onclick="toggleMobileNav()">&#9776;</button>
+            <div>
+                <div id="last-updated">Loading...</div>
+                <div id="refresh-status" style="display:none;margin-top:6px;font-size:11px;color:#64748b;"></div>
+                <button id="refresh-btn" onclick="refreshData()" style="margin-top:8px;padding:6px 14px;background:#0066cc;color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:6px;">
+                    <span id="refresh-spinner" style="display:none;width:12px;height:12px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;"></span>
+                    <span id="refresh-text">Refresh Data</span>
+                </button>
+            </div>
             <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
         </div>
     </div>
 
-    <div class="nav">
+    <div class="nav" id="main-nav">
         <div class="nav-item active" data-section="overview">Overview</div>
         <div class="nav-item" data-section="markets">Markets</div>
-        <div class="nav-item" data-section="rates">Rates & Yields</div>
-        <div class="nav-item" data-section="gdp">GDP</div>
-        <div class="nav-item" data-section="consumer">Consumer</div>
-        <div class="nav-item" data-section="trade">Trade by Category</div>
-        <div class="nav-item" data-section="petroleum">Petroleum</div>
-        <div class="nav-item" data-section="treasury">Treasury</div>
+        <div class="nav-item" data-section="energy">Energy</div>
+        <div class="nav-item" data-section="economy">Economy</div>
         <div class="nav-item" data-section="labor">Labor & Inflation</div>
+    </div>
+
+    <!-- Key Metrics Bar -->
+    <div class="key-metrics" id="key-metrics-bar">
+        <div class="key-metric">
+            <div>
+                <div class="key-metric-label">WTI Crude</div>
+                <div class="key-metric-value" id="km-wti">--</div>
+            </div>
+            <div class="key-metric-change" id="km-wti-chg">--</div>
+        </div>
+        <div class="key-metric">
+            <div>
+                <div class="key-metric-label">3-2-1 Crack</div>
+                <div class="key-metric-value" id="km-crack">--</div>
+            </div>
+            <div class="key-metric-change" id="km-crack-chg">--</div>
+        </div>
+        <div class="key-metric">
+            <div>
+                <div class="key-metric-label">DXY</div>
+                <div class="key-metric-value" id="km-dxy">--</div>
+            </div>
+            <div class="key-metric-change" id="km-dxy-chg">--</div>
+        </div>
+        <div class="key-metric">
+            <div>
+                <div class="key-metric-label">10Y Yield</div>
+                <div class="key-metric-value" id="km-10y">--</div>
+            </div>
+            <div class="key-metric-change" id="km-10y-chg">--</div>
+        </div>
+        <div class="key-metric">
+            <div>
+                <div class="key-metric-label">Jobless Claims</div>
+                <div class="key-metric-value" id="km-claims">--</div>
+            </div>
+            <div class="key-metric-change" id="km-claims-chg">--</div>
+        </div>
     </div>
 
     <div class="container">
@@ -386,7 +545,7 @@
         </div>
 
         <!-- GDP Section -->
-        <div class="section" data-page="gdp">
+        <div class="section" data-page="economy">
             <div class="section-header">
                 <div>
                     <div class="section-title">GDP Growth Contributions</div>
@@ -444,7 +603,7 @@
         </div>
 
         <!-- Trade by Category - Export vs Import Comparison -->
-        <div class="section" data-page="trade">
+        <div class="section" data-page="economy">
             <div class="section-header">
                 <div>
                     <div class="section-title">Trade by Category: Exports vs Imports</div>
@@ -458,7 +617,7 @@
         </div>
 
         <!-- Detailed Trade Categories (BEA ITA) -->
-        <div class="section" data-page="trade">
+        <div class="section" data-page="economy">
             <div class="section-header">
                 <div>
                     <div class="section-title">Detailed Trade: Pharma, Metals, Semiconductors & More</div>
@@ -488,7 +647,7 @@
         </div>
 
         <!-- Petroleum Inventories & Supply/Demand -->
-        <div class="section" data-page="petroleum">
+        <div class="section" data-page="energy">
             <div class="section-header">
                 <div>
                     <div class="section-title">U.S. Petroleum Inventories & Supply/Demand</div>
@@ -501,7 +660,7 @@
         </div>
 
         <!-- Treasury Tax Withholding -->
-        <div class="section" data-page="treasury">
+        <div class="section" data-page="economy">
             <div class="section-header">
                 <div>
                     <div class="section-title">Treasury Tax Withholding</div>
@@ -595,7 +754,7 @@
             </div>
         </div>
 
-        <div class="section" data-page="petroleum">
+        <div class="section" data-page="energy">
             <div class="section-header">
                 <div>
                     <div class="section-title">US Refinery Runs</div>
@@ -723,36 +882,36 @@
         <div class="section" data-page="overview consumer">
             <div class="section-header">
                 <div>
-                    <div class="section-title">ISM Manufacturing PMI</div>
-                    <div class="section-subtitle">Purchasing Managers Index - leading economic indicator (50+ = expansion)</div>
+                    <div class="section-title">Manufacturing Health</div>
+                    <div class="section-subtitle">Industrial production, capacity utilization, and new orders - key manufacturing indicators</div>
                 </div>
             </div>
             <div class="grid-2">
                 <div class="card">
                     <div class="card-header">
-                        <span>ISM Manufacturing PMI & Components</span>
-                        <span class="source">FRED / ISM</span>
+                        <span>Industrial Production & Capacity Utilization</span>
+                        <span class="source">FRED</span>
                     </div>
                     <div class="card-body">
                         <div id="ism-pmi-chart" class="chart"><div class="loading">Loading...</div></div>
-                        <div class="chart-desc">PMI, New Orders, Production - values above 50 indicate expansion</div>
+                        <div class="chart-desc">Industrial production index (left axis) and capacity utilization % (right axis)</div>
                     </div>
                 </div>
                 <div class="card">
                     <div class="card-header">
-                        <span>ISM Services vs Manufacturing</span>
-                        <span class="source">FRED / ISM</span>
+                        <span>Durable Goods & New Orders</span>
+                        <span class="source">FRED</span>
                     </div>
                     <div class="card-body">
                         <div id="ism-services-chart" class="chart"><div class="loading">Loading...</div></div>
-                        <div class="chart-desc">Comparing manufacturing and services sector activity</div>
+                        <div class="chart-desc">Manufacturers' new orders for durable goods and capital goods (billions $)</div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Housing Section -->
-        <div class="section" data-page="consumer">
+        <div class="section" data-page="economy">
             <div class="section-header">
                 <div>
                     <div class="section-title">Housing Market</div>
@@ -804,7 +963,7 @@
         </div>
 
         <!-- Retail Sales Section -->
-        <div class="section" data-page="consumer">
+        <div class="section" data-page="economy">
             <div class="section-header">
                 <div>
                     <div class="section-title">Retail Sales</div>
@@ -920,7 +1079,7 @@
         </div>
 
         <!-- Natural Gas Inventories Section -->
-        <div class="section" data-page="petroleum">
+        <div class="section" data-page="energy">
             <div class="section-header">
                 <div>
                     <div class="section-title">Natural Gas Inventories</div>
@@ -946,6 +1105,132 @@
                     <div class="card-body">
                         <div id="natgas-change-chart" class="chart"><div class="loading">Loading...</div></div>
                         <div class="chart-desc">Week-over-week change in storage (BCF)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Crude Oil Production & Supply Adjustment Section -->
+        <div class="section" data-page="energy">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">U.S. Crude Oil Production & Supply Adjustment</div>
+                    <div class="section-subtitle">Monthly production (MCRFPUS2) and supply adjustment (MCRUA_NUS_2) from EIA PSM</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span>Production vs Supply Adjustment (3-mo smoothed)</span>
+                    <span class="source">EIA PSM</span>
+                </div>
+                <div class="card-body">
+                    <div id="crude-production-chart" class="chart-lg"><div class="loading">Loading...</div></div>
+                    <div class="chart-desc">Left axis: Production (MMbpd) | Right axis: Supply Adjustment (MMbpd) | Vertical lines: PSM methodology changes</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Crack Spreads Section -->
+        <div class="section" data-page="energy">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Crack Spreads & Brent-WTI</div>
+                    <div class="section-subtitle">Refinery margins and crude oil arbitrage spreads</div>
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <span>3-2-1 Crack Spread</span>
+                        <span class="source">Yahoo Finance</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="crack-321-chart" class="chart"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">Refinery margin proxy: (2*RBOB + HO)/3 - WTI ($/barrel)</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span>Brent-WTI Spread</span>
+                        <span class="source">Yahoo Finance</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="brent-wti-chart" class="chart"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">Atlantic basin arbitrage: Brent - WTI ($/barrel)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Days of Supply Section -->
+        <div class="section" data-page="overview energy">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Days of Supply</div>
+                    <div class="section-subtitle">Inventory levels normalized by demand - key supply/demand indicator</div>
+                </div>
+            </div>
+            <div class="grid-3">
+                <div class="card">
+                    <div class="card-header">
+                        <span>Crude Oil Days of Supply</span>
+                        <span class="source">EIA</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="crude-dos-chart" class="chart"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">Current vs 5-year average days of supply</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span>Gasoline Days of Supply</span>
+                        <span class="source">EIA</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="gasoline-dos-chart" class="chart"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">Current vs 5-year average days of supply</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span>Distillate Days of Supply</span>
+                        <span class="source">EIA</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="distillate-dos-chart" class="chart"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">Current vs 5-year average days of supply</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Energy ETF Positioning Section -->
+        <div class="section" data-page="energy">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Energy ETF Positioning Proxy</div>
+                    <div class="section-subtitle">Daily ETF volume vs 50-day moving average - retail/institutional flow indicator</div>
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <span>USO (Oil ETF) Volume</span>
+                        <span class="source">Yahoo Finance</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="uso-positioning-chart" class="chart"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">Daily volume vs 50-day MA - spikes indicate positioning changes</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span>UNG (Natural Gas ETF) Volume</span>
+                        <span class="source">Yahoo Finance</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="ung-positioning-chart" class="chart"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">Daily volume vs 50-day MA - spikes indicate positioning changes</div>
                     </div>
                 </div>
             </div>
@@ -1062,7 +1347,7 @@
                             clearInterval(pollInterval);
                             spinner.style.display = 'none';
                             text.textContent = 'Refresh Data';
-                            btn.style.background = '#b8860b';
+                            btn.style.background = '#0066cc';
                             btn.disabled = false;
                             btn.style.opacity = '1';
                             status.style.color = '#d97706';
@@ -1081,7 +1366,7 @@
 
                 setTimeout(() => {
                     text.textContent = 'Refresh Data';
-                    btn.style.background = '#b8860b';
+                    btn.style.background = '#0066cc';
                     btn.disabled = false;
                     btn.style.opacity = '1';
                 }, 3000);
@@ -1091,7 +1376,8 @@
         const colors = {
             navy: '#1a2942',
             navyLight: '#2d4a6f',
-            gold: '#b8860b',
+            accent: '#0066cc',
+            gold: '#d97706',
             blue: '#2563eb',
             green: '#0d7d4d',
             red: '#c41e3a',
@@ -1107,11 +1393,12 @@
         const baseLayout = {
             paper_bgcolor: '#ffffff',
             plot_bgcolor: '#ffffff',
-            font: { family: 'Segoe UI, sans-serif', size: 11, color: '#5a6a7a' },
-            margin: { t: 10, r: 20, b: 50, l: 55 },
-            xaxis: { gridcolor: '#e2e8f0', linecolor: '#e2e8f0', tickfont: { size: 10 }, tickangle: -45 },
-            yaxis: { gridcolor: '#e2e8f0', linecolor: '#e2e8f0', tickfont: { size: 10 } },
-            showlegend: false,
+            font: { family: 'Segoe UI, sans-serif', size: 12, color: '#4b5563' },
+            margin: { t: 15, r: 20, b: 55, l: 50 },
+            xaxis: { gridcolor: '#d1d5db', linecolor: '#d1d5db', tickfont: { size: 11 }, tickangle: 0, tickformat: '%b %y', dtick: 'M3' },
+            yaxis: { gridcolor: '#d1d5db', linecolor: '#d1d5db', tickfont: { size: 11 } },
+            showlegend: true,
+            legend: { orientation: 'h', y: -0.18, x: 0, xanchor: 'left', font: { size: 10 } },
             hovermode: 'x unified'
         };
 
@@ -1593,16 +1880,19 @@
         // isCrude determines supply/demand component names
         const inventoryProducts = [
             { key: 'crude_US', name: 'Crude Oil (excl. SPR) - U.S.', balanceKey: 'crude_US', isCrude: true, desc: 'Commercial crude oil stocks excluding Strategic Petroleum Reserve - key indicator of supply/demand balance' },
-            { key: 'crude_PADD1', name: 'Crude Oil - PADD 1 (East Coast)', balanceKey: 'crude_PADD1', isCrude: true, desc: 'East Coast crude stocks - imports-dependent region with limited refining capacity' },
-            { key: 'crude_PADD2', name: 'Crude Oil - PADD 2 (Midwest)', balanceKey: 'crude_PADD2', isCrude: true, desc: 'Midwest crude stocks including Cushing, OK - WTI pricing hub and major storage center' },
-            { key: 'crude_PADD3', name: 'Crude Oil - PADD 3 (Gulf Coast)', balanceKey: 'crude_PADD3', isCrude: true, desc: 'Gulf Coast crude stocks - largest US refining region, major import/export hub' },
-            { key: 'crude_PADD4', name: 'Crude Oil - PADD 4 (Rocky Mtn)', balanceKey: 'crude_PADD4', isCrude: true, desc: 'Rocky Mountain crude stocks - landlocked region with local production' },
-            { key: 'crude_PADD5', name: 'Crude Oil - PADD 5 (West Coast)', balanceKey: 'crude_PADD5', isCrude: true, desc: 'West Coast crude stocks - isolated market, California-centric refining' },
             { key: 'total_gasoline_US', name: 'Motor Gasoline - U.S.', balanceKey: 'gasoline_US', isCrude: false, desc: 'Total motor gasoline inventories - tracks retail fuel supply, seasonal driving demand' },
             { key: 'distillate_US', name: 'Distillate Fuel Oil - U.S.', balanceKey: 'distillate_US', isCrude: false, desc: 'Diesel and heating oil stocks - critical for trucking, agriculture, and winter heating' },
             { key: 'jet_fuel_US', name: 'Jet Fuel - U.S.', balanceKey: 'jet_fuel_US', isCrude: false, desc: 'Aviation fuel inventories - tracks air travel demand and refinery kerosene output' },
             { key: 'propane_US', name: 'Propane/Propylene - U.S.', balanceKey: 'propane_US', isCrude: false, desc: 'Propane stocks - heating fuel and petrochemical feedstock, seasonal demand' },
-            { key: 'ngl_US', name: 'NGLs (excl. Propane)', desc: 'Natural gas liquids excluding propane - ethane, butane for petrochemical industry' },
+        ];
+
+        // PADD regions for consolidated crude chart
+        const paddRegions = [
+            { key: 'crude_PADD1', name: 'PADD 1 (East)', color: '#1a2942' },
+            { key: 'crude_PADD2', name: 'PADD 2 (Midwest/Cushing)', color: '#b8860b' },
+            { key: 'crude_PADD3', name: 'PADD 3 (Gulf Coast)', color: '#0d7d4d' },
+            { key: 'crude_PADD4', name: 'PADD 4 (Rocky Mtn)', color: '#8b5cf6' },
+            { key: 'crude_PADD5', name: 'PADD 5 (West Coast)', color: '#c41e3a' },
         ];
 
         // Month labels for week axis
@@ -1901,6 +2191,68 @@
                     }
                 }, 200);
             }
+
+            // Add consolidated PADD crude oil chart
+            const paddContainer = document.createElement('div');
+            paddContainer.className = 'card';
+            paddContainer.style.marginTop = '16px';
+            paddContainer.innerHTML = `
+                <div class="card-header">
+                    <span>Crude Oil by PADD Region (Current Year vs 5yr Range)</span>
+                    <span class="source">EIA WPSR</span>
+                </div>
+                <div class="card-body">
+                    <div id="padd-consolidated-chart" class="chart-lg"><div class="loading">Loading...</div></div>
+                    <div class="chart-desc">Regional crude stocks - PADD 2 includes Cushing (WTI hub), PADD 3 is Gulf Coast refining hub</div>
+                </div>
+            `;
+            container.appendChild(paddContainer);
+
+            // Render consolidated PADD chart
+            setTimeout(() => {
+                const paddTraces = [];
+                for (const padd of paddRegions) {
+                    const allVals = invData.map(r => r[padd.key]).filter(v => v !== null && v !== undefined && v > 0);
+                    allVals.sort((a, b) => a - b);
+                    const median = allVals[Math.floor(allVals.length / 2)];
+                    const minV = median * 0.4, maxV = median * 1.6;
+
+                    const weekData = {};
+                    for (const row of invData) {
+                        const week = row.week, year = row.year, value = row[padd.key];
+                        if (!week || week > 52 || value === undefined || value === null) continue;
+                        if (value < minV || value > maxV) continue;
+                        if (!weekData[week]) weekData[week] = { current: null };
+                        if (year === currentYear) weekData[week].current = value;
+                    }
+                    const weeks = Object.keys(weekData).map(Number).filter(w => w <= 52).sort((a, b) => a - b);
+                    const currentVals = weeks.map(w => weekData[w].current);
+                    const validWeeks = weeks.filter((_, i) => currentVals[i] !== null);
+                    const validVals = currentVals.filter(v => v !== null);
+
+                    if (validVals.length > 0) {
+                        paddTraces.push({
+                            x: validWeeks,
+                            y: validVals,
+                            name: padd.name,
+                            line: { color: padd.color, width: 2 },
+                            mode: 'lines'
+                        });
+                    }
+                }
+
+                if (paddTraces.length > 0) {
+                    Plotly.newPlot('padd-consolidated-chart', paddTraces, {
+                        ...baseLayout,
+                        showlegend: true,
+                        legend: { orientation: 'h', y: -0.15, font: { size: 9 } },
+                        xaxis: { ...baseLayout.xaxis, title: { text: 'Week of Year', font: { size: 10 } }, ...monthTicks },
+                        yaxis: { ...baseLayout.yaxis, title: { text: 'Million Barrels', font: { size: 10 } } },
+                        hovermode: 'x unified'
+                    });
+                }
+            }, 200);
+
             } catch (e) {
                 console.error('Error loading petroleum:', e);
             }
@@ -2523,7 +2875,7 @@
             }
         }
 
-        // ISM PMI
+        // Manufacturing Health (formerly ISM PMI - ISM data removed from FRED in 2016)
         async function loadISMPMI() {
             try {
                 const res = await fetch('/api/ism-pmi');
@@ -2532,32 +2884,31 @@
 
                 const dates = data.map(d => d.date);
 
-                // ISM PMI Components chart
+                // Industrial Production & Capacity Utilization chart (dual axis)
                 Plotly.newPlot('ism-pmi-chart', [
-                    { x: dates, y: data.map(d => d.ism_mfg_pmi), name: 'PMI', line: { color: '#1a2942', width: 2 } },
-                    { x: dates, y: data.map(d => d.ism_mfg_new_orders), name: 'New Orders', line: { color: '#3b82f6', width: 1.5 } },
-                    { x: dates, y: data.map(d => d.ism_mfg_production), name: 'Production', line: { color: '#0d7d4d', width: 1.5 } },
-                    { x: dates, y: data.map(d => 50), name: '50 Line', line: { color: '#c41e3a', width: 1, dash: 'dash' }, showlegend: false }
+                    { x: dates, y: data.map(d => d.industrial_prod), name: 'Industrial Production', line: { color: '#1a2942', width: 2 }, yaxis: 'y' },
+                    { x: dates, y: data.map(d => d.industrial_prod_mfg), name: 'Manufacturing IP', line: { color: '#3b82f6', width: 1.5 }, yaxis: 'y' },
+                    { x: dates, y: data.map(d => d.capacity_util_mfg), name: 'Capacity Util %', line: { color: '#0d7d4d', width: 2 }, yaxis: 'y2' }
                 ], {
                     ...baseLayout,
                     showlegend: true,
                     legend: { orientation: 'h', y: -0.2, font: { size: 10 } },
-                    yaxis: { ...baseLayout.yaxis, title: { text: 'Index', font: { size: 10 } } }
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'Index', font: { size: 10 } }, side: 'left' },
+                    yaxis2: { title: { text: 'Percent', font: { size: 10 } }, overlaying: 'y', side: 'right', showgrid: false }
                 });
 
-                // ISM Services vs Manufacturing chart
+                // Durable Goods Orders chart
                 Plotly.newPlot('ism-services-chart', [
-                    { x: dates, y: data.map(d => d.ism_mfg_pmi), name: 'Manufacturing', line: { color: '#1a2942', width: 2 } },
-                    { x: dates, y: data.map(d => d.ism_services), name: 'Services', line: { color: '#b8860b', width: 2 } },
-                    { x: dates, y: data.map(d => 50), name: '50 Line', line: { color: '#c41e3a', width: 1, dash: 'dash' }, showlegend: false }
+                    { x: dates, y: data.map(d => d.durable_goods_orders / 1000), name: 'Durable Goods Orders', line: { color: '#1a2942', width: 2 } },
+                    { x: dates, y: data.map(d => d.new_orders / 1000), name: 'Capital Goods Orders', line: { color: '#b8860b', width: 2 } }
                 ], {
                     ...baseLayout,
                     showlegend: true,
                     legend: { orientation: 'h', y: -0.2, font: { size: 10 } },
-                    yaxis: { ...baseLayout.yaxis, title: { text: 'Index', font: { size: 10 } } }
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'Billions $', font: { size: 10 } } }
                 });
             } catch (e) {
-                console.error('Error loading ISM PMI:', e);
+                console.error('Error loading Manufacturing Health:', e);
             }
         }
 
@@ -2805,6 +3156,107 @@
             }
         }
 
+        // Crude Oil Production & Supply Adjustment
+        async function loadCrudeProduction() {
+            try {
+                const res = await fetch('/api/petroleum/crude-production');
+                const data = await res.json();
+                if (!data.length) return;
+
+                const dates = data.map(d => d.date);
+
+                // PSM methodology change annotations (vertical lines only, no numbered labels)
+                const annotations = [];
+
+                // Vertical lines for PSM changes
+                const shapes = [
+                    {
+                        type: 'line',
+                        x0: '2023-08-01',
+                        x1: '2023-08-01',
+                        y0: 0,
+                        y1: 1,
+                        xref: 'x',
+                        yref: 'paper',
+                        line: { color: '#c41e3a', width: 1, dash: 'dot' }
+                    },
+                    {
+                        type: 'line',
+                        x0: '2025-10-01',
+                        x1: '2025-10-01',
+                        y0: 0,
+                        y1: 1,
+                        xref: 'x',
+                        yref: 'paper',
+                        line: { color: '#c41e3a', width: 1, dash: 'dot' }
+                    }
+                ];
+
+                Plotly.newPlot('crude-production-chart', [
+                    {
+                        x: dates,
+                        y: data.map(d => d.production_smooth),
+                        name: 'Production (smoothed)',
+                        line: { color: '#1a2942', width: 2 },
+                        yaxis: 'y'
+                    },
+                    {
+                        x: dates,
+                        y: data.map(d => d.production_mmbpd),
+                        name: 'Production (raw)',
+                        line: { color: '#1a2942', width: 1, dash: 'dot' },
+                        yaxis: 'y',
+                        opacity: 0.5
+                    },
+                    {
+                        x: dates,
+                        y: data.map(d => d.adjustment_smooth),
+                        name: 'Adjustment (smoothed)',
+                        line: { color: '#b8860b', width: 2 },
+                        yaxis: 'y2'
+                    },
+                    {
+                        x: dates,
+                        y: data.map(d => d.adjustment_mmbpd),
+                        name: 'Adjustment (raw)',
+                        line: { color: '#b8860b', width: 1, dash: 'dot' },
+                        yaxis: 'y2',
+                        opacity: 0.5
+                    }
+                ], {
+                    ...baseLayout,
+                    showlegend: true,
+                    legend: { orientation: 'h', y: -0.15, font: { size: 9 } },
+                    yaxis: {
+                        ...baseLayout.yaxis,
+                        title: { text: 'Production (MMbpd)', font: { size: 10 } },
+                        side: 'left'
+                    },
+                    yaxis2: {
+                        title: { text: 'Adjustment (MMbpd)', font: { size: 10 } },
+                        overlaying: 'y',
+                        side: 'right',
+                        showgrid: false
+                    },
+                    shapes: shapes,
+                    annotations: [
+                        {
+                            x: 0.01,
+                            y: -0.25,
+                            xref: 'paper',
+                            yref: 'paper',
+                            text: 'Vertical lines: PSM methodology changes (Aug 2023, Oct 2025)',
+                            showarrow: false,
+                            font: { size: 8, color: '#666' },
+                            align: 'left'
+                        }
+                    ]
+                });
+            } catch (e) {
+                console.error('Error loading crude production:', e);
+            }
+        }
+
         // Baltic Dry Index
         async function loadBalticDry() {
             try {
@@ -2826,6 +3278,219 @@
             } catch (e) {
                 console.error('Error loading Baltic Dry:', e);
             }
+        }
+
+        // Crack Spreads
+        async function loadCrackSpreads() {
+            try {
+                const res = await fetch('/api/petroleum/crack-spreads');
+                const data = await res.json();
+                if (!data.length || data.error) return;
+
+                const dates = data.map(d => d.date);
+
+                // 3-2-1 Crack Spread chart
+                Plotly.newPlot('crack-321-chart', [
+                    { x: dates, y: data.map(d => d.crack_321), name: '3-2-1 Crack', line: { color: '#1a2942', width: 2 } },
+                    { x: dates, y: data.map(d => d.crack_321_ma20), name: '20-Day MA', line: { color: '#b8860b', width: 1.5, dash: 'dot' } }
+                ], {
+                    ...baseLayout,
+                    showlegend: true,
+                    legend: { orientation: 'h', y: -0.15, font: { size: 10 } },
+                    yaxis: { ...baseLayout.yaxis, title: { text: '$/barrel', font: { size: 10 } } }
+                });
+
+                // Brent-WTI Spread chart
+                Plotly.newPlot('brent-wti-chart', [
+                    { x: dates, y: data.map(d => d.brent_wti_spread), name: 'Brent-WTI', line: { color: '#1a2942', width: 2 } },
+                    { x: dates, y: data.map(d => d.brent_wti_spread_ma20), name: '20-Day MA', line: { color: '#b8860b', width: 1.5, dash: 'dot' } },
+                    { x: dates, y: data.map(d => 0), name: 'Zero', line: { color: '#c41e3a', width: 1, dash: 'dash' }, showlegend: false }
+                ], {
+                    ...baseLayout,
+                    showlegend: true,
+                    legend: { orientation: 'h', y: -0.15, font: { size: 10 } },
+                    yaxis: { ...baseLayout.yaxis, title: { text: '$/barrel', font: { size: 10 } }, zeroline: true, zerolinecolor: '#c41e3a' }
+                });
+
+                // Update key metrics
+                const latest = data[data.length - 1];
+                const prev = data[data.length - 2];
+                if (latest && latest.crack_321) {
+                    document.getElementById('km-crack').textContent = '$' + latest.crack_321.toFixed(1);
+                    const chg = latest.crack_321 - (prev?.crack_321 || latest.crack_321);
+                    const chgEl = document.getElementById('km-crack-chg');
+                    chgEl.textContent = (chg >= 0 ? '+' : '') + chg.toFixed(1);
+                    chgEl.className = 'key-metric-change ' + (chg >= 0 ? 'up' : 'down');
+                }
+            } catch (e) {
+                console.error('Error loading crack spreads:', e);
+            }
+        }
+
+        // Days of Supply
+        async function loadDaysOfSupply() {
+            try {
+                const res = await fetch('/api/petroleum/days-of-supply');
+                const data = await res.json();
+                if (!data.length || data.error) return;
+
+                const dates = data.map(d => d.date);
+
+                // Helper to create days of supply chart
+                const createDOSChart = (chartId, daysCol, avgCol) => {
+                    const hasDays = data.some(d => d[daysCol]);
+                    if (!hasDays) return;
+
+                    Plotly.newPlot(chartId, [
+                        { x: dates, y: data.map(d => d[daysCol]), name: 'Current', line: { color: '#1a2942', width: 2 } },
+                        { x: dates, y: data.map(d => d[avgCol]), name: '5yr Avg', line: { color: '#64748b', width: 1.5, dash: 'dash' } }
+                    ], {
+                        ...baseLayout,
+                        showlegend: true,
+                        legend: { orientation: 'h', y: -0.15, font: { size: 10 } },
+                        yaxis: { ...baseLayout.yaxis, title: { text: 'Days', font: { size: 10 } } }
+                    });
+                };
+
+                createDOSChart('crude-dos-chart', 'crude_US_days', 'crude_US_days_5yr_avg');
+                createDOSChart('gasoline-dos-chart', 'gasoline_US_days', 'gasoline_US_days_5yr_avg');
+                createDOSChart('distillate-dos-chart', 'distillate_US_days', 'distillate_US_days_5yr_avg');
+            } catch (e) {
+                console.error('Error loading days of supply:', e);
+            }
+        }
+
+        // Energy ETF Positioning Proxy (Volume with 50-day MA)
+        async function loadPositioning() {
+            try {
+                const res = await fetch('/api/cftc-positioning');
+                const data = await res.json();
+                if (!data.length || data.error) return;
+
+                // Filter to rows with ETF volume data
+                const usoData = data.filter(d => d.uso_volume !== null && d.uso_volume !== undefined);
+                const ungData = data.filter(d => d.ung_volume !== null && d.ung_volume !== undefined);
+
+                // Calculate 50-day moving average
+                const calcMA = (arr, period) => {
+                    return arr.map((_, i) => {
+                        if (i < period - 1) return null;
+                        const slice = arr.slice(i - period + 1, i + 1);
+                        return slice.reduce((a, b) => a + b, 0) / period;
+                    });
+                };
+
+                // USO Volume chart
+                if (usoData.length > 0) {
+                    const usoDates = usoData.map(d => d.date);
+                    const usoVol = usoData.map(d => d.uso_volume / 1e6);
+                    const usoMA50 = calcMA(usoVol, 50);
+
+                    Plotly.newPlot('uso-positioning-chart', [
+                        { x: usoDates, y: usoVol, name: 'Volume', type: 'bar', marker: { color: 'rgba(26, 41, 66, 0.4)' } },
+                        { x: usoDates, y: usoMA50, name: '50-day MA', line: { color: '#b8860b', width: 2 } }
+                    ], {
+                        ...baseLayout,
+                        showlegend: true,
+                        legend: { orientation: 'h', y: -0.15, font: { size: 9 } },
+                        yaxis: { ...baseLayout.yaxis, title: { text: 'Volume (M)', font: { size: 10 } } },
+                        bargap: 0.1
+                    });
+                }
+
+                // UNG Volume chart
+                if (ungData.length > 0) {
+                    const ungDates = ungData.map(d => d.date);
+                    const ungVol = ungData.map(d => d.ung_volume / 1e6);
+                    const ungMA50 = calcMA(ungVol, 50);
+
+                    Plotly.newPlot('ung-positioning-chart', [
+                        { x: ungDates, y: ungVol, name: 'Volume', type: 'bar', marker: { color: 'rgba(26, 41, 66, 0.4)' } },
+                        { x: ungDates, y: ungMA50, name: '50-day MA', line: { color: '#b8860b', width: 2 } }
+                    ], {
+                        ...baseLayout,
+                        showlegend: true,
+                        legend: { orientation: 'h', y: -0.15, font: { size: 9 } },
+                        yaxis: { ...baseLayout.yaxis, title: { text: 'Volume (M)', font: { size: 10 } } },
+                        bargap: 0.1
+                    });
+                }
+            } catch (e) {
+                console.error('Error loading positioning:', e);
+            }
+        }
+
+        // Key Metrics Bar
+        async function loadKeyMetrics() {
+            try {
+                // Load WTI from crack spreads data
+                const crackRes = await fetch('/api/petroleum/crack-spreads');
+                const crackData = await crackRes.json();
+                if (crackData.length && !crackData.error) {
+                    const latest = crackData[crackData.length - 1];
+                    const prev = crackData[crackData.length - 2];
+                    if (latest?.wti) {
+                        document.getElementById('km-wti').textContent = '$' + latest.wti.toFixed(1);
+                        const chg = latest.wti - (prev?.wti || latest.wti);
+                        const chgEl = document.getElementById('km-wti-chg');
+                        chgEl.textContent = (chg >= 0 ? '+' : '') + chg.toFixed(2);
+                        chgEl.className = 'key-metric-change ' + (chg >= 0 ? 'up' : 'down');
+                    }
+                }
+
+                // Load DXY
+                const dxyRes = await fetch('/api/dxy');
+                const dxyData = await dxyRes.json();
+                if (dxyData.length && !dxyData.error) {
+                    const latest = dxyData[dxyData.length - 1];
+                    const prev = dxyData[dxyData.length - 2];
+                    if (latest?.dxy) {
+                        document.getElementById('km-dxy').textContent = latest.dxy.toFixed(1);
+                        const chg = latest.dxy - (prev?.dxy || latest.dxy);
+                        const chgEl = document.getElementById('km-dxy-chg');
+                        chgEl.textContent = (chg >= 0 ? '+' : '') + chg.toFixed(2);
+                        chgEl.className = 'key-metric-change ' + (chg >= 0 ? 'up' : 'down');
+                    }
+                }
+
+                // Load 10Y Yield
+                const yieldsRes = await fetch('/api/treasury-yields');
+                const yieldsData = await yieldsRes.json();
+                if (yieldsData.length && !yieldsData.error) {
+                    const latest = yieldsData[yieldsData.length - 1];
+                    const prev = yieldsData[yieldsData.length - 2];
+                    if (latest?.yield_10y) {
+                        document.getElementById('km-10y').textContent = latest.yield_10y.toFixed(2) + '%';
+                        const chg = latest.yield_10y - (prev?.yield_10y || latest.yield_10y);
+                        const chgEl = document.getElementById('km-10y-chg');
+                        chgEl.textContent = (chg >= 0 ? '+' : '') + (chg * 100).toFixed(0) + 'bp';
+                        chgEl.className = 'key-metric-change ' + (chg >= 0 ? 'up' : 'down');
+                    }
+                }
+
+                // Load Jobless Claims
+                const claimsRes = await fetch('/api/jobless-claims');
+                const claimsData = await claimsRes.json();
+                if (claimsData.length && !claimsData.error) {
+                    const latest = claimsData[claimsData.length - 1];
+                    const prev = claimsData[claimsData.length - 2];
+                    if (latest?.initial_claims) {
+                        document.getElementById('km-claims').textContent = (latest.initial_claims / 1000).toFixed(0) + 'K';
+                        const chg = latest.initial_claims - (prev?.initial_claims || latest.initial_claims);
+                        const chgEl = document.getElementById('km-claims-chg');
+                        chgEl.textContent = (chg >= 0 ? '+' : '') + (chg / 1000).toFixed(0) + 'K';
+                        chgEl.className = 'key-metric-change ' + (chg <= 0 ? 'up' : 'down'); // Lower claims is good
+                    }
+                }
+            } catch (e) {
+                console.error('Error loading key metrics:', e);
+            }
+        }
+
+        // Mobile Navigation Toggle
+        function toggleMobileNav() {
+            const nav = document.getElementById('main-nav');
+            nav.classList.toggle('mobile-open');
         }
 
         async function loadStatus() {
@@ -2861,7 +3526,12 @@
         loadCreditSpreads();
         loadDXY();
         loadNatGasInventories();
+        loadCrudeProduction();
         loadBalticDry();
+        loadCrackSpreads();
+        loadDaysOfSupply();
+        loadPositioning();
+        loadKeyMetrics();
 
         // Show overview section by default
         showSection('overview');

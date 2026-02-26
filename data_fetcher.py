@@ -1423,16 +1423,18 @@ def fetch_jobless_claims():
 
 
 def fetch_ism_pmi():
-    """Fetch ISM Manufacturing and Services PMI from FRED"""
-    print("Fetching ISM PMI data...")
+    """Fetch Manufacturing Health Indicators from FRED (ISM data removed from FRED in 2016)"""
+    print("Fetching Manufacturing Health data...")
 
+    # Note: ISM PMI data was removed from FRED in June 2016
+    # Using alternative manufacturing health indicators instead
     series = {
-        'ism_manufacturing': 'MANEMP',      # ISM Manufacturing: Employment
-        'ism_mfg_pmi': 'NAPM',              # ISM Manufacturing PMI
-        'ism_mfg_new_orders': 'NAPMNOI',    # ISM Manufacturing New Orders
-        'ism_mfg_production': 'NAPMPI',     # ISM Manufacturing Production
-        'ism_mfg_prices': 'NAPMPRI',        # ISM Manufacturing Prices
-        'ism_services': 'NMFCI',            # ISM Non-Manufacturing (Services) Index
+        'mfg_employment': 'MANEMP',         # Manufacturing Employment (thousands)
+        'industrial_prod_mfg': 'IPMAN',     # Industrial Production: Manufacturing (index)
+        'capacity_util_mfg': 'MCUMFN',      # Capacity Utilization: Manufacturing (percent)
+        'durable_goods_orders': 'DGORDER',  # Manufacturers' New Orders: Durable Goods (millions)
+        'new_orders': 'NEWORDER',           # Manufacturers' New Orders: Nondefense Capital Goods (millions)
+        'industrial_prod': 'INDPRO',        # Industrial Production Total Index
     }
 
     all_data = {}
@@ -1732,6 +1734,85 @@ def fetch_natgas_inventories():
     return df
 
 
+def fetch_crude_production():
+    """Fetch U.S. Crude Oil Production and Supply Adjustment from EIA PSM (monthly)"""
+    print("Fetching crude oil production & supply adjustment...")
+
+    # EIA API v2 PSM endpoint with series facet
+    url = 'https://api.eia.gov/v2/petroleum/sum/snd/data/'
+
+    series = {
+        'production_kbd': 'MCRFPUS2',      # U.S. Field Production of Crude Oil (kb/d)
+        'adjustment_kbd': 'MCRUA_NUS_2',   # U.S. Supply Adjustment of Crude Oil (kb/d)
+    }
+
+    all_data = {}
+
+    for col_name, series_id in series.items():
+        params = {
+            'api_key': API_KEYS.get('EIA', ''),
+            'frequency': 'monthly',
+            'data[0]': 'value',
+            'facets[series][]': series_id,
+            'sort[0][column]': 'period',
+            'sort[0][direction]': 'desc',
+            'length': 120  # Get ~10 years of monthly data
+        }
+
+        try:
+            response = requests.get(url, params=params, timeout=30)
+            data = response.json()
+
+            if 'response' in data and 'data' in data['response']:
+                rows = data['response']['data']
+                print(f"  {series_id}: {len(rows)} observations")
+
+                for row in rows:
+                    period = row.get('period', '')
+                    value = row.get('value')
+                    if period and value is not None:
+                        if period not in all_data:
+                            all_data[period] = {'date': period}
+                        try:
+                            all_data[period][col_name] = float(value)
+                        except (ValueError, TypeError):
+                            pass
+            else:
+                print(f"  Warning: No data for {series_id}")
+        except Exception as e:
+            print(f"  Error fetching {series_id}: {e}")
+
+    if not all_data:
+        print("  Warning: No crude production data retrieved")
+        return pd.DataFrame()
+
+    df = pd.DataFrame(list(all_data.values()))
+    df['date'] = pd.to_datetime(df['date'])
+    df = df.sort_values('date')
+
+    # Convert from kb/d to MMbpd (divide by 1000)
+    if 'production_kbd' in df.columns:
+        df['production_mmbpd'] = df['production_kbd'] / 1000
+    if 'adjustment_kbd' in df.columns:
+        df['adjustment_mmbpd'] = df['adjustment_kbd'] / 1000
+
+    # Apply 3-month centered rolling mean for smoothing
+    if 'production_mmbpd' in df.columns:
+        df['production_smooth'] = df['production_mmbpd'].rolling(window=3, center=True, min_periods=1).mean()
+    if 'adjustment_mmbpd' in df.columns:
+        df['adjustment_smooth'] = df['adjustment_mmbpd'].rolling(window=3, center=True, min_periods=1).mean()
+
+    # Keep only last 36 months for the chart
+    df = df.tail(36).reset_index(drop=True)
+
+    df['year'] = df['date'].dt.year
+    df['month'] = df['date'].dt.month
+
+    df.to_csv(DATA_DIR / 'crude_production.csv', index=False)
+    print(f"  Saved {len(df)} rows to crude_production.csv")
+    return df
+
+
 def fetch_baltic_dry():
     """Fetch Baltic Dry Index from Yahoo Finance"""
     print("Fetching Baltic Dry Index...")
@@ -1782,8 +1863,350 @@ def fetch_baltic_dry():
     return df
 
 
+def fetch_days_of_supply():
+    """Calculate days of supply for petroleum products using inventory and demand data"""
+    print("Fetching days of supply data...")
+
+    # Read existing inventory and weekly balance data
+    inv_file = DATA_DIR / 'petroleum_inventories.csv'
+    balance_file = DATA_DIR / 'weekly_balance.csv'
+
+    if not inv_file.exists() or not balance_file.exists():
+        print("  Missing required data files - run petroleum fetch first")
+        return pd.DataFrame()
+
+    inv_df = pd.read_csv(inv_file)
+    balance_df = pd.read_csv(balance_file)
+
+    # Normalize column names - weekly_balance uses 'period', inventories uses 'date'
+    if 'period' in balance_df.columns:
+        balance_df = balance_df.rename(columns={'period': 'date'})
+
+    # Pivot weekly balance data - each row has product column with values like 'crude_US'
+    # demand is in 'refinery_input' for crude, 'product_supplied' for products
+    products_config = {
+        'crude_US': {'inv_col': 'crude_US', 'balance_product': 'crude_US', 'demand_col': 'refinery_input'},
+        'gasoline_US': {'inv_col': 'total_gasoline_US', 'balance_product': 'gasoline_US', 'demand_col': 'product_supplied'},
+        'distillate_US': {'inv_col': 'distillate_US', 'balance_product': 'distillate_US', 'demand_col': 'product_supplied'},
+    }
+
+    results = []
+    for date in inv_df['date'].unique():
+        inv_row = inv_df[inv_df['date'] == date]
+
+        if inv_row.empty:
+            continue
+
+        row_data = {'date': date}
+
+        for product, cols in products_config.items():
+            # Get inventory value directly from inventory dataframe (wide format)
+            inv_val = inv_row[cols['inv_col']].values[0] if cols['inv_col'] in inv_row.columns else None
+
+            # Get demand from weekly balance (long format - need to filter by product)
+            bal_product = balance_df[(balance_df['date'] == date) & (balance_df['product'] == cols['balance_product'])]
+            demand_val = None
+            if not bal_product.empty and cols['demand_col'] in bal_product.columns:
+                demand_val = bal_product[cols['demand_col']].values[0]
+
+            if inv_val and demand_val and pd.notna(inv_val) and pd.notna(demand_val) and demand_val > 0:
+                # Inventory is in million barrels, demand is in MMbpd
+                # Days of supply = inventory / daily demand
+                days = inv_val / demand_val
+                row_data[f'{product}_days'] = round(days, 1)
+                row_data[f'{product}_inv'] = inv_val
+                row_data[f'{product}_demand'] = demand_val
+
+        if len(row_data) > 1:
+            results.append(row_data)
+
+    if not results:
+        print("  No days of supply data calculated")
+        return pd.DataFrame()
+
+    df = pd.DataFrame(results)
+    df['date'] = pd.to_datetime(df['date'])
+    df = df.sort_values('date')
+
+    # Calculate 5-year averages for each week of year
+    df['week'] = df['date'].dt.isocalendar().week
+    df['year'] = df['date'].dt.year
+
+    for product in products_config.keys():
+        days_col = f'{product}_days'
+        if days_col in df.columns:
+            # Calculate 5-year average by week
+            five_yr_avg = df[df['year'] < df['year'].max()].groupby('week')[days_col].mean()
+            df[f'{product}_days_5yr_avg'] = df['week'].map(five_yr_avg)
+            df[f'{product}_days_vs_avg'] = df[days_col] - df[f'{product}_days_5yr_avg']
+
+    df.to_csv(DATA_DIR / 'days_of_supply.csv', index=False)
+    print(f"  Saved {len(df)} rows to days_of_supply.csv")
+    return df
+
+
+def fetch_crack_spreads():
+    """Fetch crack spread data (gasoline, heating oil vs crude)"""
+    print("Fetching crack spreads...")
+
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=3*365)
+
+    # Fetch futures prices from Yahoo Finance
+    symbols = {
+        'wti': 'CL=F',      # WTI Crude Oil Futures
+        'rbob': 'RB=F',     # RBOB Gasoline Futures
+        'ho': 'HO=F',       # Heating Oil Futures
+        'brent': 'BZ=F',    # Brent Crude Futures
+    }
+
+    all_data = {}
+    for name, symbol in symbols.items():
+        try:
+            ticker = yf.Ticker(symbol)
+            hist = ticker.history(start=start_date, end=end_date, interval='1d')
+            if len(hist) > 0:
+                for date, row in hist.iterrows():
+                    date_str = date.strftime('%Y-%m-%d')
+                    if date_str not in all_data:
+                        all_data[date_str] = {'date': date_str}
+                    all_data[date_str][name] = row['Close']
+                print(f"  {name}: {len(hist)} records")
+            else:
+                print(f"  {name}: No data")
+        except Exception as e:
+            print(f"  Error fetching {name}: {e}")
+        time.sleep(0.5)
+
+    if not all_data:
+        print("  No crack spread data fetched")
+        return pd.DataFrame()
+
+    df = pd.DataFrame(list(all_data.values()))
+    df['date'] = pd.to_datetime(df['date'])
+    df = df.sort_values('date')
+
+    # Calculate crack spreads (prices are per gallon for products, per barrel for crude)
+    # 1 barrel = 42 gallons
+    if 'wti' in df.columns and 'rbob' in df.columns:
+        # Gasoline crack = RBOB * 42 - WTI
+        df['gasoline_crack'] = (df['rbob'] * 42) - df['wti']
+
+    if 'wti' in df.columns and 'ho' in df.columns:
+        # Heating oil crack = HO * 42 - WTI
+        df['ho_crack'] = (df['ho'] * 42) - df['wti']
+
+    if 'wti' in df.columns and 'rbob' in df.columns and 'ho' in df.columns:
+        # 3-2-1 crack spread = (2 * RBOB + HO) * 42 / 3 - WTI
+        df['crack_321'] = ((2 * df['rbob'] + df['ho']) * 42 / 3) - df['wti']
+
+    if 'brent' in df.columns and 'wti' in df.columns:
+        # Brent-WTI spread
+        df['brent_wti_spread'] = df['brent'] - df['wti']
+
+    # Add moving averages
+    for col in ['crack_321', 'gasoline_crack', 'ho_crack', 'brent_wti_spread']:
+        if col in df.columns:
+            df[f'{col}_ma20'] = df[col].rolling(window=20, min_periods=1).mean()
+
+    df['year'] = df['date'].dt.year
+    df['month'] = df['date'].dt.month
+
+    df.to_csv(DATA_DIR / 'crack_spreads.csv', index=False)
+    print(f"  Saved {len(df)} rows to crack_spreads.csv")
+    return df
+
+
+def fetch_rig_count():
+    """Fetch Baker Hughes rig count data from EIA"""
+    print("Fetching Baker Hughes rig count...")
+
+    # EIA provides rig count data
+    url = 'https://api.eia.gov/v2/petroleum/dril/wply/data/'
+
+    params = {
+        'api_key': API_KEYS.get('EIA', ''),
+        'frequency': 'weekly',
+        'data[0]': 'value',
+        'facets[duoarea][]': 'NUS',  # National US
+        'sort[0][column]': 'period',
+        'sort[0][direction]': 'desc',
+        'length': 520  # ~10 years weekly
+    }
+
+    all_data = {}
+    try:
+        response = requests.get(url, params=params, timeout=30)
+        data = response.json()
+
+        if 'response' in data and 'data' in data['response']:
+            rows = data['response']['data']
+            print(f"  EIA rig count: {len(rows)} observations")
+
+            for row in rows:
+                period = row.get('period', '')
+                value = row.get('value')
+                product = row.get('product', '')
+
+                if period and value is not None:
+                    if period not in all_data:
+                        all_data[period] = {'date': period}
+
+                    # Map product codes to column names
+                    if product == 'EP00':  # Crude Oil
+                        all_data[period]['oil_rigs'] = float(value)
+                    elif product == 'ENG':  # Natural Gas
+                        all_data[period]['gas_rigs'] = float(value)
+    except Exception as e:
+        print(f"  Error fetching rig count: {e}")
+
+    if not all_data:
+        print("  No rig count data fetched")
+        return pd.DataFrame()
+
+    df = pd.DataFrame(list(all_data.values()))
+    df['date'] = pd.to_datetime(df['date'])
+    df = df.sort_values('date')
+
+    # Calculate total rigs
+    if 'oil_rigs' in df.columns and 'gas_rigs' in df.columns:
+        df['total_rigs'] = df['oil_rigs'].fillna(0) + df['gas_rigs'].fillna(0)
+
+    # Calculate changes
+    for col in ['oil_rigs', 'gas_rigs', 'total_rigs']:
+        if col in df.columns:
+            df[f'{col}_chg_wow'] = df[col].diff()
+            df[f'{col}_chg_yoy'] = df[col].diff(52)
+
+    df['year'] = df['date'].dt.year
+    df['week'] = df['date'].dt.isocalendar().week
+
+    df.to_csv(DATA_DIR / 'rig_count.csv', index=False)
+    print(f"  Saved {len(df)} rows to rig_count.csv")
+    return df
+
+
+def fetch_cftc_positioning():
+    """Fetch CFTC Commitment of Traders positioning data from CFTC public API"""
+    print("Fetching CFTC COT positioning data...")
+
+    # CFTC Disaggregated Futures Only Report API
+    # https://publicreporting.cftc.gov/resource/72hh-3qpy.json (Disaggregated)
+    base_url = 'https://publicreporting.cftc.gov/resource/72hh-3qpy.json'
+
+    # Contracts we want (CFTC contract market codes)
+    contracts = {
+        'wti_oil': {'name': 'CRUDE OIL, LIGHT SWEET', 'market': '067651'},
+        'nat_gas': {'name': 'NATURAL GAS', 'market': '023651'},
+        'rbob_gas': {'name': 'GASOLINE', 'market': '111659'},
+    }
+
+    all_data = {}
+
+    for contract_key, contract_info in contracts.items():
+        try:
+            # Query CFTC API - get last 3 years of weekly data
+            params = {
+                '$where': f"cftc_contract_market_code = '{contract_info['market']}'",
+                '$order': 'report_date_as_yyyy_mm_dd DESC',
+                '$limit': 156  # ~3 years of weekly data
+            }
+
+            response = requests.get(base_url, params=params, timeout=30)
+
+            if response.status_code == 200:
+                data = response.json()
+                print(f"  {contract_key}: {len(data)} observations")
+
+                for row in data:
+                    date = row.get('report_date_as_yyyy_mm_dd', '')
+                    if not date:
+                        continue
+
+                    if date not in all_data:
+                        all_data[date] = {'date': date}
+
+                    # Managed Money positions (the key speculative category)
+                    mm_long = float(row.get('m_money_positions_long_all', 0) or 0)
+                    mm_short = float(row.get('m_money_positions_short_all', 0) or 0)
+                    mm_net = mm_long - mm_short
+
+                    # Open interest for percentage calculations
+                    oi = float(row.get('open_interest_all', 1) or 1)
+
+                    all_data[date][f'{contract_key}_mm_long'] = mm_long
+                    all_data[date][f'{contract_key}_mm_short'] = mm_short
+                    all_data[date][f'{contract_key}_mm_net'] = mm_net
+                    all_data[date][f'{contract_key}_mm_net_pct'] = (mm_net / oi) * 100 if oi > 0 else 0
+                    all_data[date][f'{contract_key}_oi'] = oi
+            else:
+                print(f"  {contract_key}: API error {response.status_code}")
+
+        except Exception as e:
+            print(f"  Error fetching {contract_key}: {e}")
+
+        time.sleep(0.3)
+
+    # Also fetch ETF volume as supplementary data
+    print("  Fetching ETF volume data...")
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=3*365)
+
+    etf_symbols = {'uso': 'USO', 'ung': 'UNG'}
+    for name, symbol in etf_symbols.items():
+        try:
+            ticker = yf.Ticker(symbol)
+            hist = ticker.history(start=start_date, end=end_date, interval='1d')
+            if len(hist) > 0:
+                for date, row in hist.iterrows():
+                    date_str = date.strftime('%Y-%m-%d')
+                    if date_str not in all_data:
+                        all_data[date_str] = {'date': date_str}
+                    all_data[date_str][f'{name}_price'] = row['Close']
+                    all_data[date_str][f'{name}_volume'] = row['Volume']
+        except Exception as e:
+            print(f"  Error fetching {name} ETF: {e}")
+        time.sleep(0.3)
+
+    if not all_data:
+        print("  No CFTC data fetched")
+        return pd.DataFrame()
+
+    df = pd.DataFrame(list(all_data.values()))
+    # Handle mixed date formats (CFTC uses YYYY-MM-DD, yfinance might use different)
+    df['date'] = pd.to_datetime(df['date'], format='mixed')
+    df = df.sort_values('date')
+
+    # Calculate percentile ranks for net positioning (to identify extremes)
+    for contract_key in contracts.keys():
+        net_col = f'{contract_key}_mm_net'
+        if net_col in df.columns:
+            # Percentile rank over rolling 2-year window
+            df[f'{contract_key}_mm_net_pct_rank'] = df[net_col].rolling(window=104, min_periods=20).apply(
+                lambda x: pd.Series(x).rank(pct=True).iloc[-1] * 100, raw=False
+            )
+
+    # Calculate ETF volume percentiles
+    for etf in ['uso', 'ung']:
+        vol_col = f'{etf}_volume'
+        if vol_col in df.columns:
+            df[f'{etf}_vol_ma20'] = df[vol_col].rolling(window=20, min_periods=1).mean()
+            df[f'{etf}_vol_pct'] = df[vol_col].rolling(window=252, min_periods=20).apply(
+                lambda x: pd.Series(x).rank(pct=True).iloc[-1] * 100, raw=False
+            )
+
+    df['year'] = df['date'].dt.year
+    df['week'] = df['date'].dt.isocalendar().week
+
+    df.to_csv(DATA_DIR / 'cftc_positioning.csv', index=False)
+    print(f"  Saved {len(df)} rows to cftc_positioning.csv")
+    return df
+
+
 def fetch_all():
-    """Fetch all data and save to CSV"""
+    """Fetch all data and save to CSV with parallel execution"""
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
     print("=" * 50)
     print("Macro Data Fetcher")
     print(f"Timestamp: {datetime.now().isoformat()}")
@@ -1791,35 +2214,70 @@ def fetch_all():
 
     DATA_DIR.mkdir(exist_ok=True)
 
-    fetch_gdp_components()
-    fetch_gdp_contributions()
-    fetch_trade_detail()
-    fetch_trade_categories()
-    fetch_detailed_trade()
-    fetch_services_trade()
-    fetch_commodities()
-    fetch_petroleum_inventories()
-    fetch_supply_demand()
-    fetch_weekly_balance()
-    fetch_treasury_withholding()
-    fetch_transportation()
-    fetch_refinery_runs()
-    fetch_employment()
-    fetch_jolts()
-    fetch_cpi()
-    fetch_ppi()
-    fetch_market_prices()
-    fetch_oil_stocks()
-    fetch_treasury_yields()
-    fetch_jobless_claims()
-    fetch_ism_pmi()
-    fetch_housing()
-    fetch_retail_sales()
-    fetch_consumer_sentiment()
-    fetch_credit_spreads()
-    fetch_dxy()
-    fetch_natgas_inventories()
-    fetch_baltic_dry()
+    # Group 1: Independent API fetchers (can run in parallel)
+    parallel_fetchers = [
+        fetch_gdp_components,
+        fetch_gdp_contributions,
+        fetch_trade_detail,
+        fetch_trade_categories,
+        fetch_detailed_trade,
+        fetch_services_trade,
+        fetch_commodities,
+        fetch_petroleum_inventories,
+        fetch_supply_demand,
+        fetch_weekly_balance,
+        fetch_treasury_withholding,
+        fetch_transportation,
+        fetch_refinery_runs,
+        fetch_employment,
+        fetch_jolts,
+        fetch_cpi,
+        fetch_ppi,
+        fetch_treasury_yields,
+        fetch_jobless_claims,
+        fetch_ism_pmi,
+        fetch_housing,
+        fetch_retail_sales,
+        fetch_consumer_sentiment,
+        fetch_natgas_inventories,
+        fetch_rig_count,
+        fetch_crude_production,
+    ]
+
+    # Group 2: Yahoo Finance fetchers (rate limited, run with fewer workers)
+    yfinance_fetchers = [
+        fetch_market_prices,
+        fetch_oil_stocks,
+        fetch_credit_spreads,
+        fetch_dxy,
+        fetch_baltic_dry,
+        fetch_crack_spreads,
+        fetch_cftc_positioning,
+    ]
+
+    print("\n--- Running API fetchers (parallel) ---")
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = {executor.submit(f): f.__name__ for f in parallel_fetchers}
+        for future in as_completed(futures):
+            name = futures[future]
+            try:
+                future.result()
+            except Exception as e:
+                print(f"  Error in {name}: {e}")
+
+    print("\n--- Running Yahoo Finance fetchers (rate-limited) ---")
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        futures = {executor.submit(f): f.__name__ for f in yfinance_fetchers}
+        for future in as_completed(futures):
+            name = futures[future]
+            try:
+                future.result()
+            except Exception as e:
+                print(f"  Error in {name}: {e}")
+
+    # Group 3: Derived data (depends on previous fetchers)
+    print("\n--- Calculating derived metrics ---")
+    fetch_days_of_supply()
 
     # Save metadata
     meta = {
@@ -1855,7 +2313,12 @@ def fetch_all():
             'credit_spreads.csv',
             'dxy.csv',
             'natgas_inventories.csv',
-            'baltic_dry.csv'
+            'baltic_dry.csv',
+            'days_of_supply.csv',
+            'crack_spreads.csv',
+            'rig_count.csv',
+            'cftc_positioning.csv',
+            'crude_production.csv',
         ]
     }
     pd.DataFrame([meta]).to_csv(DATA_DIR / 'metadata.csv', index=False)
