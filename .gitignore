@@ -1,5 +1,6 @@
 # API Keys - never commit
 config/api_keys.py
+data/refresh.log
 
 # Python
 __pycache__/
@@ -7,6 +8,10 @@ __pycache__/
 .env
 venv/
 .venv/
+.python_packages/
+.sklearn_packages/
+.tmp/
+.run/
 
 # IDE
 .vscode/

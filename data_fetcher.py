@@ -9,7 +9,10 @@ import pandas as pd
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
+from io import StringIO
 import yfinance as yf
+import urllib3
+import numpy as np
 
 # Load API keys - try config file first, then environment variables
 try:
@@ -23,7 +26,7 @@ except ImportError:
     if not API_KEYS['FRED']:
         print("Warning: No API keys found - set FRED_API_KEY, BEA_API_KEY, EIA_API_KEY environment variables")
 
-DATA_DIR = Path(__file__).parent / 'data'
+DATA_DIR = Path(os.environ.get('DATA_DIR', Path(__file__).parent / 'data'))
 FRED_URL = 'https://api.stlouisfed.org/fred/series/observations'
 BEA_URL = 'https://apps.bea.gov/api/data'
 EIA_URL = 'https://api.eia.gov/v2/petroleum/stoc/wstk/data'
@@ -1223,6 +1226,175 @@ def fetch_ppi():
     return df
 
 
+def _hyperbolic_fair_value(x, a, b, c):
+    return a / (x + b) + c
+
+
+def _fit_hyperbolic_grid(x, y):
+    """Fit y = a / (x + b) + c without requiring scipy."""
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
+    valid = np.isfinite(x) & np.isfinite(y)
+    x = x[valid]
+    y = y[valid]
+    if len(x) < 20:
+        raise ValueError("Need at least 20 observations to fit total inventory fair value")
+
+    ss_tot = np.sum((y - np.mean(y)) ** 2)
+    if ss_tot <= 0:
+        raise ValueError("WTI real price has no variance")
+
+    min_b = max(50.0, -float(np.min(x)) + 5.0)
+    # Dense enough to be stable, cheap enough for refresh. For each b, a and c are OLS.
+    b_grid = np.concatenate([
+        np.linspace(min_b, 500.0, 600),
+        np.linspace(510.0, 5000.0, 600),
+    ])
+
+    best = None
+    for b in b_grid:
+        denom = x + b
+        if np.any(np.abs(denom) < 1e-9):
+            continue
+        z = 1.0 / denom
+        design = np.column_stack([z, np.ones_like(z)])
+        try:
+            a, c = np.linalg.lstsq(design, y, rcond=None)[0]
+        except np.linalg.LinAlgError:
+            continue
+        if a <= 0:
+            continue
+        pred = (a * z) + c
+        sse = np.sum((y - pred) ** 2)
+        r2 = 1 - (sse / ss_tot)
+        if best is None or r2 > best['r2']:
+            best = {'a': float(a), 'b': float(b), 'c': float(c), 'r2': float(r2)}
+
+    if best is None:
+        raise RuntimeError("Unable to fit total inventory fair value curve")
+    return best
+
+
+def fetch_total_inv_eia_fair_value():
+    """Build Total Inventory EIA NTPS vs WTI fair value dataset."""
+    print("Fetching Total Inventory EIA WTI fair value data...")
+
+    # 1. EIA WTESTUS1: U.S. ending stocks excluding SPR of crude oil and petroleum products.
+    stock_rows = []
+    offset = 0
+    length = 5000
+    while True:
+        params = {
+            'api_key': API_KEYS.get('EIA', ''),
+            'frequency': 'weekly',
+            'data[0]': 'value',
+            'facets[series][]': 'WTESTUS1',
+            'start': '2011-01-01',
+            'sort[0][column]': 'period',
+            'sort[0][direction]': 'asc',
+            'offset': offset,
+            'length': length,
+        }
+        response = requests.get(EIA_URL, params=params, timeout=45)
+        response.raise_for_status()
+        batch = response.json().get('response', {}).get('data', [])
+        if not batch:
+            break
+        stock_rows.extend(batch)
+        if len(batch) < length:
+            break
+        offset += length
+
+    if not stock_rows:
+        print("  Warning: no EIA WTESTUS1 data retrieved")
+        return pd.DataFrame()
+
+    total_stocks = pd.DataFrame(stock_rows)
+    total_stocks = pd.DataFrame({
+        'date': pd.to_datetime(total_stocks['period']),
+        'value_mmbbl': pd.to_numeric(total_stocks['value'], errors='coerce') / 1000.0,
+    }).dropna().sort_values('date')
+    total_stocks.to_csv(DATA_DIR / 'eia_total_stocks.csv', index=False)
+
+    # 2. Yahoo Finance CL=F daily front-month close.
+    wti_hist = yf.Ticker('CL=F').history(start='2011-01-01', interval='1d', auto_adjust=False)
+    if wti_hist.empty:
+        print("  Warning: no CL=F data retrieved")
+        return pd.DataFrame()
+    wti_prices = wti_hist.reset_index()
+    wti_prices['date'] = pd.to_datetime(wti_prices['Date']).dt.tz_localize(None)
+    wti_prices = wti_prices[['date', 'Close']].rename(columns={'Close': 'wti_close'}).dropna().sort_values('date')
+    wti_prices.to_csv(DATA_DIR / 'wti_prices.csv', index=False)
+
+    # 3. FRED CPIAUCSL CPI-U all-items.
+    cpi_rows = fetch_fred_series('CPIAUCSL', '2011-01-01')
+    cpi_monthly = pd.DataFrame(cpi_rows, columns=['date', 'cpi_u'])
+    cpi_monthly['date'] = pd.to_datetime(cpi_monthly['date'])
+    cpi_monthly['cpi_u'] = pd.to_numeric(cpi_monthly['cpi_u'], errors='coerce')
+    cpi_monthly = cpi_monthly.dropna().sort_values('date')
+    cpi_monthly.to_csv(DATA_DIR / 'cpi_monthly.csv', index=False)
+
+    stocks = total_stocks.rename(columns={'value_mmbbl': 'total_stocks'}).copy()
+    stocks['week_of_year'] = stocks['date'].dt.isocalendar().week.astype(int)
+    stocks['year'] = stocks['date'].dt.year
+
+    baseline_years = [year for year in range(2011, 2019) if year in set(stocks['year'])]
+    if not baseline_years:
+        print("  Warning: no 2011-2018 baseline years available")
+        return pd.DataFrame()
+
+    baseline = (
+        stocks[stocks['year'].isin(baseline_years)]
+        .groupby('week_of_year')['total_stocks']
+        .mean()
+    )
+    stocks['ntps'] = stocks['total_stocks'] - stocks['week_of_year'].map(baseline)
+
+    wti_daily = wti_prices[['date', 'wti_close']].dropna().set_index('date').sort_index()
+    wti_weekly = wti_daily['wti_close'].resample('W-FRI').last().ffill()
+
+    cpi_series = cpi_monthly[['date', 'cpi_u']].dropna().set_index('date').sort_index()['cpi_u']
+    latest_cpi = float(cpi_series.iloc[-1])
+    cpi_weekly = cpi_series.resample('W-FRI').interpolate(method='linear').ffill()
+
+    merged = stocks.set_index('date')[['total_stocks', 'ntps', 'week_of_year']].join(
+        wti_weekly.rename('wti_nominal'),
+        how='left'
+    )
+    merged['wti_nominal'] = merged['wti_nominal'].ffill()
+    merged['cpi_u'] = cpi_weekly.reindex(merged.index, method='ffill').ffill().bfill()
+    merged['wti_real'] = merged['wti_nominal'] * (latest_cpi / merged['cpi_u'])
+    merged = merged.dropna(subset=['ntps', 'wti_real']).copy()
+    merged['year'] = merged.index.year
+    merged['quarter'] = merged.index.quarter
+
+    fit_df = merged[merged.index.year >= 2012].copy()
+    params = _fit_hyperbolic_grid(fit_df['ntps'].to_numpy(), fit_df['wti_real'].to_numpy())
+    fit_df['fair_value'] = _hyperbolic_fair_value(fit_df['ntps'], params['a'], params['b'], params['c'])
+    fit_df['residual'] = fit_df['wti_real'] - fit_df['fair_value']
+    sigma = float(fit_df['residual'].std(ddof=0))
+    fit_df['residual_z'] = fit_df['residual'] / sigma if sigma else np.nan
+    fit_df['fair_value_plus_1sigma'] = fit_df['fair_value'] + sigma
+    fit_df['fair_value_minus_1sigma'] = fit_df['fair_value'] - sigma
+    fit_df['fair_value_plus_2sigma'] = fit_df['fair_value'] + (2 * sigma)
+    fit_df['fair_value_minus_2sigma'] = fit_df['fair_value'] - (2 * sigma)
+    fit_df['r2'] = params['r2']
+    fit_df['sigma'] = sigma
+    fit_df['param_a'] = params['a']
+    fit_df['param_b'] = params['b']
+    fit_df['param_c'] = params['c']
+    fit_df['baseline_years'] = f"{baseline_years[0]}-{baseline_years[-1]}"
+    fit_df['cpi_series'] = 'CPIAUCSL'
+
+    output = fit_df.reset_index().rename(columns={'index': 'date'})
+    output['date'] = output['date'].dt.strftime('%Y-%m-%d')
+    output.to_csv(DATA_DIR / 'total_inv_eia_fair_value.csv', index=False)
+    print(f"  Saved {len(output)} rows to total_inv_eia_fair_value.csv")
+    latest = output.iloc[-1]
+    print(f"  Latest NTPS {latest['ntps']:.1f} MMbbl, R2 {latest['r2']:.2f}")
+    return output
+
+
 def fetch_market_prices():
     """Fetch daily market prices from Yahoo Finance - 3 years of data"""
     print("Fetching market prices from Yahoo Finance...")
@@ -2203,6 +2375,139 @@ def fetch_cftc_positioning():
     return df
 
 
+def _numeric_series(df, column):
+    if column not in df.columns:
+        return pd.Series(index=df.index, dtype=float)
+    return pd.to_numeric(df[column], errors='coerce')
+
+
+def fetch_cot_wti_brent_merged():
+    """Fetch WTI CME and Brent ICE managed money COT data aligned with Tuesday Brent closes."""
+    print("Fetching WTI + Brent managed money COT data...")
+    start_date = pd.Timestamp('2023-01-01')
+    end_date = pd.Timestamp.now().normalize()
+
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    # WTI CME from CFTC Disaggregated Futures Only report.
+    wti_url = 'https://publicreporting.cftc.gov/resource/72hh-3qpy.json'
+    wti_params = {
+        '$where': "cftc_contract_market_code = '067651' AND futonly_or_combined = 'FutOnly'",
+        '$order': 'report_date_as_yyyy_mm_dd ASC',
+        '$limit': 5000,
+    }
+    try:
+        wti_response = requests.get(wti_url, params=wti_params, timeout=45, verify=False)
+        wti_response.raise_for_status()
+        wti_raw = pd.DataFrame(wti_response.json())
+    except Exception as e:
+        print(f"  Error fetching WTI COT: {e}")
+        wti_raw = pd.DataFrame()
+
+    if not wti_raw.empty:
+        wti = pd.DataFrame({
+            'date': pd.to_datetime(wti_raw['report_date_as_yyyy_mm_dd'], errors='coerce'),
+            'WTI_CME_mm_net': (
+                _numeric_series(wti_raw, 'm_money_positions_long_all')
+                - _numeric_series(wti_raw, 'm_money_positions_short_all')
+            ) / 1000,
+        })
+        wti = wti[wti['date'] >= start_date]
+    else:
+        wti = pd.DataFrame(columns=['date', 'WTI_CME_mm_net'])
+
+    # Brent ICE from ICE historical COT CSV files.
+    brent_frames = []
+    for year in range(start_date.year, end_date.year + 1):
+        try:
+            ice_url = f'https://www.ice.com/publicdocs/futures/COTHist{year}.csv'
+            ice_response = requests.get(
+                ice_url,
+                headers={'User-Agent': 'Mozilla/5.0'},
+                timeout=45,
+            )
+            ice_response.raise_for_status()
+            ice = pd.read_csv(StringIO(ice_response.text))
+            ice.columns = [str(col).replace('\ufeff', '').replace('ï»¿', '').strip() for col in ice.columns]
+
+            market_col = next((c for c in ice.columns if c.lower() == 'market_and_exchange_names'), None)
+            report_col = next((c for c in ice.columns if c.lower() in {'report_date_as_yymmdd', 'as_of_date_in_form_yymmdd'}), None)
+            combined_col = next((c for c in ice.columns if c.lower() == 'futonly_or_combined'), None)
+            long_col = next((c for c in ice.columns if c.lower() == 'm_money_positions_long_all'), None)
+            short_col = next((c for c in ice.columns if c.lower() == 'm_money_positions_short_all'), None)
+
+            required_cols = [market_col, report_col, combined_col, long_col, short_col]
+            if any(col is None for col in required_cols):
+                print(f"  ICE {year}: missing expected columns")
+                continue
+
+            mask = (
+                ice[market_col].astype(str).str.contains('ICE Brent Crude Futures -', case=False, na=False)
+                & ice[combined_col].astype(str).eq('FutOnly')
+            )
+            brent_year = ice.loc[mask, [report_col, long_col, short_col]].copy()
+            if brent_year.empty:
+                continue
+
+            brent_year['date'] = pd.to_datetime(brent_year[report_col].astype(str).str.zfill(6), format='%y%m%d', errors='coerce')
+            brent_year['BRENT_ICE_mm_net'] = (
+                pd.to_numeric(brent_year[long_col], errors='coerce')
+                - pd.to_numeric(brent_year[short_col], errors='coerce')
+            ) / 1000
+            brent_frames.append(brent_year[['date', 'BRENT_ICE_mm_net']])
+            print(f"  Brent ICE {year}: {len(brent_year)} observations")
+        except Exception as e:
+            print(f"  Error fetching Brent ICE {year}: {e}")
+        time.sleep(0.2)
+
+    brent = (
+        pd.concat(brent_frames, ignore_index=True)
+        if brent_frames
+        else pd.DataFrame(columns=['date', 'BRENT_ICE_mm_net'])
+    )
+
+    cot = pd.merge(wti, brent, on='date', how='outer').sort_values('date')
+    cot = cot[cot['date'] >= start_date].reset_index(drop=True)
+    if cot.empty:
+        print("  No WTI/Brent COT data fetched")
+        return pd.DataFrame()
+
+    cot['COMBINED_mm_net'] = cot[['BRENT_ICE_mm_net', 'WTI_CME_mm_net']].sum(axis=1, min_count=1)
+    cot['COMBINED_mm_net_ww'] = cot['COMBINED_mm_net'].diff()
+
+    # Tuesday-close Brent and WTI futures prices from Yahoo Finance, aligned to COT report dates.
+    price_symbols = {'brent_close': 'BZ=F', 'wti_close': 'CL=F'}
+    for column, symbol in price_symbols.items():
+        try:
+            hist = yf.Ticker(symbol).history(
+                start=(cot['date'].min() - pd.Timedelta(days=7)).strftime('%Y-%m-%d'),
+                end=(cot['date'].max() + pd.Timedelta(days=7)).strftime('%Y-%m-%d'),
+                interval='1d',
+            )
+            if hist.empty:
+                continue
+            prices = hist[['Close']].copy()
+            prices.index = pd.to_datetime(prices.index).tz_localize(None).normalize()
+            aligned = prices.reindex(pd.date_range(prices.index.min(), prices.index.max(), freq='D')).ffill()
+            cot[column] = cot['date'].map(aligned['Close'])
+        except Exception as e:
+            print(f"  Error fetching {symbol} prices: {e}")
+        time.sleep(0.3)
+
+    if 'brent_close' in cot.columns:
+        cot['brent_ww'] = cot['brent_close'].diff()
+    if 'wti_close' in cot.columns:
+        cot['wti_ww'] = cot['wti_close'].diff()
+
+    cot['year'] = cot['date'].dt.year
+    cot['week'] = cot['date'].dt.isocalendar().week
+    cot['date'] = cot['date'].dt.strftime('%Y-%m-%d')
+
+    cot.to_csv(DATA_DIR / 'cot_wti_brent_merged.csv', index=False)
+    print(f"  Saved {len(cot)} rows to cot_wti_brent_merged.csv")
+    return cot
+
+
 def fetch_all():
     """Fetch all data and save to CSV with parallel execution"""
     from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -2212,7 +2517,7 @@ def fetch_all():
     print(f"Timestamp: {datetime.now().isoformat()}")
     print("=" * 50)
 
-    DATA_DIR.mkdir(exist_ok=True)
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
 
     # Group 1: Independent API fetchers (can run in parallel)
     parallel_fetchers = [
@@ -2253,6 +2558,8 @@ def fetch_all():
         fetch_baltic_dry,
         fetch_crack_spreads,
         fetch_cftc_positioning,
+        fetch_cot_wti_brent_merged,
+        fetch_total_inv_eia_fair_value,
     ]
 
     print("\n--- Running API fetchers (parallel) ---")
@@ -2318,6 +2625,11 @@ def fetch_all():
             'crack_spreads.csv',
             'rig_count.csv',
             'cftc_positioning.csv',
+            'cot_wti_brent_merged.csv',
+            'eia_total_stocks.csv',
+            'wti_prices.csv',
+            'cpi_monthly.csv',
+            'total_inv_eia_fair_value.csv',
             'crude_production.csv',
         ]
     }

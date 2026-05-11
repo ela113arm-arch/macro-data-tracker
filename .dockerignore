@@ -1,0 +1,13 @@
+.git
+.gitignore
+.venv
+venv
+__pycache__
+*.pyc
+.env
+.python_packages
+.sklearn_packages
+.tmp
+.run
+data/refresh.log
+config/api_keys.py

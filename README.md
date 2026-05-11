@@ -30,6 +30,9 @@ macro_data_tracker/
 | BEA | Bureau of Economic Analysis | https://apps.bea.gov/api |
 | BLS | Bureau of Labor Statistics | https://api.bls.gov/publicAPI |
 | EIA | Energy Information Administration | https://api.eia.gov/v2 |
+| CFTC | Commitment of Traders Disaggregated Futures Only | https://publicreporting.cftc.gov/resource/72hh-3qpy.json |
+| ICE | Brent futures historical COT CSVs | https://www.ice.com/publicdocs/futures |
+| Yahoo Finance | Futures and market prices via yfinance | N/A |
 
 ## API Enumeration Guide
 
@@ -112,11 +115,49 @@ macro_data_tracker/
 | A639RC1Q027SBEA | Industrial Supplies Exports |
 | LA0000061Q027SBEA | Petroleum Exports |
 
+The Trade by Category dashboard renders exports and imports as quarterly seasonal charts by category. Each chart uses Q1-Q4 on the x-axis, a five-year historical range band, a five-year average, prior year, and current year.
+
+The Detailed Trade dashboard uses the same quarterly seasonal chart pattern for granular BEA ITA categories such as pharmaceuticals, gold, precious metals, semiconductors, telecom equipment, chemicals, steel, and apparel. Current local data coverage is through 2025Q3 for `trade_categories.csv` and 2025Q4 for `detailed_trade.csv`; no 2026 observations are present in the current refreshed CSVs.
+
+### COT Energy Positioning (CFTC/ICE/Yahoo Finance)
+| Field | Description |
+|-------|-------------|
+| `BRENT_ICE_mm_net` | Brent ICE managed-money net position in million barrels |
+| `WTI_CME_mm_net` | WTI CME managed-money net position in million barrels |
+| `COMBINED_mm_net` | Brent plus WTI managed-money net position in million barrels |
+| `COMBINED_mm_net_ww` | Week-over-week change in combined managed-money net position |
+| `brent_close` | Brent Tuesday-close futures price |
+| `brent_ww` | Week-over-week change in Brent Tuesday-close price |
+| `wti_close` | WTI Tuesday-close futures price |
+| `wti_ww` | Week-over-week change in WTI Tuesday-close price |
+
+The COT dashboard uses Tuesday report dates because COT data is recorded as of Tuesday. The "Managed Money Positioning Change vs Brent Change" chart plots `COMBINED_mm_net_ww` against `brent_ww`, overlays an OLS trend line, highlights the last five observations, and displays R-squared, correlation, beta, observation count, and latest Brent weekly change.
+
+The exploratory relationship table compares weekly COT/Brent observations with Energy ETF volume pressure. ETF pressure is calculated as daily volume divided by its 50-day moving average minus one, averaged over the Tuesday-ending week for each COT report date.
+
+### Total Inventory EIA WTI Fair Value (EIA/Yahoo/FRED)
+| Field | Description |
+|-------|-------------|
+| `total_stocks` | EIA `WTESTUS1` weekly U.S. ending stocks excluding SPR of crude oil and petroleum products, in MMbbl |
+| `ntps` | Normalized Total Petroleum Stocks: `total_stocks` minus the same ISO-week average over 2011-2018 |
+| `wti_nominal` | Yahoo Finance `CL=F` Friday weekly close |
+| `wti_real` | WTI adjusted to latest CPI dollars using FRED `CPIAUCSL` |
+| `fair_value` | Hyperbolic fair value fit on 2012+ observations |
+| `fair_value_plus_1sigma` / `fair_value_minus_1sigma` | One residual standard deviation around fair value |
+| `fair_value_plus_2sigma` / `fair_value_minus_2sigma` | Two residual standard deviations around fair value |
+| `residual_z` | Real WTI minus fair value, divided by residual sigma |
+
+The Total Inventory EIA chart is available on the root modeling dashboard and the macro Energy dashboard. Both dashboards also include a week-over-week change view that plots `diff(ntps)` against `diff(wti_real)`, highlights the latest observation and trailing 13 weeks, and displays correlation, R-squared, and beta. The standard refresh button runs the total-inventory fetcher, updating `eia_total_stocks.csv`, `wti_prices.csv`, `cpi_monthly.csv`, and `total_inv_eia_fair_value.csv`.
+
 ## Usage
 
 1. **Update data**: `python data_fetcher.py`
 2. **Run dashboard**: `python app.py`
-3. **View**: http://localhost:5002
+3. **View**: http://localhost:5003
+
+## Deploy
+
+The app is ready to deploy from GitHub using the included `Dockerfile`, `Procfile`, and `render.yaml`. Set `FRED_API_KEY`, `BEA_API_KEY`, `EIA_API_KEY`, and `REFRESH_TOKEN` as host environment variables; never commit real keys. See `DEPLOYMENT.md` for the full setup.
 
 ## Limitations
 
@@ -124,4 +165,6 @@ macro_data_tracker/
 - FRED/BLS have no single "list all series" endpoint
 - EIA uses route-tree not flat list
 - BEA series are compound keys (dataset+table+line+freq)
+- ICE COT data is downloaded from yearly CSV files and depends on ICE column naming remaining stable
+- COT/price comparisons use Tuesday alignment; Friday closes should not be mixed with COT reporting dates
 - Full data universes may exceed storage limits - use Parquet/SQLite for full dumps

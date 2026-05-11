@@ -1,9 +1,19 @@
 services:
   - type: web
     name: macro-data-tracker
-    env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    env: docker
+    autoDeploy: true
+    healthCheckPath: /api/status
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.11.0
+      - key: HOST
+        value: 0.0.0.0
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: FRED_API_KEY
+        sync: false
+      - key: BEA_API_KEY
+        sync: false
+      - key: EIA_API_KEY
+        sync: false
+      - key: REFRESH_TOKEN
+        sync: false

@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brent Forward Modeling Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        :root {
+            --ink: #111827;
+            --muted: #64748b;
+            --line: #d8e0eb;
+            --paper: #ffffff;
+            --soft: #f6f8fb;
+            --nav: #182235;
+            --blue: #2563eb;
+            --green: #059669;
+            --red: #dc2626;
+            --amber: #b7791f;
+            --teal: #0f766e;
+            --violet: #6d28d9;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: #eef2f7;
+            color: var(--ink);
+            font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        header {
+            background: var(--nav);
+            color: #fff;
+            padding: 18px 28px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 18px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 750;
+            letter-spacing: 0;
+        }
+
+        h2 {
+            margin: 0 0 12px;
+            font-size: 15px;
+            font-weight: 750;
+        }
+
+        .subhead, .header-meta {
+            color: rgba(255,255,255,0.72);
+            font-size: 12px;
+        }
+
+        .header-meta { text-align: right; }
+
+        main {
+            max-width: 1700px;
+            margin: 0 auto;
+            padding: 22px 28px 40px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .card, .panel {
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+        }
+
+        .card {
+            min-height: 86px;
+            padding: 13px 14px;
+        }
+
+        .label {
+            color: var(--muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-weight: 700;
+            margin-bottom: 7px;
+        }
+
+        .value {
+            font-size: 24px;
+            font-weight: 780;
+            letter-spacing: 0;
+            white-space: nowrap;
+        }
+
+        .hint {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .panel {
+            padding: 15px;
+            min-width: 0;
+        }
+
+        .span-3 { grid-column: span 3; }
+        .span-4 { grid-column: span 4; }
+        .span-5 { grid-column: span 5; }
+        .span-6 { grid-column: span 6; }
+        .span-7 { grid-column: span 7; }
+        .span-8 { grid-column: span 8; }
+        .span-12 { grid-column: span 12; }
+
+        .chart { height: 330px; }
+        .chart.tall { height: 420px; }
+        .chart.short { height: 250px; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        th, td {
+            border-bottom: 1px solid #edf1f6;
+            padding: 8px 7px;
+            vertical-align: top;
+            text-align: left;
+        }
+
+        th {
+            color: #475569;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            font-weight: 750;
+            background: #f8fafc;
+        }
+
+        td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+        .table-wrap {
+            max-height: 360px;
+            overflow: auto;
+            border: 1px solid #edf1f6;
+            border-radius: 6px;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            min-height: 22px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #3730a3;
+            font-size: 11px;
+            font-weight: 750;
+        }
+
+        .pill.green { background: #ecfdf5; color: #047857; }
+        .pill.red { background: #fef2f2; color: #b91c1c; }
+        .pill.amber { background: #fffbeb; color: #92400e; }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 12px;
+        }
+
+        .footnotes {
+            color: #475569;
+            font-size: 12px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .footnotes span {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            padding: 8px 10px;
+        }
+
+        .loading {
+            padding: 30px;
+            text-align: center;
+            color: var(--muted);
+        }
+
+        .error {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 14px;
+            border-radius: 6px;
+        }
+
+        @media (max-width: 1200px) {
+            .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .span-3, .span-4, .span-5, .span-6, .span-7, .span-8 { grid-column: span 12; }
+        }
+
+        @media (max-width: 760px) {
+            header { display: block; }
+            .header-meta { text-align: left; margin-top: 10px; }
+            main { padding: 16px; }
+            .cards { grid-template-columns: 1fr; }
+            .two-col { grid-template-columns: 1fr; }
+            .value { font-size: 21px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div>
+            <h1>Brent Forward Modeling Dashboard</h1>
+            <div class="subhead">Standalone COT Tuesday-aligned exploratory model. Predictors exclude direct oil-price levels and returns.</div>
+        </div>
+        <div class="header-meta">
+            <div id="asOf">Loading...</div>
+            <div><a href="/macro" style="color:#dbeafe;">Macro dashboard</a></div>
+        </div>
+    </header>
+
+    <main>
+        <div id="status" class="loading">Building feature matrix, walk-forward models, and regimes...</div>
+        <section id="dashboard" style="display:none;">
+            <div class="cards">
+                <div class="card">
+                    <div class="label">Model Signal</div>
+                    <div class="value" id="direction">--</div>
+                    <div class="hint" id="bestModel">--</div>
+                </div>
+                <div class="card">
+                    <div class="label">Predicted Next Change</div>
+                    <div class="value" id="prediction">--</div>
+                    <div class="hint">$/bbl, next COT week</div>
+                </div>
+                <div class="card">
+                    <div class="label">Up Probability</div>
+                    <div class="value" id="upProbability">--</div>
+                    <div class="hint">Average classifier probability</div>
+                </div>
+                <div class="card">
+                    <div class="label">Current Regime</div>
+                    <div class="value" id="regime">--</div>
+                    <div class="hint" id="regimeStats">--</div>
+                </div>
+                <div class="card">
+                    <div class="label">Confidence</div>
+                    <div class="value" id="confidence">--</div>
+                    <div class="hint">Distance from 50/50 direction</div>
+                </div>
+                <div class="card">
+                    <div class="label">Sample</div>
+                    <div class="value" id="sampleSize">--</div>
+                    <div class="hint" id="featureCount">--</div>
+                </div>
+            </div>
+
+            <div class="grid">
+                <section class="panel span-7">
+                    <h2>Walk-Forward Leaderboard</h2>
+                    <div class="table-wrap"><table id="leaderboard"></table></div>
+                </section>
+                <section class="panel span-5">
+                    <h2>Direction Models</h2>
+                    <div class="table-wrap"><table id="classifiers"></table></div>
+                </section>
+
+                <section class="panel span-7">
+                    <h2>Regime Map</h2>
+                    <div id="clusterChart" class="chart tall"></div>
+                </section>
+                <section class="panel span-5">
+                    <h2>Current Regime</h2>
+                    <div class="two-col">
+                        <div>
+                            <div class="label">Historical Regime Performance</div>
+                            <div class="table-wrap"><table id="regimeTable"></table></div>
+                        </div>
+                        <div>
+                            <div class="label">Nearest Historical Weeks</div>
+                            <div class="table-wrap"><table id="similarWeeks"></table></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel span-6">
+                    <h2>Random Forest Feature Importance</h2>
+                    <div id="rfImportance" class="chart"></div>
+                </section>
+                <section class="panel span-6">
+                    <h2>Linear Prediction Decomposition</h2>
+                    <div id="linearContrib" class="chart"></div>
+                </section>
+
+                <section class="panel span-7">
+                    <h2>Lag Correlation Scan</h2>
+                    <div id="lagHeatmap" class="chart tall"></div>
+                </section>
+                <section class="panel span-5">
+                    <h2>Composite Factor Dashboard</h2>
+                    <div id="groupChart" class="chart tall"></div>
+                </section>
+
+                <section class="panel span-7">
+                    <h2>Walk-Forward Actual vs Model</h2>
+                    <div id="wfChart" class="chart"></div>
+                </section>
+                <section class="panel span-5">
+                    <h2>Final Model Predictions</h2>
+                    <div class="table-wrap"><table id="finalPredictions"></table></div>
+                </section>
+
+                <section class="panel span-7">
+                    <h2>Total Inventory EIA WTI Fair Value</h2>
+                    <div id="totalInvEiaChart" class="chart tall"></div>
+                </section>
+                <section class="panel span-5">
+                    <h2>Total Inventory Stats</h2>
+                    <div class="table-wrap"><table id="totalInvEiaStats"></table></div>
+                    <div class="hint" style="margin-top:10px;">NTPS uses EIA WTESTUS1 minus same-ISO-week 2011-2018 average. WTI is CL=F adjusted to latest CPIAUCSL dollars.</div>
+                </section>
+                <section class="panel span-7">
+                    <h2>Total Inventory WoW Change vs WTI WoW Change</h2>
+                    <div id="totalInvEiaWowChart" class="chart tall"></div>
+                </section>
+                <section class="panel span-5">
+                    <h2>Total Inventory WoW Stats</h2>
+                    <div class="table-wrap"><table id="totalInvEiaWowStats"></table></div>
+                    <div class="hint" style="margin-top:10px;">Weekly changes are calculated from the same Friday-aligned NTPS and real WTI series used in the fair-value chart.</div>
+                </section>
+
+                <section class="panel span-12">
+                    <h2>Recent 12-Week Feature Matrix</h2>
+                    <div class="table-wrap"><table id="recentRows"></table></div>
+                </section>
+
+                <section class="panel span-6">
+                    <h2>Top Relationships</h2>
+                    <div class="table-wrap"><table id="relationships"></table></div>
+                </section>
+                <section class="panel span-6">
+                    <h2>Derived Field Documentation</h2>
+                    <div class="table-wrap"><table id="docs"></table></div>
+                </section>
+
+                <section class="span-12">
+                    <div class="footnotes" id="caveats"></div>
+                </section>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const fmt = {
+            n(value, digits = 2) {
+                if (value === null || value === undefined || Number.isNaN(Number(value))) return '--';
+                return Number(value).toLocaleString(undefined, { maximumFractionDigits: digits, minimumFractionDigits: digits });
+            },
+            pct(value, digits = 1) {
+                if (value === null || value === undefined || Number.isNaN(Number(value))) return '--';
+                return `${Number(value).toLocaleString(undefined, { maximumFractionDigits: digits, minimumFractionDigits: digits })}%`;
+            },
+            signed(value, digits = 2, suffix = '') {
+                if (value === null || value === undefined || Number.isNaN(Number(value))) return '--';
+                const sign = Number(value) > 0 ? '+' : '';
+                return `${sign}${fmt.n(value, digits)}${suffix}`;
+            },
+            html(value) {
+                return String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+            },
+            shortFeature(name) {
+                return String(name || '')
+                    .replace(/^composite_/, 'cmp_')
+                    .replace(/^inventory_/, 'inv_')
+                    .replace(/^positioning_/, 'pos_')
+                    .replace(/^manufacturing_/, 'mfg_')
+                    .replace(/^withholding_/, 'with_')
+                    .replace(/^spread_/, 'spr_');
+            }
+        };
+
+        const palette = ['#2563eb', '#059669', '#dc2626', '#b7791f', '#6d28d9', '#0f766e'];
+        const baseLayout = {
+            margin: { l: 52, r: 20, t: 12, b: 48 },
+            paper_bgcolor: '#ffffff',
+            plot_bgcolor: '#ffffff',
+            font: { family: 'Segoe UI, sans-serif', size: 11, color: '#111827' },
+            xaxis: { gridcolor: '#edf1f6', zerolinecolor: '#cbd5e1' },
+            yaxis: { gridcolor: '#edf1f6', zerolinecolor: '#cbd5e1' },
+            legend: { orientation: 'h', y: -0.18 }
+        };
+        const config = { displayModeBar: false, responsive: true };
+
+        function table(id, headers, rows, mapper) {
+            const el = document.getElementById(id);
+            el.innerHTML = `<thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${
+                rows.map(row => `<tr>${mapper(row).join('')}</tr>`).join('')
+            }</tbody>`;
+        }
+
+        function numberCell(value, digits = 2, suffix = '') {
+            return `<td class="num">${fmt.signed(value, digits, suffix)}</td>`;
+        }
+
+        function plainNumberCell(value, digits = 2, suffix = '') {
+            return `<td class="num">${fmt.n(value, digits)}${value === null || value === undefined ? '' : suffix}</td>`;
+        }
+
+        function renderSummary(data) {
+            const signal = data.current_signal || {};
+            const summary = data.target_summary || {};
+            const regime = (data.clusters?.stats || []).find(row => row.is_current);
+            const pred = signal.ensemble_prediction ?? signal.best_model_prediction;
+
+            document.getElementById('asOf').textContent = `As of ${signal.as_of_date || '--'} | Target date ${summary.next_target_date || '--'}`;
+            document.getElementById('direction').innerHTML = `<span class="pill ${signal.direction === 'Up' ? 'green' : 'red'}">${fmt.html(signal.direction || '--')}</span>`;
+            document.getElementById('bestModel').textContent = signal.best_regression_model || '--';
+            document.getElementById('prediction').textContent = fmt.signed(pred, 2);
+            document.getElementById('upProbability').textContent = fmt.pct(signal.up_probability);
+            document.getElementById('regime').textContent = signal.current_regime_label || '--';
+            document.getElementById('regimeStats').textContent = regime ? `Avg ${fmt.signed(regime.avg_target, 2)}, hit ${fmt.pct(regime.positive_hit_rate)}` : '--';
+            document.getElementById('confidence').textContent = fmt.pct(signal.confidence);
+            document.getElementById('sampleSize').textContent = fmt.n(summary.observations, 0);
+            document.getElementById('featureCount').textContent = `${fmt.n(summary.feature_count, 0)} modeled features`;
+        }
+
+        function renderTables(data) {
+            table('leaderboard',
+                ['Model', 'N', 'MAE', 'RMSE', 'Dir Acc', 'Large Hit', 'Avg Pred'],
+                data.model_leaderboard || [],
+                row => [
+                    `<td>${fmt.html(row.model)}</td>`,
+                    `<td class="num">${fmt.n(row.n, 0)}</td>`,
+                    plainNumberCell(row.mae, 2),
+                    plainNumberCell(row.rmse, 2),
+                    plainNumberCell(row.directional_accuracy, 1, '%'),
+                    plainNumberCell(row.large_move_hit_rate, 1, '%'),
+                    numberCell(row.avg_prediction, 2),
+                ]);
+
+            table('classifiers',
+                ['Model', 'N', 'Dir Acc', 'Up Pred Rate', 'Avg Up Prob'],
+                data.classifier_leaderboard || [],
+                row => [
+                    `<td>${fmt.html(row.model)}</td>`,
+                    `<td class="num">${fmt.n(row.n, 0)}</td>`,
+                    plainNumberCell(row.directional_accuracy, 1, '%'),
+                    plainNumberCell(row.positive_prediction_rate, 1, '%'),
+                    plainNumberCell((row.avg_up_probability ?? 0) * 100, 1, '%'),
+                ]);
+
+            table('finalPredictions',
+                ['Model', 'Prediction'],
+                data.final_predictions || [],
+                row => [`<td>${fmt.html(row.model)}</td>`, numberCell(row.prediction, 2)]);
+
+            table('similarWeeks',
+                ['Feature Date', 'Target Date', 'Move', 'Distance'],
+                data.clusters?.similar_weeks || [],
+                row => [
+                    `<td>${fmt.html(row.date)}</td>`,
+                    `<td>${fmt.html(row.target_date)}</td>`,
+                    numberCell(row.target, 2),
+                    plainNumberCell(row.distance, 2),
+                ]);
+
+            table('regimeTable',
+                ['Regime', 'N', 'Avg', 'Vol', 'Hit'],
+                data.clusters?.stats || [],
+                row => [
+                    `<td><span class="pill ${row.is_current ? 'amber' : ''}">Regime ${fmt.html(row.cluster)}</span></td>`,
+                    `<td class="num">${fmt.n(row.n, 0)}</td>`,
+                    numberCell(row.avg_target, 2),
+                    plainNumberCell(row.volatility, 2),
+                    plainNumberCell(row.positive_hit_rate, 1, '%'),
+                ]);
+
+            table('relationships',
+                ['Feature', 'Group', 'Lag', 'Corr', 'R2', 'Beta'],
+                (data.relationships || []).slice(0, 35),
+                row => [
+                    `<td title="${fmt.html(row.feature)}">${fmt.html(fmt.shortFeature(row.feature))}</td>`,
+                    `<td>${fmt.html(row.group)}</td>`,
+                    `<td class="num">${fmt.n(row.best_lag_weeks, 0)}</td>`,
+                    numberCell(row.corr, 2),
+                    plainNumberCell(row.r2, 2),
+                    numberCell(row.beta, 2),
+                ]);
+
+            table('docs',
+                ['Field', 'Formula', 'Source', 'Alignment'],
+                data.feature_docs || [],
+                row => [
+                    `<td>${fmt.html(row.field)}</td>`,
+                    `<td>${fmt.html(row.formula)}</td>`,
+                    `<td>${fmt.html(row.source)}</td>`,
+                    `<td>${fmt.html(row.alignment)}</td>`,
+                ]);
+
+            const recent = data.last_rows || [];
+            const columns = recent.length ? Object.keys(recent[0]) : [];
+            const recentEl = document.getElementById('recentRows');
+            recentEl.innerHTML = `<thead><tr>${columns.map(col => `<th>${fmt.html(fmt.shortFeature(col))}</th>`).join('')}</tr></thead><tbody>${
+                recent.map(row => `<tr>${columns.map(col => {
+                    const value = row[col];
+                    return typeof value === 'number' ? `<td class="num">${fmt.n(value, 2)}</td>` : `<td>${fmt.html(value)}</td>`;
+                }).join('')}</tr>`).join('')
+            }</tbody>`;
+
+            document.getElementById('caveats').innerHTML = (data.caveats || []).map(text => `<span>${fmt.html(text)}</span>`).join('');
+        }
+
+        function renderCluster(data) {
+            const points = data.clusters?.points || [];
+            const traces = [];
+            const clusters = [...new Set(points.map(row => row.cluster))].sort((a, b) => a - b);
+            clusters.forEach((cluster, i) => {
+                const rows = points.filter(row => row.cluster === cluster);
+                traces.push({
+                    x: rows.map(row => row.pc1),
+                    y: rows.map(row => row.pc2),
+                    mode: 'markers',
+                    type: 'scatter',
+                    name: `Regime ${cluster}`,
+                    marker: {
+                        size: rows.map(row => Math.min(18, 7 + Math.abs(row.target || 0))),
+                        color: palette[i % palette.length],
+                        opacity: 0.72,
+                        line: { color: '#ffffff', width: 1 }
+                    },
+                    text: rows.map(row => `${row.date}<br>Next move: ${fmt.signed(row.target, 2)}`),
+                    hovertemplate: '%{text}<extra></extra>'
+                });
+            });
+            const latest = points[points.length - 1];
+            if (latest) {
+                traces.push({
+                    x: [latest.pc1],
+                    y: [latest.pc2],
+                    mode: 'markers',
+                    type: 'scatter',
+                    name: 'Latest',
+                    marker: { size: 18, color: '#111827', symbol: 'star', line: { color: '#ffffff', width: 1.5 } },
+                    hovertemplate: `Latest ${latest.date}<extra></extra>`
+                });
+            }
+            const variance = data.clusters?.pca_explained_variance || [];
+            Plotly.newPlot('clusterChart', traces, {
+                ...baseLayout,
+                xaxis: { ...baseLayout.xaxis, title: `PC1 ${fmt.pct((variance[0] || 0) * 100, 0)}` },
+                yaxis: { ...baseLayout.yaxis, title: `PC2 ${fmt.pct((variance[1] || 0) * 100, 0)}` }
+            }, config);
+        }
+
+        function renderImportance(data) {
+            const rfRows = (data.rf_feature_importance || []).slice(0, 18).reverse();
+            Plotly.newPlot('rfImportance', [{
+                x: rfRows.map(row => row.importance),
+                y: rfRows.map(row => fmt.shortFeature(row.feature)),
+                type: 'bar',
+                orientation: 'h',
+                marker: { color: '#2563eb' },
+                hovertext: rfRows.map(row => `${row.feature}<br>${row.group}`),
+                hovertemplate: '%{hovertext}<br>Importance: %{x:.3f}<extra></extra>'
+            }], {
+                ...baseLayout,
+                margin: { l: 160, r: 16, t: 8, b: 34 },
+                xaxis: { ...baseLayout.xaxis, title: 'Importance' },
+                yaxis: { ...baseLayout.yaxis, automargin: true }
+            }, config);
+
+            const contribRows = (data.linear_contributions || []).slice(0, 18).reverse();
+            Plotly.newPlot('linearContrib', [{
+                x: contribRows.map(row => row.contribution),
+                y: contribRows.map(row => fmt.shortFeature(row.feature)),
+                type: 'bar',
+                orientation: 'h',
+                marker: { color: contribRows.map(row => (row.contribution || 0) >= 0 ? '#059669' : '#dc2626') },
+                hovertext: contribRows.map(row => `${row.feature}<br>${row.group}`),
+                hovertemplate: '%{hovertext}<br>Contribution: %{x:.3f}<extra></extra>'
+            }], {
+                ...baseLayout,
+                margin: { l: 160, r: 16, t: 8, b: 34 },
+                xaxis: { ...baseLayout.xaxis, title: 'Ridge contribution', zeroline: true },
+                yaxis: { ...baseLayout.yaxis, automargin: true }
+            }, config);
+        }
+
+        function renderLagAndGroups(data) {
+            const rows = (data.relationships || []).slice(0, 25);
+            const z = rows.map(row => [row.lag0_corr, row.lag1_corr, row.lag2_corr, row.lag3_corr, row.lag4_corr]);
+            Plotly.newPlot('lagHeatmap', [{
+                z,
+                x: ['0', '1', '2', '3', '4'],
+                y: rows.map(row => fmt.shortFeature(row.feature)),
+                type: 'heatmap',
+                colorscale: [[0, '#b91c1c'], [0.5, '#f8fafc'], [1, '#047857']],
+                zmin: -1,
+                zmax: 1,
+                hovertemplate: 'Lag %{x} weeks<br>%{y}<br>Corr %{z:.2f}<extra></extra>'
+            }], {
+                ...baseLayout,
+                margin: { l: 190, r: 18, t: 8, b: 42 },
+                xaxis: { ...baseLayout.xaxis, title: 'Feature lag in COT weeks' },
+                yaxis: { ...baseLayout.yaxis, automargin: true }
+            }, config);
+
+            const groups = data.group_summary || [];
+            Plotly.newPlot('groupChart', [
+                {
+                    x: groups.map(row => row.group),
+                    y: groups.map(row => row.latest_abs_z_avg),
+                    name: 'Latest Abs Z Avg',
+                    type: 'bar',
+                    marker: { color: '#0f766e' }
+                },
+                {
+                    x: groups.map(row => row.group),
+                    y: groups.map(row => row.top_relationship_corr),
+                    name: 'Top Abs Corr',
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    yaxis: 'y2',
+                    marker: { color: '#b7791f' },
+                    line: { color: '#b7791f' }
+                }
+            ], {
+                ...baseLayout,
+                margin: { l: 48, r: 44, t: 8, b: 120 },
+                xaxis: { ...baseLayout.xaxis, tickangle: -45 },
+                yaxis: { ...baseLayout.yaxis, title: 'Abs Z' },
+                yaxis2: { overlaying: 'y', side: 'right', title: 'Abs Corr', gridcolor: 'rgba(0,0,0,0)' }
+            }, config);
+        }
+
+        function renderWalkForward(data) {
+            const wf = data.walk_forward || {};
+            const leaderboard = data.model_leaderboard || [];
+            const best = leaderboard.find(row => !String(row.model).includes('Baseline'))?.model;
+            const predictions = wf.predictions?.[best] || [];
+            Plotly.newPlot('wfChart', [
+                {
+                    x: wf.dates || [],
+                    y: wf.actual || [],
+                    name: 'Actual',
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    line: { color: '#111827', width: 2 }
+                },
+                {
+                    x: wf.dates || [],
+                    y: predictions,
+                    name: best || 'Model',
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    line: { color: '#2563eb', width: 2 }
+                }
+            ], {
+                ...baseLayout,
+                xaxis: { ...baseLayout.xaxis, title: 'Target date' },
+                yaxis: { ...baseLayout.yaxis, title: '$/bbl', zeroline: true }
+            }, config);
+        }
+
+        async function renderTotalInvEia() {
+            const res = await fetch('/api/energy/total-inv-eia');
+            if (!res.ok) throw new Error(`Total inventory API returned ${res.status}`);
+            const rows = await res.json();
+            if (!Array.isArray(rows) || !rows.length || rows.error) return;
+
+            const clean = rows
+                .map(row => ({
+                    ...row,
+                    ntps: Number(row.ntps),
+                    wti_real: Number(row.wti_real),
+                    fair_value: Number(row.fair_value),
+                    sigma: Number(row.sigma),
+                    r2: Number(row.r2),
+                    residual_z: Number(row.residual_z),
+                    total_stocks: Number(row.total_stocks)
+                }))
+                .filter(row => Number.isFinite(row.ntps) && Number.isFinite(row.wti_real) && Number.isFinite(row.fair_value));
+            if (!clean.length) return;
+
+            const latest = clean[clean.length - 1];
+            const trail = clean.slice(-14);
+            const sigma = latest.sigma;
+            const minX = Math.min(...clean.map(row => row.ntps), -160);
+            const maxX = Math.max(...clean.map(row => row.ntps), 240);
+            const a = Number(latest.param_a);
+            const b = Number(latest.param_b);
+            const c = Number(latest.param_c);
+            const curveX = Array.from({ length: 180 }, (_, i) => minX + ((maxX - minX) * i / 179));
+            const curveY = curveX.map(x => a / (x + b) + c);
+
+            const quarterColors = { 1: '#111827', 2: '#00a7c7', 3: '#f59e0b', 4: '#7c3aed' };
+            const traces = [1, 2, 3, 4].map(q => {
+                const subset = clean.filter(row => Number(row.quarter) === q);
+                return {
+                    x: subset.map(row => row.ntps),
+                    y: subset.map(row => row.wti_real),
+                    text: subset.map(row => row.date),
+                    name: `Q${q}`,
+                    type: 'scatter',
+                    mode: 'markers',
+                    marker: { size: 6, color: quarterColors[q], opacity: 0.68 },
+                    hovertemplate: '%{text}<br>NTPS: %{x:.1f} MMbbl<br>WTI real: $%{y:.2f}<extra></extra>'
+                };
+            });
+
+            traces.push(
+                {
+                    x: curveX,
+                    y: curveY,
+                    name: 'Fair value',
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { color: '#dc2626', width: 3.5 },
+                    hovertemplate: 'NTPS: %{x:.1f}<br>Fair value: $%{y:.2f}<extra></extra>'
+                },
+                ...[2, 1, -1, -2].map(mult => ({
+                    x: curveX,
+                    y: curveY.map(y => y + (mult * sigma)),
+                    name: `${mult > 0 ? '+' : ''}${mult} sigma`,
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { color: '#dc2626', width: 1.2, dash: Math.abs(mult) === 2 ? 'dot' : 'dash' },
+                    hoverinfo: 'skip'
+                })),
+                {
+                    x: trail.map(row => row.ntps),
+                    y: trail.map(row => row.wti_real),
+                    text: trail.map(row => row.date),
+                    name: 'Previous 13 weeks',
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    line: { color: '#059669', width: 2 },
+                    marker: { size: trail.map((_, i) => 5 + i * 0.45), color: '#059669' },
+                    hovertemplate: '%{text}<br>NTPS: %{x:.1f} MMbbl<br>WTI real: $%{y:.2f}<extra></extra>'
+                },
+                {
+                    x: [latest.ntps],
+                    y: [latest.wti_real],
+                    text: [latest.date],
+                    name: 'Latest',
+                    type: 'scatter',
+                    mode: 'markers',
+                    marker: { size: 15, symbol: 'square', color: '#2563eb', line: { color: '#1e3a8a', width: 2 } },
+                    hovertemplate: '%{text}<br>NTPS: %{x:.1f} MMbbl<br>WTI real: $%{y:.2f}<extra></extra>'
+                }
+            );
+
+            Plotly.newPlot('totalInvEiaChart', traces, {
+                ...baseLayout,
+                margin: { l: 56, r: 20, t: 8, b: 64 },
+                showlegend: true,
+                legend: { orientation: 'h', y: -0.2, font: { size: 10 } },
+                xaxis: { ...baseLayout.xaxis, title: 'NTPS (MMbbl vs 2011-2018 same-week average)', zeroline: true },
+                yaxis: { ...baseLayout.yaxis, title: 'WTI, latest CPI dollars ($/bbl)' }
+            }, config);
+
+            const previous = clean[clean.length - 2] || latest;
+            table('totalInvEiaStats',
+                ['Metric', 'Value'],
+                [
+                    ['Latest date', latest.date],
+                    ['NTPS', `${fmt.signed(latest.ntps, 1)} MMbbl`],
+                    ['WoW stocks', `${fmt.signed(latest.total_stocks - previous.total_stocks, 1)} MMbbl`],
+                    ['WTI real', `$${fmt.n(latest.wti_real, 2)}`],
+                    ['Fair value', `$${fmt.n(latest.fair_value, 2)}`],
+                    ['Residual z', fmt.signed(latest.residual_z, 2)],
+                    ['R squared', fmt.n(latest.r2, 2)],
+                    ['Baseline', latest.baseline_years || '2011-2018'],
+                ],
+                row => [`<td>${fmt.html(row[0])}</td>`, `<td class="num">${fmt.html(row[1])}</td>`]
+            );
+
+            const regressionStats = (points) => {
+                const cleanPoints = points.filter(point => Number.isFinite(point.x) && Number.isFinite(point.y));
+                const n = cleanPoints.length;
+                if (n < 3) return { n, slope: null, intercept: null, corr: null, r2: null };
+                const meanX = cleanPoints.reduce((sum, point) => sum + point.x, 0) / n;
+                const meanY = cleanPoints.reduce((sum, point) => sum + point.y, 0) / n;
+                const ssX = cleanPoints.reduce((sum, point) => sum + Math.pow(point.x - meanX, 2), 0);
+                const ssY = cleanPoints.reduce((sum, point) => sum + Math.pow(point.y - meanY, 2), 0);
+                const covXY = cleanPoints.reduce((sum, point) => sum + ((point.x - meanX) * (point.y - meanY)), 0);
+                const slope = ssX ? covXY / ssX : null;
+                const intercept = slope === null ? null : meanY - (slope * meanX);
+                const corr = ssX && ssY ? covXY / Math.sqrt(ssX * ssY) : null;
+                const r2 = corr === null ? null : corr * corr;
+                return { n, slope, intercept, corr, r2 };
+            };
+            const wowRows = clean
+                .map((row, i) => {
+                    if (i === 0) return null;
+                    const prior = clean[i - 1];
+                    return {
+                        ...row,
+                        ntpsChange: row.ntps - prior.ntps,
+                        wtiRealChange: row.wti_real - prior.wti_real,
+                        totalStocksChange: row.total_stocks - prior.total_stocks
+                    };
+                })
+                .filter(row => row && Number.isFinite(row.ntpsChange) && Number.isFinite(row.wtiRealChange));
+
+            if (wowRows.length) {
+                const wowStats = regressionStats(wowRows.map(row => ({ x: row.ntpsChange, y: row.wtiRealChange })));
+                const wowLatest = wowRows[wowRows.length - 1];
+                const wowTrail = wowRows.slice(-13);
+                const xMin = Math.min(...wowRows.map(row => row.ntpsChange));
+                const xMax = Math.max(...wowRows.map(row => row.ntpsChange));
+                const trendY = Number.isFinite(wowStats.slope)
+                    ? [wowStats.intercept + (wowStats.slope * xMin), wowStats.intercept + (wowStats.slope * xMax)]
+                    : [null, null];
+
+                const wowTraces = [1, 2, 3, 4].map(q => {
+                    const subset = wowRows.filter(row => Number(row.quarter) === q);
+                    return {
+                        x: subset.map(row => row.ntpsChange),
+                        y: subset.map(row => row.wtiRealChange),
+                        text: subset.map(row => row.date),
+                        customdata: subset.map(row => [row.totalStocksChange, row.ntps, row.wti_real]),
+                        name: `Q${q}`,
+                        type: 'scatter',
+                        mode: 'markers',
+                        marker: { size: 6, color: quarterColors[q], opacity: 0.62 },
+                        hovertemplate: '%{text}<br>NTPS WoW: %{x:.1f} MMbbl<br>WTI real WoW: $%{y:.2f}/bbl<br>Total stocks WoW: %{customdata[0]:.1f} MMbbl<br>NTPS: %{customdata[1]:.1f} MMbbl<br>WTI real: $%{customdata[2]:.2f}<extra></extra>'
+                    };
+                });
+
+                wowTraces.push(
+                    {
+                        x: [xMin, xMax],
+                        y: trendY,
+                        name: `Trend: $${fmt.n(wowStats.slope, 2)} per MMbbl`,
+                        type: 'scatter',
+                        mode: 'lines',
+                        line: { color: '#111827', width: 2.5 },
+                        hoverinfo: 'skip'
+                    },
+                    {
+                        x: wowTrail.map(row => row.ntpsChange),
+                        y: wowTrail.map(row => row.wtiRealChange),
+                        text: wowTrail.map(row => row.date),
+                        customdata: wowTrail.map(row => [row.totalStocksChange, row.ntps, row.wti_real]),
+                        name: 'Previous 13 weeks',
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        line: { color: '#059669', width: 2 },
+                        marker: { size: wowTrail.map((_, i) => 5 + i * 0.45), color: '#059669' },
+                        hovertemplate: '%{text}<br>NTPS WoW: %{x:.1f} MMbbl<br>WTI real WoW: $%{y:.2f}/bbl<br>Total stocks WoW: %{customdata[0]:.1f} MMbbl<extra></extra>'
+                    },
+                    {
+                        x: [wowLatest.ntpsChange],
+                        y: [wowLatest.wtiRealChange],
+                        text: [wowLatest.date],
+                        customdata: [[wowLatest.totalStocksChange, wowLatest.ntps, wowLatest.wti_real]],
+                        name: 'Latest',
+                        type: 'scatter',
+                        mode: 'markers',
+                        marker: { size: 15, symbol: 'square', color: '#2563eb', line: { color: '#1e3a8a', width: 2 } },
+                        hovertemplate: '%{text}<br>NTPS WoW: %{x:.1f} MMbbl<br>WTI real WoW: $%{y:.2f}/bbl<br>Total stocks WoW: %{customdata[0]:.1f} MMbbl<extra></extra>'
+                    }
+                );
+
+                Plotly.newPlot('totalInvEiaWowChart', wowTraces, {
+                    ...baseLayout,
+                    margin: { l: 56, r: 20, t: 8, b: 64 },
+                    showlegend: true,
+                    legend: { orientation: 'h', y: -0.2, font: { size: 10 } },
+                    xaxis: { ...baseLayout.xaxis, title: 'NTPS weekly change (MMbbl)', zeroline: true },
+                    yaxis: { ...baseLayout.yaxis, title: 'WTI real weekly change ($/bbl)', zeroline: true }
+                }, config);
+
+                table('totalInvEiaWowStats',
+                    ['Metric', 'Value'],
+                    [
+                        ['Latest date', wowLatest.date],
+                        ['Latest NTPS WoW', `${fmt.signed(wowLatest.ntpsChange, 1)} MMbbl`],
+                        ['Latest total stocks WoW', `${fmt.signed(wowLatest.totalStocksChange, 1)} MMbbl`],
+                        ['Latest WTI real WoW', `$${fmt.signed(wowLatest.wtiRealChange, 2)}/bbl`],
+                        ['Correlation', fmt.n(wowStats.corr, 2)],
+                        ['R squared', fmt.n(wowStats.r2, 2)],
+                        ['Beta', `$${fmt.n(wowStats.slope, 2)} / MMbbl`],
+                    ],
+                    row => [`<td>${fmt.html(row[0])}</td>`, `<td class="num">${fmt.html(row[1])}</td>`]
+                );
+            }
+        }
+
+        async function loadDashboard() {
+            try {
+                const res = await fetch('/api/energy/modeling');
+                if (!res.ok) throw new Error(`API returned ${res.status}`);
+                const data = await res.json();
+                renderSummary(data);
+                renderTables(data);
+                renderCluster(data);
+                renderImportance(data);
+                renderLagAndGroups(data);
+                renderWalkForward(data);
+                await renderTotalInvEia();
+                document.getElementById('status').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+            } catch (error) {
+                document.getElementById('status').className = 'error';
+                document.getElementById('status').textContent = `Unable to load modeling dashboard: ${error.message}`;
+            }
+        }
+
+        loadDashboard();
+    </script>
+</body>
+</html>
