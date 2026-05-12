@@ -1,6 +1,7 @@
 # API Keys - never commit
 config/api_keys.py
 data/refresh.log
+data/spr_refresh.log
 
 # Python
 __pycache__/

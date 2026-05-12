@@ -88,6 +88,43 @@
             border-bottom-color: var(--positive);
         }
 
+        .nav-spr-link {
+            margin-left: auto;
+            padding: 12px 20px;
+            color: #dbeafe;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+            border-bottom: 3px solid transparent;
+        }
+
+        .nav-spr-link:hover {
+            color: white;
+            background: rgba(255,255,255,0.08);
+            text-decoration: none;
+        }
+
+        .section-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 34px;
+            padding: 8px 13px;
+            border-radius: 5px;
+            background: var(--navy);
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .section-button:hover {
+            background: var(--navy-light);
+            color: white;
+            text-decoration: none;
+        }
+
         .container {
             max-width: 1600px;
             margin: 0 auto;
@@ -527,6 +564,7 @@
         <div class="nav-item" data-section="energy">Energy</div>
         <div class="nav-item" data-section="economy">Economy</div>
         <div class="nav-item" data-section="labor">Labor & Inflation</div>
+        <a class="nav-spr-link" href="/spr">SPR Tracker</a>
     </div>
 
     <!-- Key Metrics Bar -->
@@ -743,6 +781,7 @@
                     <div class="section-title">U.S. Petroleum Inventories & Supply/Demand</div>
                     <div class="section-subtitle">Left: Weekly stocks vs 5-year range | Right: last 4 weeks flow components and actual stock change</div>
                 </div>
+                <a class="section-button" href="/spr">Open SPR Release Tracker</a>
             </div>
             <div id="petroleum-section">
                 <!-- Will be populated by JavaScript -->

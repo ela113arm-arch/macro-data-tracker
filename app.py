@@ -40,6 +40,16 @@ REFRESH_STATE = {
     'returncode': None,
     'message': 'No refresh has been started.',
 }
+SPR_REFRESH_LOG = DATA_DIR / 'spr_refresh.log'
+SPR_REFRESH_LOCK = threading.Lock()
+SPR_REFRESH_PROCESS = None
+SPR_REFRESH_STATE = {
+    'status': 'idle',
+    'started_at': None,
+    'finished_at': None,
+    'returncode': None,
+    'message': 'No SPR refresh has been started.',
+}
 MODELING_CACHE = {
     'signature': None,
     'built_at': None,
@@ -247,6 +257,38 @@ def get_refresh_snapshot():
         return refresh_snapshot_locked()
 
 
+def spr_refresh_snapshot_locked():
+    """Return SPR refresh state, updating it if the child process has exited."""
+    global SPR_REFRESH_PROCESS
+
+    if SPR_REFRESH_PROCESS is not None:
+        returncode = SPR_REFRESH_PROCESS.poll()
+        if returncode is None:
+            SPR_REFRESH_STATE['status'] = 'running'
+        else:
+            SPR_REFRESH_STATE['finished_at'] = now_iso()
+            SPR_REFRESH_STATE['returncode'] = returncode
+            if returncode == 0:
+                SPR_REFRESH_STATE['status'] = 'completed'
+                SPR_REFRESH_STATE['message'] = 'SPR data refresh completed.'
+                read_csv_cached.cache_clear()
+            else:
+                SPR_REFRESH_STATE['status'] = 'failed'
+                SPR_REFRESH_STATE['message'] = f'SPR data refresh failed with exit code {returncode}.'
+            SPR_REFRESH_PROCESS = None
+
+    snapshot = dict(SPR_REFRESH_STATE)
+    snapshot['is_running'] = snapshot['status'] == 'running'
+    snapshot['log_file'] = str(SPR_REFRESH_LOG)
+    return snapshot
+
+
+def get_spr_refresh_snapshot():
+    """Thread-safe SPR refresh state snapshot."""
+    with SPR_REFRESH_LOCK:
+        return spr_refresh_snapshot_locked()
+
+
 def is_refresh_authorized():
     """Require a token for refresh operations when REFRESH_TOKEN is configured."""
     if not REFRESH_TOKEN:
@@ -266,6 +308,11 @@ def index():
 @app.route('/macro')
 def macro_dashboard():
     return render_template('index.html')
+
+
+@app.route('/spr')
+def spr_dashboard():
+    return render_template('spr.html')
 
 
 @app.route('/api/gdp/components')
@@ -396,6 +443,55 @@ def get_cot_brent_positioning():
 def get_total_inv_eia():
     """Total EIA petroleum stocks NTPS vs WTI fair value dataset"""
     return read_csv('total_inv_eia_fair_value.csv')
+
+
+@app.route('/api/spr/summary')
+@safe_endpoint
+def get_spr_summary():
+    """SPR release headline metrics."""
+    return read_csv('spr_release_summary.csv')
+
+
+@app.route('/api/spr/weekly-inventory')
+@safe_endpoint
+def get_spr_weekly_inventory():
+    """EIA WCSSTUS1 weekly SPR inventory and drawdown metrics."""
+    return read_csv('spr_weekly_inventory.csv')
+
+
+@app.route('/api/spr/events')
+@safe_endpoint
+def get_spr_events():
+    """Structured DOE/IEA SPR release events."""
+    return read_csv('spr_release_events.csv')
+
+
+@app.route('/api/spr/site-quality')
+@safe_endpoint
+def get_spr_site_quality():
+    """DOE SPR site and quality inventory snapshot."""
+    return read_csv('spr_site_quality.csv')
+
+
+@app.route('/api/spr/release-quality')
+@safe_endpoint
+def get_spr_release_quality():
+    """SPR release volume by public quality classification."""
+    return read_csv('spr_release_quality.csv')
+
+
+@app.route('/api/spr/release-buyers')
+@safe_endpoint
+def get_spr_release_buyers():
+    """SPR release award volumes by public buyer award information."""
+    return read_csv('spr_release_buyers.csv')
+
+
+@app.route('/api/spr/news')
+@safe_endpoint
+def get_spr_news():
+    """Latest official SPR release source rows."""
+    return read_csv('spr_news.csv')
 
 
 @app.route('/api/energy/exploration')
@@ -1619,7 +1715,15 @@ def status():
             'cache_ttl': CACHE_TTL,
             'refresh_requires_token': bool(REFRESH_TOKEN),
             'files_exist': {f: (DATA_DIR / f'{f}.csv').exists() for f in files},
-            'refresh': get_refresh_snapshot()
+            'spr_files_exist': {
+                f: (DATA_DIR / f'{f}.csv').exists()
+                for f in [
+                    'spr_weekly_inventory', 'spr_release_events', 'spr_site_quality',
+                    'spr_release_quality', 'spr_release_buyers', 'spr_news', 'spr_release_summary'
+                ]
+            },
+            'refresh': get_refresh_snapshot(),
+            'spr_refresh': get_spr_refresh_snapshot()
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -1629,6 +1733,12 @@ def status():
 def refresh_status():
     """Check the currently running or most recent refresh."""
     return jsonify(get_refresh_snapshot())
+
+
+@app.route('/api/spr/refresh/status')
+def spr_refresh_status():
+    """Check the currently running or most recent SPR refresh."""
+    return jsonify(get_spr_refresh_snapshot())
 
 
 @app.route('/api/refresh', methods=['POST'])
@@ -1683,6 +1793,64 @@ def refresh_data():
         return jsonify({
             'success': True,
             'message': 'Data refresh started.',
+            'refresh': snapshot
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/spr/refresh', methods=['POST'])
+def refresh_spr_data():
+    """Run spr_release_fetcher.py to refresh only SPR release data (async)."""
+    global SPR_REFRESH_PROCESS
+
+    try:
+        if not is_refresh_authorized():
+            return jsonify({
+                'success': False,
+                'message': 'Refresh token required.',
+                'requires_token': True
+            }), 401
+
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+        script_path = Path(__file__).parent / 'spr_release_fetcher.py'
+
+        with SPR_REFRESH_LOCK:
+            current = spr_refresh_snapshot_locked()
+            if current['is_running']:
+                return jsonify({
+                    'success': False,
+                    'message': 'An SPR data refresh is already running.',
+                    'refresh': current
+                }), 409
+
+            env = os.environ.copy()
+            env['PYTHONUNBUFFERED'] = '1'
+
+            with open(SPR_REFRESH_LOG, 'a', encoding='utf-8') as log_file:
+                log_file.write(f"\n===== SPR refresh started {now_iso()} =====\n")
+                log_file.flush()
+                SPR_REFRESH_PROCESS = subprocess.Popen(
+                    [sys.executable, str(script_path)],
+                    cwd=str(Path(__file__).parent),
+                    stdout=log_file,
+                    stderr=subprocess.STDOUT,
+                    env=env
+                )
+
+            SPR_REFRESH_STATE.update({
+                'status': 'running',
+                'started_at': now_iso(),
+                'finished_at': None,
+                'returncode': None,
+                'message': 'SPR data refresh is running.'
+            })
+            read_csv_cached.cache_clear()
+            snapshot = spr_refresh_snapshot_locked()
+
+        return jsonify({
+            'success': True,
+            'message': 'SPR data refresh started.',
             'refresh': snapshot
         })
     except Exception as e:

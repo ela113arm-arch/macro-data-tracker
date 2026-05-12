@@ -1,0 +1,22 @@
+metric,value,unit,label,as_of_date,refreshed_at
+announced_release_mmbbl,172.0,MMbbl,Announced release,2026-05-01,2026-05-11T20:48:58
+iea_us_contribution_mmbbl,172.2,MMbbl,IEA U.S. contribution,2026-05-01,2026-05-11T20:48:58
+expected_return_mmbbl,200.0,MMbbl,Expected returned volume,2026-05-01,2026-05-11T20:48:58
+release_days,120.0,days,Announced release window,2026-05-01,2026-05-11T20:48:58
+planned_daily_mmbbl,1.4333333333333333,MMbbl/day,Implied planned daily pace,2026-05-01,2026-05-11T20:48:58
+planned_weekly_mmbbl,10.033333333333333,MMbbl/week,Implied planned weekly pace,2026-05-01,2026-05-11T20:48:58
+awarded_mmbbl,133.04000000000002,MMbbl,Awarded volume,2026-05-01,2026-05-11T20:48:58
+solicited_not_awarded_mmbbl,39.17,MMbbl,Solicited-not-awarded volume,2026-05-01,2026-05-11T20:48:58
+observed_eia_drawdown_mmbbl,22.74200000000002,MMbbl,Observed EIA drawdown,2026-05-01,2026-05-11T20:48:58
+planned_drawdown_to_latest_mmbbl,60.2,MMbbl,Planned drawdown to latest EIA week,2026-05-01,2026-05-11T20:48:58
+plan_gap_mmbbl,-37.457999999999984,MMbbl,Actual minus planned drawdown,2026-05-01,2026-05-11T20:48:58
+latest_spr_stock_mmbbl,392.7,MMbbl,Latest SPR stock,2026-05-01,2026-05-11T20:48:58
+latest_weekly_drawdown_mmbbl,5.2239999999999895,MMbbl/week,Latest weekly drawdown pace,2026-05-01,2026-05-11T20:48:58
+released_sweet_mmbbl,24.18,MMbbl,Awarded release classified sweet,2026-05-01,2026-05-11T20:48:58
+released_sour_mmbbl,10.0,MMbbl,Awarded release classified sour,2026-05-01,2026-05-11T20:48:58
+released_mixed_split_not_stated_mmbbl,45.53,MMbbl,Awarded release mixed / split not stated,2026-05-01,2026-05-11T20:48:58
+released_public_split_not_stated_mmbbl,53.33,MMbbl,Awarded release public split not stated,2026-05-01,2026-05-11T20:48:58
+solicited_quality_unspecified_mmbbl,39.17,MMbbl,Open RFP balance quality unspecified,2026-05-01,2026-05-11T20:48:58
+site_total_mmbbl,402.0,MMbbl,DOE quick-facts site total,2026-05-01,2026-05-11T20:48:58
+site_sweet_mmbbl,150.0,MMbbl,DOE sweet crude inventory,2026-05-01,2026-05-11T20:48:58
+site_sour_mmbbl,252.0,MMbbl,DOE sour crude inventory,2026-05-01,2026-05-11T20:48:58

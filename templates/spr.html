@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPR Release Tracker</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        :root {
+            --ink: #111827;
+            --muted: #5b6778;
+            --line: #d9e0ea;
+            --paper: #ffffff;
+            --soft: #f5f7fa;
+            --nav: #1f2937;
+            --blue: #2563eb;
+            --green: #059669;
+            --red: #dc2626;
+            --amber: #b7791f;
+            --teal: #0f766e;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: #eef2f6;
+            color: var(--ink);
+            font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        header {
+            background: var(--nav);
+            color: #fff;
+            padding: 18px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 18px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 780;
+            letter-spacing: 0;
+        }
+
+        h2 {
+            margin: 0;
+            color: var(--nav);
+            font-size: 14px;
+            font-weight: 760;
+        }
+
+        a { color: var(--blue); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        .subhead {
+            margin-top: 4px;
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 12px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: flex-end;
+            gap: 14px;
+            text-align: right;
+        }
+
+        .header-link {
+            color: #dbeafe;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .refresh-panel {
+            min-width: 220px;
+        }
+
+        .refresh-status {
+            min-height: 17px;
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 11px;
+        }
+
+        button {
+            border: 0;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 700;
+        }
+
+        .refresh-btn {
+            margin-top: 7px;
+            padding: 8px 13px;
+            background: #0f766e;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .refresh-btn:disabled {
+            cursor: default;
+            opacity: 0.75;
+        }
+
+        .spinner {
+            display: none;
+            width: 13px;
+            height: 13px;
+            border: 2px solid rgba(255, 255, 255, 0.9);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        main {
+            max-width: 1700px;
+            margin: 0 auto;
+            padding: 22px 28px 40px;
+        }
+
+        .kpis {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .kpi, .panel {
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+        }
+
+        .kpi {
+            min-height: 91px;
+            padding: 13px 14px;
+        }
+
+        .label {
+            color: var(--muted);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-weight: 760;
+            margin-bottom: 7px;
+        }
+
+        .value {
+            color: var(--ink);
+            font-size: 24px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .hint {
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .panel {
+            padding: 15px;
+            min-width: 0;
+        }
+
+        .panel-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 10px;
+        }
+
+        .source {
+            color: var(--muted);
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: 760;
+            white-space: nowrap;
+        }
+
+        .span-4 { grid-column: span 4; }
+        .span-5 { grid-column: span 5; }
+        .span-7 { grid-column: span 7; }
+        .span-8 { grid-column: span 8; }
+        .span-12 { grid-column: span 12; }
+
+        .chart { height: 360px; }
+        .chart.short { height: 300px; }
+
+        .table-wrap {
+            max-height: 390px;
+            overflow: auto;
+            border: 1px solid #edf1f6;
+            border-radius: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        th, td {
+            border-bottom: 1px solid #edf1f6;
+            padding: 8px 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            position: sticky;
+            top: 0;
+            background: #f8fafc;
+            color: #475569;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            font-weight: 760;
+            z-index: 1;
+        }
+
+        td.num, th.num {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            min-height: 22px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #3730a3;
+            font-size: 11px;
+            font-weight: 760;
+            white-space: nowrap;
+        }
+
+        .pill.awarded { background: #ecfdf5; color: #047857; }
+        .pill.solicited { background: #fffbeb; color: #92400e; }
+        .pill.observed { background: #f1f5f9; color: #334155; }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        select {
+            min-width: 190px;
+            border: 1px solid var(--line);
+            border-radius: 5px;
+            background: #fff;
+            color: var(--ink);
+            font: inherit;
+            padding: 7px 9px;
+        }
+
+        .loading, .error {
+            padding: 34px;
+            text-align: center;
+            color: var(--muted);
+        }
+
+        .error {
+            color: #991b1b;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 6px;
+        }
+
+        @media (max-width: 1300px) {
+            .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .span-4, .span-5, .span-7, .span-8 { grid-column: span 12; }
+        }
+
+        @media (max-width: 760px) {
+            header { display: block; }
+            .header-actions { margin-top: 14px; text-align: left; align-items: flex-start; }
+            main { padding: 16px; }
+            .kpis { grid-template-columns: 1fr; }
+            .value { font-size: 21px; }
+            .chart, .chart.short { height: 300px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div>
+            <h1>SPR Release Tracker</h1>
+            <div class="subhead">DOE/IEA release facts, EIA weekly SPR stock drawdown, and public release-quality classification.</div>
+        </div>
+        <div class="header-actions">
+            <a href="/macro" class="header-link">Macro dashboard</a>
+            <div class="refresh-panel">
+                <div id="refreshStatus" class="refresh-status">Loading refresh status...</div>
+                <button id="refreshBtn" class="refresh-btn" onclick="refreshSprData()">
+                    <span id="refreshSpinner" class="spinner"></span>
+                    <span id="refreshText">Refresh SPR Data</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="kpis">
+            <div class="kpi">
+                <div class="label">Announced</div>
+                <div class="value" id="kpi-announced">--</div>
+                <div class="hint">DOE emergency release</div>
+            </div>
+            <div class="kpi">
+                <div class="label">Awarded</div>
+                <div class="value" id="kpi-awarded">--</div>
+                <div class="hint">DOE award notices</div>
+            </div>
+            <div class="kpi">
+                <div class="label">Solicited</div>
+                <div class="value" id="kpi-solicited">--</div>
+                <div class="hint">RFP not yet marked awarded</div>
+            </div>
+            <div class="kpi">
+                <div class="label">Observed Drawdown</div>
+                <div class="value" id="kpi-observed">--</div>
+                <div class="hint">EIA WCSSTUS1 vs baseline</div>
+            </div>
+            <div class="kpi">
+                <div class="label">Latest SPR Stock</div>
+                <div class="value" id="kpi-stock">--</div>
+                <div class="hint" id="kpi-date">--</div>
+            </div>
+            <div class="kpi">
+                <div class="label">Weekly Pace</div>
+                <div class="value" id="kpi-pace">--</div>
+                <div class="hint" id="kpi-pace-plan">--</div>
+            </div>
+        </section>
+
+        <section class="grid">
+            <div class="panel span-8">
+                <div class="panel-head">
+                    <h2>Plan vs Actual Drawdown</h2>
+                    <span class="source">DOE / EIA</span>
+                </div>
+                <div id="planChart" class="chart"><div class="loading">Loading...</div></div>
+            </div>
+            <div class="panel span-4">
+                <div class="panel-head">
+                    <h2>Latest Source Facts</h2>
+                    <span class="source">DOE / IEA</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>Metric</th><th class="num">Value</th><th>Unit</th></tr>
+                        </thead>
+                        <tbody id="summaryTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel span-7">
+                <div class="panel-head">
+                    <h2>Weekly SPR Drawdown Pace</h2>
+                    <span class="source">EIA WCSSTUS1</span>
+                </div>
+                <div id="weeklyChart" class="chart short"><div class="loading">Loading...</div></div>
+            </div>
+            <div class="panel span-5">
+                <div class="panel-head">
+                    <h2>SPR Release by Quality</h2>
+                    <span class="source">DOE awards / site quality</span>
+                </div>
+                <div class="toolbar">
+                    <div class="hint" id="releaseQualityNote">Awarded release barrels by public quality bucket.</div>
+                    <select id="releaseWeekFilter" onchange="renderFilteredReleaseQuality()"></select>
+                </div>
+                <div id="releaseQualityChart" class="chart short"><div class="loading">Loading...</div></div>
+                <div class="hint">Buyer-level award PDFs publish buyer totals. They do not publish buyer-to-site allocation or buyer-level sweet/sour split, so quality is shown at the tranche/site level where public.</div>
+                <div class="table-wrap" style="margin-top:10px;max-height:none;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tranche</th>
+                                <th>Site</th>
+                                <th>Status</th>
+                                <th>Quality</th>
+                                <th class="num">Volume</th>
+                                <th>Method</th>
+                            </tr>
+                        </thead>
+                        <tbody id="releaseQualityTable"></tbody>
+                    </table>
+                </div>
+                <div class="table-wrap" style="margin-top:10px;max-height:260px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Buyer</th>
+                                <th>Tranche</th>
+                                <th class="num">Award</th>
+                                <th>Allocation Note</th>
+                                <th>Source</th>
+                            </tr>
+                        </thead>
+                        <tbody id="releaseBuyerTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel span-12">
+                <div class="panel-head">
+                    <h2>Release Timeline</h2>
+                    <span class="source">Official sources</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Source</th>
+                                <th>Status</th>
+                                <th>Event</th>
+                                <th class="num">Volume</th>
+                                <th>Sites</th>
+                                <th>Quality</th>
+                                <th>Source Link</th>
+                                <th>Award PDF</th>
+                            </tr>
+                        </thead>
+                        <tbody id="eventsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel span-12">
+                <div class="panel-head">
+                    <h2>Latest Official News and Source Rows</h2>
+                    <span class="source">DOE / IEA / EIA</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Source</th>
+                                <th>Title</th>
+                                <th>Status</th>
+                                <th class="num">Volume</th>
+                                <th>Extracted Fields</th>
+                                <th>Link</th>
+                                <th>Award PDF</th>
+                            </tr>
+                        </thead>
+                        <tbody id="newsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const chartConfig = { responsive: true, displaylogo: false };
+        const chartLayout = {
+            margin: { l: 56, r: 24, t: 18, b: 46 },
+            paper_bgcolor: '#ffffff',
+            plot_bgcolor: '#ffffff',
+            font: { family: 'Segoe UI, sans-serif', size: 11, color: '#111827' },
+            xaxis: { showgrid: false, zeroline: false },
+            yaxis: { gridcolor: '#e8edf5', zeroline: false },
+            legend: { orientation: 'h', y: -0.18 }
+        };
+
+        function fmt(value, digits = 1) {
+            const num = Number(value);
+            return Number.isFinite(num) ? num.toLocaleString(undefined, {
+                minimumFractionDigits: digits,
+                maximumFractionDigits: digits
+            }) : '--';
+        }
+
+        function metricValue(summary, metric) {
+            const row = summary.find(item => item.metric === metric);
+            return row ? Number(row.value) : null;
+        }
+
+        function metricRow(summary, metric) {
+            return summary.find(item => item.metric === metric) || {};
+        }
+
+        function statusPill(status) {
+            const cls = String(status || '').toLowerCase();
+            const kind = cls.includes('award') ? 'awarded' : (cls.includes('solicit') ? 'solicited' : 'observed');
+            return `<span class="pill ${kind}">${status || '--'}</span>`;
+        }
+
+        function link(url, label = 'Open') {
+            return url ? `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>` : '--';
+        }
+
+        function pdfLink(row) {
+            const url = row.award_pdf_url || (String(row.source_url || '').toLowerCase().endsWith('.pdf') ? row.source_url : '');
+            return url ? link(url, 'PDF') : '--';
+        }
+
+        async function fetchJson(url) {
+            const res = await fetch(url);
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error(`${url} failed: ${text.slice(0, 140)}`);
+            }
+            return res.json();
+        }
+
+        function setKpis(summary) {
+            const announced = metricValue(summary, 'announced_release_mmbbl');
+            const awarded = metricValue(summary, 'awarded_mmbbl');
+            const solicited = metricValue(summary, 'solicited_not_awarded_mmbbl');
+            const observed = metricValue(summary, 'observed_eia_drawdown_mmbbl');
+            const stock = metricValue(summary, 'latest_spr_stock_mmbbl');
+            const pace = metricValue(summary, 'latest_weekly_drawdown_mmbbl');
+            const plannedWeekly = metricValue(summary, 'planned_weekly_mmbbl');
+            const latest = metricRow(summary, 'latest_spr_stock_mmbbl');
+
+            document.getElementById('kpi-announced').textContent = `${fmt(announced)} MMbbl`;
+            document.getElementById('kpi-awarded').textContent = `${fmt(awarded)} MMbbl`;
+            document.getElementById('kpi-solicited').textContent = `${fmt(solicited)} MMbbl`;
+            document.getElementById('kpi-observed').textContent = `${fmt(observed)} MMbbl`;
+            document.getElementById('kpi-stock').textContent = `${fmt(stock)} MMbbl`;
+            document.getElementById('kpi-date').textContent = latest.as_of_date ? `EIA week ${latest.as_of_date}` : '--';
+            document.getElementById('kpi-pace').textContent = `${fmt(pace)} MMbbl/wk`;
+            document.getElementById('kpi-pace-plan').textContent = `Plan ${fmt(plannedWeekly)} MMbbl/wk`;
+        }
+
+        function renderSummaryTable(summary) {
+            const keep = [
+                'iea_us_contribution_mmbbl',
+                'expected_return_mmbbl',
+                'release_days',
+                'planned_daily_mmbbl',
+                'planned_weekly_mmbbl',
+                'planned_drawdown_to_latest_mmbbl',
+                'plan_gap_mmbbl',
+                'released_sweet_mmbbl',
+                'released_sour_mmbbl',
+                'released_mixed_split_not_stated_mmbbl',
+                'released_public_split_not_stated_mmbbl',
+                'solicited_quality_unspecified_mmbbl'
+            ];
+            const rows = summary.filter(row => keep.includes(row.metric));
+            document.getElementById('summaryTable').innerHTML = rows.map(row => `
+                <tr>
+                    <td>${row.label || row.metric}</td>
+                    <td class="num">${fmt(row.value, row.unit === 'days' ? 0 : 2)}</td>
+                    <td>${row.unit || ''}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderPlanChart(weekly) {
+            const dates = weekly.map(row => row.date);
+            const observed = weekly.map(row => Number(row.observed_drawdown_mmbbl));
+            const planned = weekly.map(row => Number(row.planned_drawdown_mmbbl));
+
+            Plotly.newPlot('planChart', [
+                {
+                    x: dates,
+                    y: planned,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'Planned drawdown',
+                    line: { color: '#64748b', width: 2, dash: 'dash' }
+                },
+                {
+                    x: dates,
+                    y: observed,
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    name: 'EIA observed drawdown',
+                    line: { color: '#2563eb', width: 3 },
+                    marker: { size: 5 }
+                }
+            ], {
+                ...chartLayout,
+                yaxis: { ...chartLayout.yaxis, title: 'MMbbl from pre-release baseline' }
+            }, chartConfig);
+        }
+
+        function renderWeeklyChart(weekly, plannedWeekly) {
+            const recent = weekly.slice(-18);
+            const dates = recent.map(row => row.date);
+            const drawdown = recent.map(row => Number(row.weekly_drawdown_mmbbl));
+            const plan = recent.map(() => plannedWeekly);
+
+            Plotly.newPlot('weeklyChart', [
+                {
+                    x: dates,
+                    y: drawdown,
+                    type: 'bar',
+                    name: 'Weekly drawdown',
+                    marker: { color: drawdown.map(v => v >= 0 ? '#0f766e' : '#dc2626') }
+                },
+                {
+                    x: dates,
+                    y: plan,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'Implied weekly plan',
+                    line: { color: '#92400e', width: 2, dash: 'dot' }
+                }
+            ], {
+                ...chartLayout,
+                yaxis: { ...chartLayout.yaxis, title: 'MMbbl/week' }
+            }, chartConfig);
+        }
+
+        let releaseQualityRows = [];
+        let releaseBuyerRows = [];
+
+        function populateReleaseWeekFilter(rows) {
+            const select = document.getElementById('releaseWeekFilter');
+            const weeks = [...new Set(rows.map(row => row.week || row.date).filter(Boolean))]
+                .sort((a, b) => String(b).localeCompare(String(a)));
+            const current = select.value || 'all';
+            select.innerHTML = [
+                '<option value="all">All award weeks</option>',
+                ...weeks.map(week => `<option value="${week}">${week}</option>`)
+            ].join('');
+            select.value = weeks.includes(current) ? current : 'all';
+        }
+
+        function renderFilteredReleaseQuality() {
+            const selectedWeek = document.getElementById('releaseWeekFilter').value || 'all';
+            renderReleaseQualityChart(releaseQualityRows, releaseBuyerRows, selectedWeek);
+        }
+
+        function renderReleaseQualityChart(releaseRows, buyerRows, selectedWeek = 'all') {
+            const rows = [...releaseRows]
+                .filter(row => selectedWeek === 'all' || (row.week || row.date) === selectedWeek)
+                .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+            const buyers = [...buyerRows]
+                .filter(row => selectedWeek === 'all' || (row.week || row.date) === selectedWeek)
+                .sort((a, b) => Number(b.volume_mmbbl) - Number(a.volume_mmbbl));
+            document.getElementById('releaseQualityTable').innerHTML = rows.map(row => `
+                <tr>
+                    <td>${row.tranche || '--'}</td>
+                    <td>${row.site || '--'}</td>
+                    <td>${statusPill(row.status)}</td>
+                    <td>${row.quality_bucket || '--'}<div class="hint">${row.notes || ''}</div></td>
+                    <td class="num">${fmt(row.volume_mmbbl)}</td>
+                    <td>${row.quality_method || '--'}</td>
+                </tr>
+            `).join('');
+            document.getElementById('releaseBuyerTable').innerHTML = buyers.map(row => `
+                <tr>
+                    <td>${row.buyer || '--'}</td>
+                    <td>${row.tranche || '--'}</td>
+                    <td class="num">${fmt(row.volume_mmbbl, 3)}</td>
+                    <td>${row.buyer_site_allocation || row.quality_allocation || '--'}</td>
+                    <td>${link(row.source_url, 'PDF')}</td>
+                </tr>
+            `).join('') || '<tr><td colspan="5">No buyer award rows for this selection.</td></tr>';
+
+            if (!rows.length) {
+                document.getElementById('releaseQualityChart').innerHTML = '<div class="loading">No release-quality data available.</div>';
+                return;
+            }
+
+            const qualityOrder = [
+                'Sweet',
+                'Sour',
+                'Mixed / split not stated',
+                'Public split not stated',
+                'Open RFP balance'
+            ];
+            const statusOrder = ['Awarded', 'Open / not awarded'];
+            const colorMap = {
+                'Sweet': '#2563eb',
+                'Sour': '#b7791f',
+                'Mixed / split not stated': '#64748b',
+                'Public split not stated': '#7c3aed',
+                'Open RFP balance': '#cbd5e1'
+            };
+            const totalsByQuality = Object.fromEntries(qualityOrder.map(q => [q, 0]));
+            for (const row of rows) {
+                totalsByQuality[row.quality_bucket] = (totalsByQuality[row.quality_bucket] || 0) + (Number(row.volume_mmbbl) || 0);
+            }
+            const maxTotal = Math.max(...Object.values(totalsByQuality), 1);
+            const selectedTotal = rows.reduce((sum, row) => sum + (Number(row.volume_mmbbl) || 0), 0);
+            const buyerTotal = buyers.reduce((sum, row) => sum + (Number(row.volume_mmbbl) || 0), 0);
+            document.getElementById('releaseQualityNote').textContent = selectedWeek === 'all'
+                ? `All public tranches: ${fmt(selectedTotal, 2)} MMbbl by quality bucket; buyer awards total ${fmt(buyerTotal, 2)} MMbbl.`
+                : `${selectedWeek}: ${fmt(selectedTotal, 2)} MMbbl by quality bucket; buyer awards total ${fmt(buyerTotal, 2)} MMbbl.`;
+
+            try {
+                const traces = statusOrder.map(status => ({
+                    y: qualityOrder,
+                    x: qualityOrder.map(quality => rows
+                        .filter(row => row.status === status && row.quality_bucket === quality)
+                        .reduce((sum, row) => sum + (Number(row.volume_mmbbl) || 0), 0)
+                    ),
+                    type: 'bar',
+                    orientation: 'h',
+                    name: status,
+                    marker: {
+                        color: qualityOrder.map(quality => status === 'Open / not awarded' ? '#cbd5e1' : colorMap[quality])
+                    },
+                    hovertemplate: '%{y}<br>%{fullData.name}: %{x:.1f} MMbbl<extra></extra>'
+                }));
+
+                Plotly.newPlot('releaseQualityChart', traces, {
+                    ...chartLayout,
+                    barmode: 'stack',
+                    margin: { l: 158, r: 42, t: 52, b: 38 },
+                    legend: {
+                        orientation: 'h',
+                        x: 0,
+                        y: 1.18,
+                        xanchor: 'left',
+                        yanchor: 'bottom',
+                        bgcolor: 'rgba(255,255,255,0.92)',
+                        bordercolor: '#d9e0ea',
+                        borderwidth: 1
+                    },
+                    xaxis: { ...chartLayout.xaxis, title: 'Release volume, MMbbl', range: [0, maxTotal * 1.16], type: 'linear' },
+                    yaxis: { ...chartLayout.yaxis, autorange: 'reversed', type: 'category' },
+                    annotations: qualityOrder.map(quality => ({
+                        x: (totalsByQuality[quality] || 0) + maxTotal * 0.025,
+                        y: quality,
+                        text: `${fmt(totalsByQuality[quality] || 0)} MMbbl`,
+                        showarrow: false,
+                        xanchor: 'left',
+                        font: { size: 10, color: '#475569' }
+                    }))
+                }, chartConfig);
+            } catch (error) {
+                document.getElementById('releaseQualityChart').innerHTML = '<div class="error">Release-quality chart failed to render. The table below has the source data.</div>';
+            }
+        }
+
+        function renderSiteChart(siteRows) {
+            const rows = [...siteRows].sort((a, b) => Number(b.total_mmbbl) - Number(a.total_mmbbl));
+            const sites = rows.map(row => row.site);
+            const sweet = rows.map(row => Number(row.sweet_mmbbl) || 0);
+            const sour = rows.map(row => Number(row.sour_mmbbl) || 0);
+            const totals = rows.map(row => Number(row.total_mmbbl) || 0);
+
+            try {
+                Plotly.newPlot('releaseQualityChart', [
+                    {
+                        y: sites,
+                        x: sweet,
+                        type: 'bar',
+                        orientation: 'h',
+                        name: 'Inventory sweet',
+                        marker: { color: '#2563eb' }
+                    },
+                    {
+                        y: sites,
+                        x: sour,
+                        type: 'bar',
+                        orientation: 'h',
+                        name: 'Inventory sour',
+                        marker: { color: '#b7791f' }
+                    },
+                ], {
+                    ...chartLayout,
+                    barmode: 'stack',
+                    margin: { l: 118, r: 36, t: 18, b: 46 },
+                    xaxis: { ...chartLayout.xaxis, title: 'MMbbl', range: [0, Math.max(...totals) * 1.16] },
+                    yaxis: { ...chartLayout.yaxis, autorange: 'reversed' },
+                    annotations: rows.map((row, index) => ({
+                        x: Number(row.total_mmbbl) + Math.max(...totals) * 0.025,
+                        y: row.site,
+                        text: `${fmt(row.total_mmbbl)} total`,
+                        showarrow: false,
+                        xanchor: 'left',
+                        font: { size: 10, color: '#475569' }
+                    }))
+                }, chartConfig);
+            } catch (error) {
+                document.getElementById('releaseQualityChart').innerHTML = '<div class="error">Fallback inventory chart failed to render.</div>';
+            }
+        }
+
+        function renderEventsTable(events) {
+            const sorted = [...events].sort((a, b) => String(a.date).localeCompare(String(b.date)));
+            document.getElementById('eventsTable').innerHTML = sorted.map(row => `
+                <tr>
+                    <td>${row.date || '--'}</td>
+                    <td>${row.source || '--'}</td>
+                    <td>${statusPill(row.status)}</td>
+                    <td>${row.event_type || '--'}<div class="hint">${row.title || ''}</div></td>
+                    <td class="num">${fmt(row.volume_mmbbl)}</td>
+                    <td>${row.sites || '--'}</td>
+                    <td>${row.quality || '--'}</td>
+                    <td>${link(row.source_url)}</td>
+                    <td>${pdfLink(row)}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderNewsTable(news) {
+            document.getElementById('newsTable').innerHTML = news.map(row => `
+                <tr>
+                    <td>${row.date || '--'}</td>
+                    <td>${row.source || '--'}</td>
+                    <td>${row.title || row.page_title || '--'}</td>
+                    <td>${statusPill(row.status)}</td>
+                    <td class="num">${fmt(row.volume_mmbbl)}</td>
+                    <td>${row.sites || '--'}<div class="hint">${row.quality || ''}</div></td>
+                    <td>${link(row.source_url)}</td>
+                    <td>${pdfLink(row)}</td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadDashboard() {
+            try {
+                const [summary, weekly, events, siteRows, releaseQuality, releaseBuyers, news] = await Promise.all([
+                    fetchJson('/api/spr/summary'),
+                    fetchJson('/api/spr/weekly-inventory'),
+                    fetchJson('/api/spr/events'),
+                    fetchJson('/api/spr/site-quality'),
+                    fetchJson('/api/spr/release-quality'),
+                    fetchJson('/api/spr/release-buyers'),
+                    fetchJson('/api/spr/news')
+                ]);
+                releaseQualityRows = releaseQuality;
+                releaseBuyerRows = releaseBuyers;
+                populateReleaseWeekFilter(releaseQualityRows);
+                const plannedWeekly = metricValue(summary, 'planned_weekly_mmbbl');
+                setKpis(summary);
+                renderSummaryTable(summary);
+                renderPlanChart(weekly);
+                renderWeeklyChart(weekly, plannedWeekly);
+                renderFilteredReleaseQuality();
+                renderEventsTable(events);
+                renderNewsTable(news);
+                await updateRefreshStatus();
+            } catch (error) {
+                document.querySelector('main').innerHTML = `<div class="error">${error.message}</div>`;
+            }
+        }
+
+        async function updateRefreshStatus() {
+            const status = document.getElementById('refreshStatus');
+            try {
+                const data = await fetchJson('/api/spr/refresh/status');
+                if (data.status === 'running') {
+                    status.textContent = 'SPR refresh running...';
+                } else if (data.status === 'completed') {
+                    status.textContent = data.finished_at ? `Last SPR refresh completed ${data.finished_at}` : 'SPR refresh completed.';
+                } else if (data.status === 'failed') {
+                    status.textContent = data.message || 'Last SPR refresh failed.';
+                } else {
+                    status.textContent = 'SPR refresh idle.';
+                }
+            } catch (error) {
+                status.textContent = 'Refresh status unavailable.';
+            }
+        }
+
+        async function refreshSprData() {
+            const btn = document.getElementById('refreshBtn');
+            const spinner = document.getElementById('refreshSpinner');
+            const text = document.getElementById('refreshText');
+            const status = document.getElementById('refreshStatus');
+
+            btn.disabled = true;
+            spinner.style.display = 'inline-block';
+            text.textContent = 'Starting...';
+            status.textContent = 'Starting SPR-only refresh...';
+
+            try {
+                const makeRefreshRequest = async () => {
+                    const token = localStorage.getItem('macroRefreshToken');
+                    const headers = token ? { 'X-Refresh-Token': token } : {};
+                    return fetch('/api/spr/refresh', { method: 'POST', headers });
+                };
+
+                let res = await makeRefreshRequest();
+                let data = await res.json();
+                if (res.status === 401 && data.requires_token) {
+                    const token = window.prompt('Enter refresh token');
+                    if (!token) throw new Error('Refresh token required.');
+                    localStorage.setItem('macroRefreshToken', token);
+                    res = await makeRefreshRequest();
+                    data = await res.json();
+                }
+                if (!res.ok || !data.success) throw new Error(data.message || 'SPR refresh failed to start.');
+
+                text.textContent = 'Refreshing...';
+                let elapsed = 0;
+                const poll = setInterval(async () => {
+                    elapsed += 3;
+                    status.textContent = `Refreshing SPR data... ${elapsed}s elapsed`;
+                    const check = await fetchJson('/api/spr/refresh/status');
+                    if (check.status === 'completed') {
+                        clearInterval(poll);
+                        spinner.style.display = 'none';
+                        text.textContent = 'Done';
+                        status.textContent = check.message || 'SPR refresh complete.';
+                        setTimeout(() => location.reload(), 900);
+                    } else if (check.status === 'failed') {
+                        clearInterval(poll);
+                        spinner.style.display = 'none';
+                        text.textContent = 'Failed';
+                        status.textContent = check.message || 'SPR refresh failed.';
+                        btn.disabled = false;
+                    }
+                    if (elapsed > 240) {
+                        clearInterval(poll);
+                        spinner.style.display = 'none';
+                        text.textContent = 'Refresh SPR Data';
+                        status.textContent = 'SPR refresh is taking longer than expected. Check data/spr_refresh.log.';
+                        btn.disabled = false;
+                    }
+                }, 3000);
+            } catch (error) {
+                spinner.style.display = 'none';
+                text.textContent = 'Refresh SPR Data';
+                status.textContent = `Error: ${error.message}`;
+                btn.disabled = false;
+            }
+        }
+
+        window.addEventListener('resize', () => {
+            document.querySelectorAll('.js-plotly-plot').forEach(chart => Plotly.Plots.resize(chart));
+        });
+
+        loadDashboard();
+    </script>
+</body>
+</html>
