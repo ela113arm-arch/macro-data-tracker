@@ -640,18 +640,20 @@
         <div class="section" data-page="overview labor rates">
             <div class="section-header">
                 <div>
-                    <div class="section-title">Policy, Inflation & Labor</div>
-                    <div class="section-subtitle">Treasury yields, fed funds, 3-month annualized CPI, and weekly labor stress</div>
+                    <div class="section-title">Policy & Inflation</div>
+                    <div class="section-subtitle">Treasury yields, fed funds, and 12-month CPI</div>
                 </div>
             </div>
             <div class="card">
                 <div class="card-header">
-                    <span>Rates vs Inflation vs Labor Stress</span>
-                    <span class="source">FRED / BLS / DOL</span>
+                    <span>Rates vs Smoothed Inflation</span>
+                    <span class="source">FRED / BLS</span>
                 </div>
                 <div class="card-body">
                     <div id="policy-inflation-labor-chart" class="chart-lg"><div class="loading">Loading...</div></div>
-                    <div class="chart-desc">Actual values: rates and 3-month annualized CPI use the left percent axis; jobless claims use the right axis in thousands.</div>
+                    <div class="chart-desc">Rates use the left percent axis. CPI is the 12-month year-over-year rate on the right percent axis.</div>
+                    <div id="policy-initial-claims-chart" class="chart" style="margin-top: 18px;"><div class="loading">Loading...</div></div>
+                    <div class="chart-desc">Initial jobless claims 12-week moving average. 2020-2021 values are held flat at the last 2019 observation.</div>
                 </div>
             </div>
         </div>
@@ -3177,11 +3179,42 @@
          * @param {string} config.interval - 'weekly', 'monthly', or 'quarterly' (default: 'monthly')
          * @param {Array} config.metrics - Array of {key, name, desc, unit?, color?}
          */
-        async function loadRangeCharts({ endpoint, containerId, chartPrefix, source, yAxisLabel, interval = 'monthly', metrics }) {
+        function forwardFillPeriodWithPriorValue(data, { dateField = 'date', startYear = 2020, endYear = 2020, fields = null } = {}) {
+            const skipFields = new Set([dateField, 'year', 'month', 'week', 'quarter']);
+            const valueFields = fields || Object.keys(data[0] || {}).filter(key => !skipFields.has(key));
+            const rows = data
+                .map(row => ({ ...row }))
+                .sort((a, b) => new Date(a[dateField]) - new Date(b[dateField]));
+            const priorValues = {};
+
+            for (const row of rows) {
+                const rowYear = new Date(row[dateField]).getFullYear();
+                if (rowYear < startYear) {
+                    for (const field of valueFields) {
+                        const value = Number(row[field]);
+                        if (Number.isFinite(value)) priorValues[field] = value;
+                    }
+                } else if (rowYear >= startYear && rowYear <= endYear) {
+                    for (const field of valueFields) {
+                        if (priorValues[field] !== undefined) row[field] = priorValues[field];
+                    }
+                }
+            }
+            return rows;
+        }
+
+        async function loadRangeCharts({ endpoint, containerId, chartPrefix, source, yAxisLabel, interval = 'monthly', metrics, flattenYear = null }) {
             try {
                 const res = await fetch(endpoint);
-                const data = await res.json();
+                let data = await res.json();
                 if (!data.length) return;
+                if (flattenYear) {
+                    data = forwardFillPeriodWithPriorValue(data, {
+                        startYear: flattenYear,
+                        endYear: flattenYear,
+                        fields: metrics.map(m => m.key)
+                    });
+                }
 
                 const container = document.getElementById(containerId);
                 if (!container) return;
@@ -3218,11 +3251,18 @@
             }
         }
 
-        async function loadTimeSeriesCards({ endpoint, containerId, chartPrefix, source, yAxisLabel, metrics, zeroLine = false }) {
+        async function loadTimeSeriesCards({ endpoint, containerId, chartPrefix, source, yAxisLabel, metrics, zeroLine = false, flattenYear = null }) {
             try {
                 const res = await fetch(endpoint);
-                const data = await res.json();
+                let data = await res.json();
                 if (!data.length) return;
+                if (flattenYear) {
+                    data = forwardFillPeriodWithPriorValue(data, {
+                        startYear: flattenYear,
+                        endYear: flattenYear,
+                        fields: metrics.map(m => m.key)
+                    });
+                }
 
                 data.sort((a, b) => new Date(a.date) - new Date(b.date));
                 const dates = data.map(d => d.date);
@@ -3320,6 +3360,7 @@
                 chartPrefix: 'transport-chart',
                 source: 'FRED / DOT',
                 yAxisLabel: 'Value',
+                flattenYear: 2020,
                 metrics: [
                     { key: 'vmt', name: 'Vehicle Miles Traveled', unit: 'Million Miles', desc: 'Total miles driven on US roads - indicator of consumer mobility, commuting, and freight activity' },
                     { key: 'air_passengers', name: 'Air Load Factor', unit: '%', desc: 'Percentage of available airline seats filled - measures air travel demand and airline efficiency' },
@@ -3348,6 +3389,7 @@
                 chartPrefix: 'emp-chart',
                 source: 'BLS via FRED',
                 yAxisLabel: 'Thousands',
+                flattenYear: 2020,
                 metrics: [
                     { key: 'us_total', name: 'US Total Nonfarm', desc: 'Total nonfarm payroll employment across all US industries' },
                     { key: 'california', name: 'California', desc: 'Nonfarm payrolls in California, the largest state economy' },
@@ -3366,6 +3408,7 @@
                 chartPrefix: 'jolts-chart',
                 source: 'BLS JOLTS via FRED',
                 yAxisLabel: 'Thousands',
+                flattenYear: 2020,
                 metrics: [
                     { key: 'job_openings', name: 'Job Openings', color: '#2563eb', desc: 'Total unfilled job positions - indicates labor demand and hiring intentions' },
                     { key: 'layoffs', name: 'Layoffs & Discharges', color: '#dc2626', desc: 'Involuntary separations - indicates employer-initiated job losses' },
@@ -3600,8 +3643,13 @@
         async function loadJoblessClaims() {
             try {
                 const res = await fetch('/api/jobless-claims');
-                const data = await res.json();
+                let data = await res.json();
                 if (!data.length) return;
+                data = forwardFillPeriodWithPriorValue(data, {
+                    startYear: 2020,
+                    endYear: 2021,
+                    fields: ['initial_claims', 'continued_claims', 'insured_unemployment', 'initial_claims_4wma']
+                });
 
                 const dates = data.map(d => d.date);
 
@@ -4629,7 +4677,7 @@
                 ]);
                 const yields = await yieldsRes.json();
                 const cpi = await cpiRes.json();
-                const claims = await claimsRes.json();
+                let claims = await claimsRes.json();
 
                 if (!Array.isArray(yields) || !Array.isArray(cpi) || !Array.isArray(claims)) return;
 
@@ -4640,18 +4688,15 @@
                 const cpiData = cpi
                     .filter(d => d.date >= startDate)
                     .sort((a, b) => new Date(a.date) - new Date(b.date));
-                const claimsData = claims
-                    .filter(d => d.date >= startDate)
-                    .sort((a, b) => new Date(a.date) - new Date(b.date));
 
                 const cpiLevelField = cpiData.some(d => d.cpi_all !== null && d.cpi_all !== undefined)
                     ? 'cpi_all'
                     : 'cpi_core';
-                const cpi3mAnnualized = cpiData.map((row, i) => {
+                const cpi12mYoY = cpiData.map((row, i) => {
                     const current = Number(row[cpiLevelField]);
-                    const prior = i >= 3 ? Number(cpiData[i - 3][cpiLevelField]) : NaN;
+                    const prior = i >= 12 ? Number(cpiData[i - 12][cpiLevelField]) : NaN;
                     if (!Number.isFinite(current) || !Number.isFinite(prior) || prior <= 0) return null;
-                    return (Math.pow(current / prior, 4) - 1) * 100;
+                    return ((current / prior) - 1) * 100;
                 });
 
                 const numericOrNull = (value) => {
@@ -4700,18 +4745,11 @@
                     },
                     {
                         x: cpiData.map(d => d.date),
-                        y: cpi3mAnnualized,
-                        name: `3M Ann. ${cpiLevelField === 'cpi_all' ? 'CPI' : 'Core CPI'}`,
+                        y: cpi12mYoY,
+                        name: `12M ${cpiLevelField === 'cpi_all' ? 'CPI' : 'Core CPI'}`,
                         unit: '%',
-                        line: { color: '#dc2626', width: 2.4 }
-                    },
-                    {
-                        x: claimsData.map(d => d.date),
-                        y: claimsData.map(d => d.initial_claims_4wma ? d.initial_claims_4wma / 1000 : null),
-                        name: 'Initial Claims 4WMA',
-                        unit: 'K',
                         yaxis: 'y2',
-                        line: { color: '#64748b', width: 2, dash: 'dash' }
+                        line: { color: '#dc2626', width: 2.8, shape: 'spline', smoothing: 0.35 }
                     }
                 ];
 
@@ -4738,18 +4776,21 @@
                     xaxis: dateAxis({ tickformat: '%Y', dtick: 'M12' }),
                     yaxis: {
                         ...baseLayout.yaxis,
-                        title: { text: 'Percent', font: { size: 11 } },
+                        title: { text: 'Rates (%)', font: { size: 11 } },
                         zeroline: true,
-                        zerolinecolor: '#94a3b8'
+                        zerolinecolor: '#94a3b8',
+                        ticksuffix: '%'
                     },
                     yaxis2: {
-                        title: { text: 'Initial Claims 4WMA, K', font: { size: 11 } },
+                        title: { text: '12M CPI (%)', font: { size: 11 } },
                         overlaying: 'y',
                         side: 'right',
                         showgrid: false,
-                        rangemode: 'tozero',
-                        tickfont: { size: 11, color: '#64748b' },
-                        titlefont: { size: 11, color: '#64748b' }
+                        zeroline: true,
+                        zerolinecolor: '#fca5a5',
+                        ticksuffix: '%',
+                        tickfont: { size: 11, color: '#dc2626' },
+                        titlefont: { size: 11, color: '#dc2626' }
                     },
                     shapes: [{
                         type: 'line',
@@ -4761,6 +4802,79 @@
                         y1: 0,
                         line: { color: '#94a3b8', width: 1, dash: 'dot' }
                     }]
+                });
+
+                claims = forwardFillPeriodWithPriorValue(
+                    claims.filter(d => d.date >= startDate),
+                    {
+                        startYear: 2020,
+                        endYear: 2021,
+                        fields: ['initial_claims']
+                    }
+                ).sort((a, b) => new Date(a.date) - new Date(b.date));
+                const claimsDates = claims.map(d => d.date);
+                const initialClaims = claims.map(d => numericOrNull(d.initial_claims));
+                const claims12wma = initialClaims.map((_, i) => {
+                    const values = initialClaims
+                        .slice(Math.max(0, i - 11), i + 1)
+                        .filter(value => value !== null);
+                    return values.length === 12
+                        ? values.reduce((sum, value) => sum + value, 0) / values.length / 1000
+                        : null;
+                });
+                const dynamicYRange = (xValues, yValues, xRange = null) => {
+                    const minTime = xRange ? new Date(xRange[0]).getTime() : -Infinity;
+                    const maxTime = xRange ? new Date(xRange[1]).getTime() : Infinity;
+                    const visible = yValues.filter((value, i) => {
+                        if (!Number.isFinite(value)) return false;
+                        const time = new Date(xValues[i]).getTime();
+                        return time >= minTime && time <= maxTime;
+                    });
+                    if (!visible.length) return null;
+                    const minY = Math.min(...visible);
+                    const maxY = Math.max(...visible);
+                    const span = maxY - minY || Math.max(Math.abs(maxY) * 0.1, 1);
+                    return [minY - (span * 0.1), maxY + (span * 0.1)];
+                };
+                const initialClaimsYRange = dynamicYRange(claimsDates, claims12wma);
+
+                Plotly.newPlot('policy-initial-claims-chart', [{
+                    x: claimsDates,
+                    y: claims12wma,
+                    name: 'Initial Claims 12W MA',
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { color: '#1a2942', width: 2.5 },
+                    hovertemplate: 'Initial Claims 12W MA<br>%{x}<br>%{y:.0f}K<extra></extra>'
+                }], {
+                    ...baseLayout,
+                    showlegend: false,
+                    margin: { t: 16, r: 20, b: 52, l: 62 },
+                    xaxis: dateAxis({ tickformat: '%Y', dtick: 'M12' }),
+                    yaxis: {
+                        ...baseLayout.yaxis,
+                        title: { text: 'Initial Claims 12W MA (K)', font: { size: 10 } },
+                        range: initialClaimsYRange
+                    },
+                    hovermode: 'x unified'
+                }).then(chart => {
+                    let isUpdatingClaimsAxis = false;
+                    chart.on('plotly_relayout', eventData => {
+                        if (isUpdatingClaimsAxis) return;
+                        let xRange = null;
+                        if (eventData['xaxis.range[0]'] && eventData['xaxis.range[1]']) {
+                            xRange = [eventData['xaxis.range[0]'], eventData['xaxis.range[1]']];
+                        } else if (Array.isArray(eventData['xaxis.range'])) {
+                            xRange = eventData['xaxis.range'];
+                        }
+
+                        const nextRange = dynamicYRange(claimsDates, claims12wma, xRange);
+                        if (!nextRange) return;
+
+                        isUpdatingClaimsAxis = true;
+                        Plotly.relayout(chart, { 'yaxis.range': nextRange })
+                            .finally(() => { isUpdatingClaimsAxis = false; });
+                    });
                 });
             } catch (e) {
                 console.error('Error loading policy/inflation/labor chart:', e);
