@@ -5,7 +5,6 @@ Reads data from CSV files (run data_fetcher.py to update data)
 
 import os
 import json
-import hmac
 from datetime import datetime, timedelta
 from functools import lru_cache, wraps
 from pathlib import Path
@@ -15,7 +14,7 @@ import threading
 import time
 import warnings
 
-from flask import Flask, render_template, jsonify, request, Response, redirect, session, url_for
+from flask import Flask, render_template, jsonify, request, Response
 import numpy as np
 import pandas as pd
 from pandas.errors import PerformanceWarning
@@ -56,31 +55,6 @@ MODELING_CACHE = {
     'payload': None,
 }
 MODELING_CACHE_FILE = Path(__file__).parent / '.run' / 'energy_modeling_cache.json'
-REFRESH_TOKEN = os.environ.get('REFRESH_TOKEN', '').strip()
-APP_PASSWORD = os.environ.get('APP_PASSWORD', '').strip() or REFRESH_TOKEN
-app.secret_key = (
-    os.environ.get('APP_SECRET_KEY', '').strip()
-    or APP_PASSWORD
-    or 'macro-data-tracker-local-dev'
-)
-
-
-def is_site_authenticated():
-    """Return whether this request is allowed past the optional password gate."""
-    return not APP_PASSWORD or session.get('authenticated') is True
-
-
-@app.before_request
-def require_site_password():
-    """Protect the dashboard with one password, while leaving health checks public."""
-    public_endpoints = {'login', 'logout', 'status'}
-    if request.endpoint in public_endpoints or request.endpoint == 'static':
-        return None
-    if is_site_authenticated():
-        return None
-    if request.path.startswith('/api/'):
-        return jsonify({'error': 'Authentication required', 'requires_password': True}), 401
-    return redirect(url_for('login', next=request.full_path if request.query_string else request.path))
 
 
 def get_cache_key():
@@ -313,40 +287,9 @@ def get_spr_refresh_snapshot():
         return spr_refresh_snapshot_locked()
 
 
-def is_refresh_authorized():
-    """Refresh access is covered by the site-wide password gate."""
-    return is_site_authenticated()
-
-
 @app.route('/')
 def index():
     return render_template('stats.html')
-
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    """Simple password gate for the dashboard."""
-    if not APP_PASSWORD:
-        session['authenticated'] = True
-        return redirect(request.args.get('next') or url_for('index'))
-
-    error = None
-    next_url = request.args.get('next') or request.form.get('next') or url_for('index')
-    if request.method == 'POST':
-        supplied_password = request.form.get('password', '')
-        if hmac.compare_digest(supplied_password, APP_PASSWORD):
-            session['authenticated'] = True
-            session.permanent = True
-            return redirect(next_url or url_for('index'))
-        error = 'Incorrect password.'
-    return render_template('login.html', error=error, next_url=next_url)
-
-
-@app.route('/logout')
-def logout():
-    """Clear dashboard access for this browser."""
-    session.pop('authenticated', None)
-    return redirect(url_for('login'))
 
 
 @app.route('/macro')
@@ -1757,8 +1700,6 @@ def status():
         return jsonify({
             'last_updated': meta.get('last_updated', 'Never'),
             'cache_ttl': CACHE_TTL,
-            'password_required': bool(APP_PASSWORD),
-            'refresh_requires_token': False,
             'files_exist': {f: (DATA_DIR / f'{f}.csv').exists() for f in files},
             'spr_files_exist': {
                 f: (DATA_DIR / f'{f}.csv').exists()
@@ -1792,13 +1733,6 @@ def refresh_data():
     global REFRESH_PROCESS
 
     try:
-        if not is_refresh_authorized():
-            return jsonify({
-                'success': False,
-                'message': 'Refresh token required.',
-                'requires_token': True
-            }), 401
-
         DATA_DIR.mkdir(parents=True, exist_ok=True)
         script_path = Path(__file__).parent / 'data_fetcher.py'
 
@@ -1850,13 +1784,6 @@ def refresh_spr_data():
     global SPR_REFRESH_PROCESS
 
     try:
-        if not is_refresh_authorized():
-            return jsonify({
-                'success': False,
-                'message': 'Refresh token required.',
-                'requires_token': True
-            }), 401
-
         DATA_DIR.mkdir(parents=True, exist_ok=True)
         script_path = Path(__file__).parent / 'spr_release_fetcher.py'
 
@@ -1906,12 +1833,6 @@ def refresh_spr_data():
 def clear_cache():
     """Manually clear the data cache"""
     try:
-        if not is_refresh_authorized():
-            return jsonify({
-                'success': False,
-                'message': 'Refresh token required.',
-                'requires_token': True
-            }), 401
         read_csv_cached.cache_clear()
         return jsonify({'success': True, 'message': 'Cache cleared'})
     except Exception as e:
