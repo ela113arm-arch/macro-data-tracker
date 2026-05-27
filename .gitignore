@@ -1,5 +1,6 @@
 # API Keys - never commit
 config/api_keys.py
+environment variables/
 data/refresh.log
 data/spr_refresh.log
 

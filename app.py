@@ -15,7 +15,7 @@ import threading
 import time
 import warnings
 
-from flask import Flask, render_template, jsonify, request, Response
+from flask import Flask, render_template, jsonify, request, Response, redirect, session, url_for
 import numpy as np
 import pandas as pd
 from pandas.errors import PerformanceWarning
@@ -57,6 +57,30 @@ MODELING_CACHE = {
 }
 MODELING_CACHE_FILE = Path(__file__).parent / '.run' / 'energy_modeling_cache.json'
 REFRESH_TOKEN = os.environ.get('REFRESH_TOKEN', '').strip()
+APP_PASSWORD = os.environ.get('APP_PASSWORD', '').strip() or REFRESH_TOKEN
+app.secret_key = (
+    os.environ.get('APP_SECRET_KEY', '').strip()
+    or APP_PASSWORD
+    or 'macro-data-tracker-local-dev'
+)
+
+
+def is_site_authenticated():
+    """Return whether this request is allowed past the optional password gate."""
+    return not APP_PASSWORD or session.get('authenticated') is True
+
+
+@app.before_request
+def require_site_password():
+    """Protect the dashboard with one password, while leaving health checks public."""
+    public_endpoints = {'login', 'logout', 'status'}
+    if request.endpoint in public_endpoints or request.endpoint == 'static':
+        return None
+    if is_site_authenticated():
+        return None
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'Authentication required', 'requires_password': True}), 401
+    return redirect(url_for('login', next=request.full_path if request.query_string else request.path))
 
 
 def get_cache_key():
@@ -290,19 +314,39 @@ def get_spr_refresh_snapshot():
 
 
 def is_refresh_authorized():
-    """Require a token for refresh operations when REFRESH_TOKEN is configured."""
-    if not REFRESH_TOKEN:
-        return True
-    supplied_token = request.headers.get('X-Refresh-Token') or request.args.get('refresh_token') or ''
-    if not supplied_token and request.is_json:
-        payload = request.get_json(silent=True) or {}
-        supplied_token = payload.get('refresh_token', '')
-    return hmac.compare_digest(str(supplied_token), REFRESH_TOKEN)
+    """Refresh access is covered by the site-wide password gate."""
+    return is_site_authenticated()
 
 
 @app.route('/')
 def index():
     return render_template('stats.html')
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Simple password gate for the dashboard."""
+    if not APP_PASSWORD:
+        session['authenticated'] = True
+        return redirect(request.args.get('next') or url_for('index'))
+
+    error = None
+    next_url = request.args.get('next') or request.form.get('next') or url_for('index')
+    if request.method == 'POST':
+        supplied_password = request.form.get('password', '')
+        if hmac.compare_digest(supplied_password, APP_PASSWORD):
+            session['authenticated'] = True
+            session.permanent = True
+            return redirect(next_url or url_for('index'))
+        error = 'Incorrect password.'
+    return render_template('login.html', error=error, next_url=next_url)
+
+
+@app.route('/logout')
+def logout():
+    """Clear dashboard access for this browser."""
+    session.pop('authenticated', None)
+    return redirect(url_for('login'))
 
 
 @app.route('/macro')
@@ -1713,7 +1757,8 @@ def status():
         return jsonify({
             'last_updated': meta.get('last_updated', 'Never'),
             'cache_ttl': CACHE_TTL,
-            'refresh_requires_token': bool(REFRESH_TOKEN),
+            'password_required': bool(APP_PASSWORD),
+            'refresh_requires_token': False,
             'files_exist': {f: (DATA_DIR / f'{f}.csv').exists() for f in files},
             'spr_files_exist': {
                 f: (DATA_DIR / f'{f}.csv').exists()

@@ -15,5 +15,7 @@ services:
         sync: false
       - key: EIA_API_KEY
         sync: false
-      - key: REFRESH_TOKEN
+      - key: APP_PASSWORD
+        sync: false
+      - key: APP_SECRET_KEY
         sync: false

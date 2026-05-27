@@ -1575,21 +1575,12 @@
             status.textContent = 'Initializing data refresh...';
 
             try {
-                const makeRefreshRequest = async () => {
-                    const token = localStorage.getItem('macroRefreshToken');
-                    const headers = token ? { 'X-Refresh-Token': token } : {};
-                    return fetch('/api/refresh', { method: 'POST', headers });
-                };
-
-                let res = await makeRefreshRequest();
+                let res = await fetch('/api/refresh', { method: 'POST' });
                 let data = await res.json();
 
-                if (res.status === 401 && data.requires_token) {
-                    const token = window.prompt('Enter refresh token');
-                    if (!token) throw new Error('Refresh token required.');
-                    localStorage.setItem('macroRefreshToken', token);
-                    res = await makeRefreshRequest();
-                    data = await res.json();
+                if (res.status === 401 && data.requires_password) {
+                    window.location.href = '/login?next=' + encodeURIComponent(window.location.pathname + window.location.search);
+                    return;
                 }
 
                 if (!res.ok || !data.success) {
@@ -5004,8 +4995,9 @@
         loadPolicyInflationLabor();
         loadKeyMetrics();
 
-        // Show overview section by default
-        showSection('overview');
+        // Show overview section by default, or a requested section for direct links/screenshots.
+        const initialSection = new URLSearchParams(window.location.search).get('section') || 'overview';
+        showSection(initialSection);
     </script>
 </body>
 </html>
