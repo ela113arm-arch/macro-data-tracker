@@ -5,6 +5,7 @@ Reads data from CSV files (run data_fetcher.py to update data)
 
 import os
 import json
+import shutil
 from datetime import datetime, timedelta
 from functools import lru_cache, wraps
 from pathlib import Path
@@ -20,8 +21,10 @@ import pandas as pd
 from pandas.errors import PerformanceWarning
 
 app = Flask(__name__)
-DATA_DIR = Path(os.environ.get('DATA_DIR', Path(__file__).parent / 'data'))
-LOCAL_SKLEARN_PACKAGES = Path(__file__).parent / '.sklearn_packages'
+APP_DIR = Path(__file__).parent
+BUNDLED_DATA_DIR = APP_DIR / 'data'
+DATA_DIR = Path(os.environ.get('DATA_DIR', BUNDLED_DATA_DIR))
+LOCAL_SKLEARN_PACKAGES = APP_DIR / '.sklearn_packages'
 if LOCAL_SKLEARN_PACKAGES.exists():
     sys.path.insert(0, str(LOCAL_SKLEARN_PACKAGES))
 os.environ.setdefault('LOKY_MAX_CPU_COUNT', '8')
@@ -54,7 +57,17 @@ MODELING_CACHE = {
     'built_at': None,
     'payload': None,
 }
-MODELING_CACHE_FILE = Path(__file__).parent / '.run' / 'energy_modeling_cache.json'
+MODELING_CACHE_FILE = APP_DIR / '.run' / 'energy_modeling_cache.json'
+DATA_SYNC_STATE = {
+    'enabled': False,
+    'status': 'not_run',
+    'message': 'Bundled data sync has not run.',
+    'bundled_data_dir': str(BUNDLED_DATA_DIR),
+    'data_dir': str(DATA_DIR),
+    'bundled_version': None,
+    'data_dir_version': None,
+    'files_copied': [],
+}
 
 
 def get_cache_key():
@@ -218,6 +231,134 @@ def schema_for_csv(name, description):
     }
 
 
+
+def parse_timestamp(value):
+    """Parse a CSV timestamp into a comparable datetime, returning None on blanks/errors."""
+    if value is None or pd.isna(value):
+        return None
+    try:
+        parsed = pd.to_datetime(value, errors='coerce')
+        if pd.isna(parsed):
+            return None
+        return parsed.to_pydatetime()
+    except (TypeError, ValueError):
+        return None
+
+
+def data_dir_version(data_dir):
+    """Return the newest refresh timestamp recorded by a data directory."""
+    candidates = []
+
+    metadata_file = data_dir / 'metadata.csv'
+    if metadata_file.exists():
+        try:
+            metadata = pd.read_csv(metadata_file, nrows=1)
+            if 'last_updated' in metadata.columns and not metadata.empty:
+                candidates.append(parse_timestamp(metadata.iloc[0]['last_updated']))
+        except (OSError, pd.errors.EmptyDataError, ValueError):
+            pass
+
+    spr_summary_file = data_dir / 'spr_release_summary.csv'
+    if spr_summary_file.exists():
+        try:
+            spr_summary = pd.read_csv(spr_summary_file, usecols=lambda col: col == 'refreshed_at')
+            if 'refreshed_at' in spr_summary.columns:
+                candidates.extend(parse_timestamp(value) for value in spr_summary['refreshed_at'])
+        except (OSError, pd.errors.EmptyDataError, ValueError):
+            pass
+
+    candidates = [candidate for candidate in candidates if candidate is not None]
+    return max(candidates) if candidates else None
+
+
+def should_sync_bundled_data():
+    """Return whether the bundled image data should seed an external DATA_DIR."""
+    setting = os.environ.get('SYNC_BUNDLED_DATA_ON_STARTUP', '1').strip().lower()
+    return setting not in {'0', 'false', 'no', 'off'}
+
+
+def sync_bundled_data_if_newer():
+    """
+    Seed an external DATA_DIR from the data bundled into the deployed image.
+
+    Render persistent disks are mounted outside the Git checkout. If DATA_DIR points at
+    such a disk, newly deployed CSVs from GitHub are otherwise hidden by the old disk
+    contents. This copies the bundled CSVs only when their recorded refresh timestamp is
+    newer than the external DATA_DIR's recorded timestamp, preserving fresher in-app
+    refreshes.
+    """
+    global DATA_SYNC_STATE
+
+    state = {
+        'enabled': False,
+        'status': 'skipped',
+        'message': 'Bundled data sync skipped.',
+        'bundled_data_dir': str(BUNDLED_DATA_DIR),
+        'data_dir': str(DATA_DIR),
+        'bundled_version': None,
+        'data_dir_version': None,
+        'files_copied': [],
+    }
+
+    if not should_sync_bundled_data():
+        state['message'] = 'SYNC_BUNDLED_DATA_ON_STARTUP is disabled.'
+        DATA_SYNC_STATE = state
+        return state
+
+    try:
+        if DATA_DIR.resolve() == BUNDLED_DATA_DIR.resolve():
+            state['message'] = 'DATA_DIR is the bundled repository data directory.'
+            DATA_SYNC_STATE = state
+            return state
+    except OSError:
+        pass
+
+    state['enabled'] = True
+    bundled_version = data_dir_version(BUNDLED_DATA_DIR)
+    target_version = data_dir_version(DATA_DIR)
+    state['bundled_version'] = bundled_version.isoformat() if bundled_version else None
+    state['data_dir_version'] = target_version.isoformat() if target_version else None
+
+    if not BUNDLED_DATA_DIR.exists():
+        state['status'] = 'failed'
+        state['message'] = 'Bundled data directory does not exist.'
+        DATA_SYNC_STATE = state
+        return state
+
+    should_copy_all = bundled_version is not None and (
+        target_version is None or bundled_version > target_version
+    )
+    if not should_copy_all:
+        missing_files = [
+            source for source in BUNDLED_DATA_DIR.glob('*.csv')
+            if not (DATA_DIR / source.name).exists()
+        ]
+        if not missing_files:
+            state['message'] = 'External DATA_DIR is current or newer than bundled data.'
+            DATA_SYNC_STATE = state
+            return state
+        sources_to_copy = missing_files
+    else:
+        sources_to_copy = list(BUNDLED_DATA_DIR.glob('*.csv'))
+
+    try:
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+        copied = []
+        for source in sources_to_copy:
+            destination = DATA_DIR / source.name
+            shutil.copy2(source, destination)
+            copied.append(source.name)
+        read_csv_cached.cache_clear()
+        state['status'] = 'completed'
+        state['message'] = f'Copied {len(copied)} bundled CSV file(s) into DATA_DIR.'
+        state['files_copied'] = copied
+    except OSError as exc:
+        state['status'] = 'failed'
+        state['message'] = f'Bundled data sync failed: {exc}'
+
+    DATA_SYNC_STATE = state
+    return state
+
 def now_iso():
     """Current local timestamp for API responses."""
     return datetime.now().isoformat()
@@ -285,6 +426,9 @@ def get_spr_refresh_snapshot():
     """Thread-safe SPR refresh state snapshot."""
     with SPR_REFRESH_LOCK:
         return spr_refresh_snapshot_locked()
+
+
+sync_bundled_data_if_newer()
 
 
 @app.route('/')
@@ -1700,6 +1844,10 @@ def status():
         return jsonify({
             'last_updated': meta.get('last_updated', 'Never'),
             'cache_ttl': CACHE_TTL,
+            'data_dir': str(DATA_DIR),
+            'bundled_data_dir': str(BUNDLED_DATA_DIR),
+            'uses_external_data_dir': str(DATA_DIR.resolve()) != str(BUNDLED_DATA_DIR.resolve()),
+            'bundled_data_sync': DATA_SYNC_STATE,
             'files_exist': {f: (DATA_DIR / f'{f}.csv').exists() for f in files},
             'spr_files_exist': {
                 f: (DATA_DIR / f'{f}.csv').exists()
@@ -1734,7 +1882,7 @@ def refresh_data():
 
     try:
         DATA_DIR.mkdir(parents=True, exist_ok=True)
-        script_path = Path(__file__).parent / 'data_fetcher.py'
+        script_path = APP_DIR / 'data_fetcher.py'
 
         with REFRESH_LOCK:
             current = refresh_snapshot_locked()
@@ -1753,7 +1901,7 @@ def refresh_data():
                 log_file.flush()
                 REFRESH_PROCESS = subprocess.Popen(
                     [sys.executable, str(script_path)],
-                    cwd=str(Path(__file__).parent),
+                    cwd=str(APP_DIR),
                     stdout=log_file,
                     stderr=subprocess.STDOUT,
                     env=env
@@ -1785,7 +1933,7 @@ def refresh_spr_data():
 
     try:
         DATA_DIR.mkdir(parents=True, exist_ok=True)
-        script_path = Path(__file__).parent / 'spr_release_fetcher.py'
+        script_path = APP_DIR / 'spr_release_fetcher.py'
 
         with SPR_REFRESH_LOCK:
             current = spr_refresh_snapshot_locked()
@@ -1804,7 +1952,7 @@ def refresh_spr_data():
                 log_file.flush()
                 SPR_REFRESH_PROCESS = subprocess.Popen(
                     [sys.executable, str(script_path)],
-                    cwd=str(Path(__file__).parent),
+                    cwd=str(APP_DIR),
                     stdout=log_file,
                     stderr=subprocess.STDOUT,
                     env=env
