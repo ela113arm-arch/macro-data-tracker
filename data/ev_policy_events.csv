@@ -1,0 +1,13 @@
+country,date,label,event,description
+China,2010-01-01,1,NEV subsidies begin,Direct cash rebates up to RMB 60k per vehicle.
+China,2014-09-01,2,Purchase tax exemption begins,Purchase tax waived for qualifying new energy vehicles.
+China,2019-01-01,3,Dual credit mandate begins,Automakers must sell NEVs or buy credits.
+China,2022-12-01,4,NEV subsidies end,Direct national cash rebates terminated.
+China,2025-12-01,5,Full tax exemption ends,Tax benefit reduced for 2026-2027.
+USA,2010-01-01,1,Federal EV tax credit begins,"Up to USD 7,500 per vehicle, with manufacturer caps."
+USA,2022-08-01,2,IRA clean vehicle credit begins,Credit redesigned with domestic content and eligibility rules.
+USA,2025-09-01,3,IRA credit ends,Guide reference point for the end of federal EV credits.
+India,2015-04-01,1,FAME I begins,First national EV demand incentive program.
+India,2019-04-01,2,FAME II begins,Expanded subsidy program for electric mobility.
+India,2024-03-01,3,FAME II ends,Five-year program concludes.
+India,2024-10-01,4,PM E-DRIVE begins,Successor incentive program through March 2026.

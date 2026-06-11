@@ -82,6 +82,119 @@ EIA_PADDS = {
     'PADD5': {'code': 'R50', 'name': 'PADD 5 (West Coast)'},
 }
 
+EV_CARSALES_URLS = [
+    'https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv',
+    'https://robbieandrew.github.io/carsales/CSV/all_carsales_monthly.csv',
+]
+
+EV_FOCUS_COUNTRIES = ['China', 'USA', 'India']
+
+EV_FUEL_CATEGORIES = {
+    'BatteryElectric': 'EV',
+    'PluginHybrid': 'EV',
+    'ZEV': 'EV',
+    'NonPluginHybrid': 'HYB',
+    'MildHybrid': 'HYB',
+    'Hybrid': 'HYB',
+    'Petrol': 'ICE',
+    'Diesel': 'ICE',
+    'LPG': 'ICE',
+    'LPG_LPGBlend': 'ICE',
+    'Ethanol': 'ICE',
+    'Ethanol_Petrol': 'ICE',
+    'PetrolBlend': 'ICE',
+    'ICE': 'ICE',
+    'Hydrogen': 'ICE',
+    'Others': 'ICE',
+}
+
+EV_POLICY_EVENTS = [
+    {
+        'country': 'China',
+        'date': '2010-01-01',
+        'label': '1',
+        'event': 'NEV subsidies begin',
+        'description': 'Direct cash rebates up to RMB 60k per vehicle.',
+    },
+    {
+        'country': 'China',
+        'date': '2014-09-01',
+        'label': '2',
+        'event': 'Purchase tax exemption begins',
+        'description': 'Purchase tax waived for qualifying new energy vehicles.',
+    },
+    {
+        'country': 'China',
+        'date': '2019-01-01',
+        'label': '3',
+        'event': 'Dual credit mandate begins',
+        'description': 'Automakers must sell NEVs or buy credits.',
+    },
+    {
+        'country': 'China',
+        'date': '2022-12-01',
+        'label': '4',
+        'event': 'NEV subsidies end',
+        'description': 'Direct national cash rebates terminated.',
+    },
+    {
+        'country': 'China',
+        'date': '2025-12-01',
+        'label': '5',
+        'event': 'Full tax exemption ends',
+        'description': 'Tax benefit reduced for 2026-2027.',
+    },
+    {
+        'country': 'USA',
+        'date': '2010-01-01',
+        'label': '1',
+        'event': 'Federal EV tax credit begins',
+        'description': 'Up to USD 7,500 per vehicle, with manufacturer caps.',
+    },
+    {
+        'country': 'USA',
+        'date': '2022-08-01',
+        'label': '2',
+        'event': 'IRA clean vehicle credit begins',
+        'description': 'Credit redesigned with domestic content and eligibility rules.',
+    },
+    {
+        'country': 'USA',
+        'date': '2025-09-01',
+        'label': '3',
+        'event': 'IRA credit ends',
+        'description': 'Guide reference point for the end of federal EV credits.',
+    },
+    {
+        'country': 'India',
+        'date': '2015-04-01',
+        'label': '1',
+        'event': 'FAME I begins',
+        'description': 'First national EV demand incentive program.',
+    },
+    {
+        'country': 'India',
+        'date': '2019-04-01',
+        'label': '2',
+        'event': 'FAME II begins',
+        'description': 'Expanded subsidy program for electric mobility.',
+    },
+    {
+        'country': 'India',
+        'date': '2024-03-01',
+        'label': '3',
+        'event': 'FAME II ends',
+        'description': 'Five-year program concludes.',
+    },
+    {
+        'country': 'India',
+        'date': '2024-10-01',
+        'label': '4',
+        'event': 'PM E-DRIVE begins',
+        'description': 'Successor incentive program through March 2026.',
+    },
+]
+
 
 def fetch_bea_ita_series(indicator, start_year=2015):
     """Fetch a single indicator from BEA ITA dataset"""
@@ -2521,6 +2634,211 @@ def fetch_cot_wti_brent_merged():
     return cot
 
 
+def classify_vehicle_fuel(fuel):
+    """Map source fuel labels to the EV dashboard categories."""
+    return EV_FUEL_CATEGORIES.get(str(fuel).strip(), 'ICE')
+
+
+def _safe_pct(numerator, denominator):
+    return np.where(denominator > 0, numerator / denominator * 100, np.nan)
+
+
+def fetch_ev_registration_source():
+    """Download Robbie Andrew's all-country monthly vehicle registration CSV."""
+    last_error = None
+    for url in EV_CARSALES_URLS:
+        try:
+            response = requests.get(url, timeout=60, headers={'User-Agent': 'macro-data-tracker/1.0'})
+            response.raise_for_status()
+            raw = pd.read_csv(StringIO(response.text))
+            required = {'YYYYMM', 'Country', 'Fuel', 'Value'}
+            missing = required - set(raw.columns)
+            if missing:
+                raise ValueError(f"EV registration CSV missing columns: {sorted(missing)}")
+            raw['source_url'] = url
+            return raw
+        except Exception as exc:
+            last_error = exc
+            print(f"  EV registrations source failed ({url}): {exc}")
+    raise RuntimeError(f"Unable to fetch EV registration source: {last_error}")
+
+
+def fetch_ev_brent_monthly(start_date='2010-01-01'):
+    """Fetch monthly Brent futures closes for the EV adoption charts."""
+    try:
+        brent = yf.download(
+            'BZ=F',
+            start=start_date,
+            interval='1d',
+            auto_adjust=True,
+            progress=False,
+        )
+        if brent.empty:
+            raise ValueError('Yahoo Finance returned no Brent data')
+
+        close = brent['Close']
+        if isinstance(close, pd.DataFrame):
+            close = close.iloc[:, 0]
+        close.index = pd.to_datetime(close.index).tz_localize(None)
+        out = close.resample('MS').mean().reset_index()
+        out.columns = ['date', 'brent']
+    except Exception as exc:
+        print(f"  EV Brent monthly fetch failed, falling back to local crack_spreads.csv: {exc}")
+        crack_path = DATA_DIR / 'crack_spreads.csv'
+        if not crack_path.exists():
+            return pd.DataFrame(columns=['date', 'brent', 'brent_yoy_pct', 'brent_mom_pct'])
+        crack = pd.read_csv(crack_path)
+        if 'date' not in crack.columns or 'brent' not in crack.columns:
+            return pd.DataFrame(columns=['date', 'brent', 'brent_yoy_pct', 'brent_mom_pct'])
+        crack['date'] = pd.to_datetime(crack['date'], errors='coerce')
+        crack['brent'] = pd.to_numeric(crack['brent'], errors='coerce')
+        crack = crack.dropna(subset=['date', 'brent'])
+        out = (
+            crack.assign(month=crack['date'].dt.to_period('M').dt.to_timestamp())
+            .groupby('month', as_index=False)['brent']
+            .mean()
+            .rename(columns={'month': 'date'})
+        )
+
+    out = out.sort_values('date').dropna(subset=['date', 'brent'])
+    out['brent_yoy_pct'] = out['brent'].pct_change(12) * 100
+    out['brent_mom_pct'] = out['brent'].pct_change() * 100
+    out['date'] = out['date'].dt.strftime('%Y-%m-%d')
+    return out
+
+
+def process_ev_fleet_data(raw, brent_monthly=None):
+    """Classify powertrains and convert monthly registrations into fleet stock."""
+    df = raw[['YYYYMM', 'Country', 'Fuel', 'Value']].copy()
+    df['YYYYMM'] = pd.to_numeric(df['YYYYMM'], errors='coerce')
+    df['Value'] = pd.to_numeric(df['Value'], errors='coerce').fillna(0)
+    df = df.dropna(subset=['YYYYMM', 'Country', 'Fuel'])
+    df['YYYYMM'] = df['YYYYMM'].astype(int)
+    df['date'] = pd.to_datetime(df['YYYYMM'].astype(str) + '01', format='%Y%m%d', errors='coerce')
+    df = df.dropna(subset=['date'])
+    df['country'] = df['Country'].astype(str).str.strip()
+    df['category'] = df['Fuel'].map(classify_vehicle_fuel)
+
+    grouped = (
+        df.groupby(['date', 'YYYYMM', 'country', 'category'], as_index=False)['Value']
+        .sum()
+    )
+    monthly = (
+        grouped.pivot_table(
+            index=['date', 'YYYYMM', 'country'],
+            columns='category',
+            values='Value',
+            aggfunc='sum',
+            fill_value=0,
+        )
+        .reset_index()
+    )
+    monthly.columns.name = None
+    for col in ['EV', 'HYB', 'ICE']:
+        if col not in monthly.columns:
+            monthly[col] = 0.0
+
+    monthly = monthly.sort_values(['country', 'date']).reset_index(drop=True)
+    monthly['ev_sales'] = monthly['EV'] + monthly['HYB'] * 0.5
+    monthly['ice_sales'] = monthly['ICE'] + monthly['HYB'] * 0.5
+    monthly['hybrid_sales'] = monthly['HYB']
+    monthly['total_sales'] = monthly['ev_sales'] + monthly['ice_sales']
+    monthly['ev_sales_share'] = _safe_pct(monthly['ev_sales'], monthly['total_sales'])
+
+    for col in ['ev_sales', 'ice_sales', 'total_sales']:
+        monthly[f'{col}_12m'] = (
+            monthly.groupby('country')[col]
+            .transform(lambda series: series.rolling(12, min_periods=3).sum())
+        )
+    monthly['ev_sales_share_12m'] = _safe_pct(monthly['ev_sales_12m'], monthly['total_sales_12m'])
+
+    monthly['ev_fleet'] = monthly.groupby('country')['ev_sales'].cumsum()
+    monthly['ice_fleet'] = monthly.groupby('country')['ice_sales'].cumsum()
+    monthly['total_fleet'] = monthly['ev_fleet'] + monthly['ice_fleet']
+    monthly['ev_fleet_share'] = _safe_pct(monthly['ev_fleet'], monthly['total_fleet'])
+    monthly['ev_fleet_share_yoy_pp'] = monthly.groupby('country')['ev_fleet_share'].diff(12)
+    monthly['focus_country'] = monthly['country'].isin(EV_FOCUS_COUNTRIES)
+
+    if brent_monthly is not None and not brent_monthly.empty:
+        brent = brent_monthly.copy()
+        brent['date'] = pd.to_datetime(brent['date'], errors='coerce')
+        monthly = monthly.merge(brent, on='date', how='left')
+
+    numeric_cols = [
+        'ev_sales', 'ice_sales', 'hybrid_sales', 'total_sales', 'ev_sales_share',
+        'ev_sales_12m', 'ice_sales_12m', 'total_sales_12m', 'ev_sales_share_12m',
+        'ev_fleet', 'ice_fleet', 'total_fleet', 'ev_fleet_share',
+        'ev_fleet_share_yoy_pp', 'brent', 'brent_yoy_pct', 'brent_mom_pct',
+    ]
+    for col in numeric_cols:
+        if col in monthly.columns:
+            monthly[col] = pd.to_numeric(monthly[col], errors='coerce').round(4)
+
+    monthly['date'] = monthly['date'].dt.strftime('%Y-%m-%d')
+
+    annual = monthly.copy()
+    annual['year'] = pd.to_datetime(annual['date']).dt.year
+    annual = (
+        annual.groupby(['country', 'year'], as_index=False)
+        .agg(
+            ev_sales=('ev_sales', 'sum'),
+            ice_sales=('ice_sales', 'sum'),
+            hybrid_sales=('hybrid_sales', 'sum'),
+            total_sales=('total_sales', 'sum'),
+            ev_fleet=('ev_fleet', 'last'),
+            ice_fleet=('ice_fleet', 'last'),
+            total_fleet=('total_fleet', 'last'),
+            ev_fleet_share=('ev_fleet_share', 'last'),
+            ev_sales_share=('ev_sales_share', 'mean'),
+            ev_sales_share_12m=('ev_sales_share_12m', 'last'),
+            ev_fleet_share_yoy_pp=('ev_fleet_share_yoy_pp', 'last'),
+            brent=('brent', 'mean'),
+            last_month=('date', 'max'),
+            focus_country=('focus_country', 'last'),
+        )
+    )
+    for col in annual.select_dtypes(include=[np.number]).columns:
+        annual[col] = annual[col].round(4)
+
+    output_cols = [
+        'date', 'YYYYMM', 'country', 'focus_country',
+        'ev_sales', 'ice_sales', 'hybrid_sales', 'total_sales',
+        'ev_sales_share', 'ev_sales_share_12m',
+        'ev_fleet', 'ice_fleet', 'total_fleet', 'ev_fleet_share',
+        'ev_fleet_share_yoy_pp', 'brent', 'brent_yoy_pct', 'brent_mom_pct',
+    ]
+    output_cols = [col for col in output_cols if col in monthly.columns]
+    return monthly[output_cols], annual
+
+
+def ev_policy_events_frame():
+    policies = pd.DataFrame(EV_POLICY_EVENTS)
+    policies['date'] = pd.to_datetime(policies['date']).dt.strftime('%Y-%m-%d')
+    return policies
+
+
+def fetch_ev_fleet_dashboard():
+    """Fetch global EV registration data and build dashboard-ready fleet CSVs."""
+    print("Fetching EV fleet dashboard data...")
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+    raw = fetch_ev_registration_source()
+    raw.to_csv(DATA_DIR / 'ev_carsales_monthly_raw.csv', index=False)
+
+    brent = fetch_ev_brent_monthly('2010-01-01')
+    brent.to_csv(DATA_DIR / 'ev_brent_monthly.csv', index=False)
+
+    monthly, annual = process_ev_fleet_data(raw, brent)
+    monthly.to_csv(DATA_DIR / 'ev_monthly_fleet.csv', index=False)
+    annual.to_csv(DATA_DIR / 'ev_annual_fleet.csv', index=False)
+    ev_policy_events_frame().to_csv(DATA_DIR / 'ev_policy_events.csv', index=False)
+
+    latest_month = monthly['date'].max() if not monthly.empty else 'n/a'
+    print(f"  Saved {len(monthly)} monthly EV rows through {latest_month}")
+    print(f"  Saved {len(annual)} annual EV rows")
+    return monthly
+
+
 def fetch_all():
     """Fetch all data and save to CSV with parallel execution"""
     from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -2573,6 +2891,7 @@ def fetch_all():
         fetch_cftc_positioning,
         fetch_cot_wti_brent_merged,
         fetch_total_inv_eia_fair_value,
+        fetch_ev_fleet_dashboard,
     ]
 
     print("\n--- Running API fetchers (parallel) ---")
@@ -2644,6 +2963,11 @@ def fetch_all():
             'cpi_monthly.csv',
             'total_inv_eia_fair_value.csv',
             'crude_production.csv',
+            'ev_carsales_monthly_raw.csv',
+            'ev_brent_monthly.csv',
+            'ev_monthly_fleet.csv',
+            'ev_annual_fleet.csv',
+            'ev_policy_events.csv',
         ]
     }
     pd.DataFrame([meta]).to_csv(DATA_DIR / 'metadata.csv', index=False)

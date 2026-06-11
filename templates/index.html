@@ -562,6 +562,7 @@
         <div class="nav-item active" data-section="overview">Overview</div>
         <div class="nav-item" data-section="markets">Markets</div>
         <div class="nav-item" data-section="energy">Energy</div>
+        <div class="nav-item" data-section="ev">EVs</div>
         <div class="nav-item" data-section="economy">Economy</div>
         <div class="nav-item" data-section="labor">Labor & Inflation</div>
         <a class="nav-spr-link" href="/spr">SPR Tracker</a>
@@ -860,6 +861,117 @@
                         </div>
                     </div>
                     <div class="chart-desc">Weekly change uses the same Friday-aligned Total Inventory EIA dataset: x-axis is NTPS change in million barrels; y-axis is CPI-adjusted WTI change in dollars per barrel.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EV Fleet Dashboard -->
+        <div class="section" data-page="ev energy">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Global EV Fleet</div>
+                    <div class="section-subtitle">Monthly registrations converted into cumulative fleet stock; hybrids are split 50/50 between ICE and EV</div>
+                </div>
+            </div>
+
+            <div class="stats-row" id="ev-metrics-row" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="stat-card">
+                    <div class="stat-label">China EV Fleet Share</div>
+                    <div class="stat-value" id="ev-china-share">--</div>
+                    <div class="stat-change" id="ev-china-detail">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">USA EV Fleet Share</div>
+                    <div class="stat-value" id="ev-usa-share">--</div>
+                    <div class="stat-change" id="ev-usa-detail">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">India EV Fleet Share</div>
+                    <div class="stat-value" id="ev-india-share">--</div>
+                    <div class="stat-change" id="ev-india-detail">--</div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <span>EV Share of Cumulative Fleet</span>
+                        <span class="source">Robbie Andrew</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="ev-fleet-share-chart" class="chart-lg"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">Fleet stock is the cumulative sum of monthly registrations. It does not subtract scrappage or exports.</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span>EV Share of New Registrations</span>
+                        <span class="source">12M rolling</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="ev-sales-share-chart" class="chart-lg"><div class="loading">Loading...</div></div>
+                        <div class="chart-desc">Twelve-month rolling share smooths registration seasonality and policy pull-forward effects.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-header" style="margin-top: 24px;">
+                <div>
+                    <div class="section-title">EV Momentum vs Brent</div>
+                    <div class="section-subtitle">Year-over-year fleet-share change, Brent crude, and policy markers for China, USA, and India</div>
+                </div>
+            </div>
+            <div class="grid-3" id="ev-policy-charts">
+                <div class="card">
+                    <div class="card-header">
+                        <span>China</span>
+                        <span class="source">Policy markers</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="ev-policy-chart-china" class="chart"><div class="loading">Loading...</div></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span>USA</span>
+                        <span class="source">Policy markers</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="ev-policy-chart-usa" class="chart"><div class="loading">Loading...</div></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span>India</span>
+                        <span class="source">Policy markers</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="ev-policy-chart-india" class="chart"><div class="loading">Loading...</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-header">
+                    <span>Policy Event Reference</span>
+                    <span class="source">Guide input</span>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="data-table" id="ev-policy-table">
+                            <thead>
+                                <tr>
+                                    <th>Country</th>
+                                    <th>#</th>
+                                    <th>Date</th>
+                                    <th>Event</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="chart-desc">Policy dates are reference annotations for the chart, not a full statutory policy database.</div>
                 </div>
             </div>
         </div>
@@ -1522,7 +1634,7 @@
     </div>
 
     <div class="footer">
-        Data: BEA NIPA via FRED (quarterly) | EIA Petroleum Weekly Stocks (weekly) | Treasury Fiscal Data (daily) | All trade values in Billions USD (SAAR)
+        Data: BEA NIPA via FRED (quarterly) | EIA Petroleum Weekly Stocks (weekly) | Treasury Fiscal Data (daily) | Robbie Andrew vehicle registrations (monthly) | All trade values in Billions USD (SAAR)
     </div>
 
     <script>
@@ -4654,6 +4766,218 @@
             }
         }
 
+        async function loadEVFleet() {
+            const focusCountries = ['China', 'USA', 'India'];
+            const countryColors = {
+                China: '#c41e3a',
+                USA: '#2563eb',
+                India: '#0d7d4d'
+            };
+            const metricIds = {
+                China: ['ev-china-share', 'ev-china-detail'],
+                USA: ['ev-usa-share', 'ev-usa-detail'],
+                India: ['ev-india-share', 'ev-india-detail']
+            };
+            const slug = country => country.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            const numberOrNull = value => {
+                const numeric = Number(value);
+                return Number.isFinite(numeric) ? numeric : null;
+            };
+            const pct = (value, digits = 1) => {
+                const numeric = numberOrNull(value);
+                return numeric === null ? '--' : `${numeric.toFixed(digits)}%`;
+            };
+            const signedPct = (value, digits = 1) => {
+                const numeric = numberOrNull(value);
+                if (numeric === null) return '--';
+                return `${numeric >= 0 ? '+' : ''}${numeric.toFixed(digits)} pp`;
+            };
+            const fleetLabel = value => {
+                const numeric = numberOrNull(value);
+                if (numeric === null) return '--';
+                return numeric >= 1000000
+                    ? `${(numeric / 1000000).toFixed(1)}M`
+                    : `${(numeric / 1000).toFixed(0)}K`;
+            };
+
+            try {
+                const [monthlyRes, annualRes, policyRes] = await Promise.all([
+                    fetch('/api/ev/monthly'),
+                    fetch('/api/ev/annual'),
+                    fetch('/api/ev/policies')
+                ]);
+                const monthly = await monthlyRes.json();
+                const annual = await annualRes.json();
+                const policies = await policyRes.json();
+                if (!Array.isArray(monthly) || !monthly.length || monthly.error) {
+                    document.getElementById('ev-fleet-share-chart').innerHTML = '<div class="loading">EV fleet data is not available. Run the data refresh to build EV CSVs.</div>';
+                    document.getElementById('ev-sales-share-chart').innerHTML = '<div class="loading">EV fleet data is not available. Run the data refresh to build EV CSVs.</div>';
+                    return;
+                }
+
+                const rows = monthly
+                    .map(row => ({
+                        ...row,
+                        dateObj: new Date(row.date),
+                        ev_fleet_share: numberOrNull(row.ev_fleet_share),
+                        ev_sales_share_12m: numberOrNull(row.ev_sales_share_12m),
+                        ev_fleet_share_yoy_pp: numberOrNull(row.ev_fleet_share_yoy_pp),
+                        ev_fleet: numberOrNull(row.ev_fleet),
+                        total_fleet: numberOrNull(row.total_fleet),
+                        brent: numberOrNull(row.brent)
+                    }))
+                    .filter(row => row.date && !Number.isNaN(row.dateObj.getTime()))
+                    .sort((a, b) => a.dateObj - b.dateObj);
+                const policyRows = Array.isArray(policies) ? policies : [];
+                ['ev-fleet-share-chart', 'ev-sales-share-chart', 'ev-policy-chart-china', 'ev-policy-chart-usa', 'ev-policy-chart-india'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.innerHTML = '';
+                });
+
+                focusCountries.forEach(country => {
+                    const latest = rows.filter(row => row.country === country).slice(-1)[0];
+                    const ids = metricIds[country];
+                    if (!latest || !ids) return;
+                    document.getElementById(ids[0]).textContent = pct(latest.ev_fleet_share, 1);
+                    document.getElementById(ids[1]).textContent = `${fleetLabel(latest.ev_fleet)} fleet | ${pct(latest.ev_sales_share_12m, 0)} 12M sales share | ${signedPct(latest.ev_fleet_share_yoy_pp, 2)} YoY`;
+                });
+
+                const fleetTraces = focusCountries.map(country => {
+                    const countryRows = rows.filter(row => row.country === country && row.ev_fleet_share !== null);
+                    return {
+                        x: countryRows.map(row => row.date),
+                        y: countryRows.map(row => row.ev_fleet_share),
+                        name: country,
+                        type: 'scatter',
+                        mode: 'lines',
+                        line: { color: countryColors[country], width: 2.6 },
+                        hovertemplate: '%{x}<br>Fleet share: %{y:.2f}%<extra></extra>'
+                    };
+                });
+
+                Plotly.newPlot('ev-fleet-share-chart', fleetTraces, {
+                    ...baseLayout,
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'EV fleet share (%)', font: { size: 11 } }, rangemode: 'tozero' },
+                    xaxis: dateAxis({ tickformat: '%Y', nticks: 10 })
+                });
+
+                const salesTraces = focusCountries.map(country => {
+                    const countryRows = rows.filter(row => row.country === country && row.ev_sales_share_12m !== null);
+                    return {
+                        x: countryRows.map(row => row.date),
+                        y: countryRows.map(row => row.ev_sales_share_12m),
+                        name: country,
+                        type: 'scatter',
+                        mode: 'lines',
+                        line: { color: countryColors[country], width: 2.4 },
+                        hovertemplate: '%{x}<br>12M sales share: %{y:.1f}%<extra></extra>'
+                    };
+                });
+
+                Plotly.newPlot('ev-sales-share-chart', salesTraces, {
+                    ...baseLayout,
+                    yaxis: { ...baseLayout.yaxis, title: { text: '12M EV registrations share (%)', font: { size: 11 } }, rangemode: 'tozero' },
+                    xaxis: dateAxis({ tickformat: '%Y', nticks: 10 })
+                });
+
+                focusCountries.forEach(country => {
+                    const countryRows = rows
+                        .filter(row => row.country === country && row.date >= '2012-01-01')
+                        .sort((a, b) => a.dateObj - b.dateObj);
+                    const policiesForCountry = policyRows.filter(row => row.country === country);
+                    const yValues = countryRows
+                        .map(row => row.ev_fleet_share_yoy_pp)
+                        .filter(value => value !== null);
+                    const yMax = yValues.length ? Math.max(1, ...yValues.map(value => Math.abs(value))) : 1;
+                    const shapes = policiesForCountry.map(event => ({
+                        type: 'line',
+                        xref: 'x',
+                        yref: 'paper',
+                        x0: event.date,
+                        x1: event.date,
+                        y0: 0,
+                        y1: 1,
+                        line: { color: '#111827', width: 1, dash: 'dot' }
+                    }));
+                    const annotations = policiesForCountry.map(event => ({
+                        x: event.date,
+                        y: 0.98,
+                        xref: 'x',
+                        yref: 'paper',
+                        text: event.label,
+                        showarrow: false,
+                        bgcolor: '#111827',
+                        borderpad: 2,
+                        font: { size: 9, color: '#ffffff' }
+                    }));
+
+                    Plotly.newPlot(`ev-policy-chart-${slug(country)}`, [
+                        {
+                            x: countryRows.map(row => row.date),
+                            y: countryRows.map(row => row.ev_fleet_share_yoy_pp),
+                            name: 'EV fleet-share YoY',
+                            type: 'scatter',
+                            mode: 'lines',
+                            line: { color: countryColors[country], width: 2.5 },
+                            hovertemplate: '%{x}<br>YoY change: %{y:.2f} pp<extra></extra>'
+                        },
+                        {
+                            x: countryRows.map(row => row.date),
+                            y: countryRows.map(row => row.brent),
+                            name: 'Brent',
+                            type: 'scatter',
+                            mode: 'lines',
+                            yaxis: 'y2',
+                            line: { color: '#64748b', width: 1.6 },
+                            hovertemplate: '%{x}<br>Brent: $%{y:.2f}/bbl<extra></extra>'
+                        }
+                    ], {
+                        ...baseLayout,
+                        margin: { t: 18, r: 52, b: 70, l: 52 },
+                        showlegend: true,
+                        legend: { orientation: 'h', y: -0.28, x: 0.5, xanchor: 'center', font: { size: 9 } },
+                        xaxis: dateAxis({ tickformat: '%Y', nticks: 7 }),
+                        yaxis: {
+                            ...baseLayout.yaxis,
+                            title: { text: 'YoY pp', font: { size: 10 } },
+                            range: [-0.2, yMax * 1.18],
+                            zeroline: true,
+                            zerolinecolor: '#94a3b8'
+                        },
+                        yaxis2: {
+                            title: { text: 'Brent $/bbl', font: { size: 10, color: '#64748b' } },
+                            overlaying: 'y',
+                            side: 'right',
+                            tickfont: { size: 10, color: '#64748b' },
+                            showgrid: false,
+                            rangemode: 'tozero'
+                        },
+                        shapes,
+                        annotations
+                    });
+                });
+
+                const tbody = document.querySelector('#ev-policy-table tbody');
+                tbody.innerHTML = policyRows
+                    .filter(row => focusCountries.includes(row.country))
+                    .map(row => `
+                        <tr>
+                            <td>${row.country}</td>
+                            <td>${row.label}</td>
+                            <td>${row.date}</td>
+                            <td>${row.event}</td>
+                            <td>${row.description}</td>
+                        </tr>
+                    `).join('');
+            } catch (e) {
+                console.error('Error loading EV fleet dashboard:', e);
+                ['ev-fleet-share-chart', 'ev-sales-share-chart', 'ev-policy-chart-china', 'ev-policy-chart-usa', 'ev-policy-chart-india'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.innerHTML = '<div class="error">EV chart failed to load.</div>';
+                });
+            }
+        }
+
         async function loadPolicyInflationLabor() {
             try {
                 const [yieldsRes, cpiRes, claimsRes] = await Promise.all([
@@ -4987,6 +5311,7 @@
         loadPositioning();
         loadCOTBrentPositioning();
         loadTotalInvEIA();
+        loadEVFleet();
         loadPolicyInflationLabor();
         loadKeyMetrics();
 
