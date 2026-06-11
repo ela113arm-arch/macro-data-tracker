@@ -1,0 +1,50 @@
+name: Refresh data
+
+on:
+  schedule:
+    # All times UTC. Targets ET releases, robust to DST (ET = UTC-4/-5):
+    - cron: "0 14 * * 1-5"   # 9-10am ET: CPI, jobs, claims, retail, GDP, trade (8:30am releases)
+    - cron: "0 16 * * 1-5"   # 11am-12pm ET: EIA petroleum (Wed) / nat gas (Thu), ISM
+    - cron: "30 23 * * 1-5"  # 6:30-7:30pm ET: market close, yields, DTS, Fri rig count + CFTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Fetch data
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          BEA_API_KEY: ${{ secrets.BEA_API_KEY }}
+          EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+        run: python data_fetcher.py
+
+      - name: Commit and push updated data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "No data changes - nothing to commit"
+          else
+            git commit -m "Auto-refresh data ($(date -u +'%Y-%m-%d %H:%M UTC'))"
+            git pull --rebase origin master
+            git push
+          fi
