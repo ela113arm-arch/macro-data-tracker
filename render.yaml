@@ -9,6 +9,8 @@ services:
         value: 0.0.0.0
       - key: PYTHONUNBUFFERED
         value: "1"
+      - key: SYNC_BUNDLED_DATA_ON_STARTUP
+        value: "1"
       - key: FRED_API_KEY
         sync: false
       - key: BEA_API_KEY

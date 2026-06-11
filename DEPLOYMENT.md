@@ -19,6 +19,7 @@ Optional:
 | `PORT` | `5003` | Port used by Flask/gunicorn |
 | `HOST` | `127.0.0.1` locally, `0.0.0.0` in Docker | Bind address |
 | `DATA_DIR` | `./data` | Alternate writable CSV directory |
+| `SYNC_BUNDLED_DATA_ON_STARTUP` | `1` | When `DATA_DIR` points at a Render disk, copy newer CSVs bundled by a GitHub redeploy into that disk on startup. Set to `0` to disable. |
 
 ## Recommended: Render From GitHub
 
@@ -28,6 +29,12 @@ Optional:
 4. Add `FRED_API_KEY`, `BEA_API_KEY`, and `EIA_API_KEY` in Render environment variables.
 5. Deploy, then open `/macro`.
 6. Click Refresh Data to update CSVs on the running Render instance.
+
+### GitHub CSV updates vs. in-app refreshes
+
+Render does not `git pull` inside a running container. CSV updates committed to GitHub reach the app only after Render builds and deploys a new image from that commit. The in-app **Refresh Data** button is separate: it runs `data_fetcher.py` on the running instance and writes CSVs into `DATA_DIR`.
+
+If `DATA_DIR` points at a persistent Render disk, those disk files can hide the newer CSVs bundled in a GitHub redeploy. On startup, the app now compares the bundled data refresh timestamp with the external `DATA_DIR` timestamp and copies the bundled CSVs into `DATA_DIR` only when the deployed GitHub data is newer. Check `/api/status` for `data_dir`, `bundled_data_dir`, `uses_external_data_dir`, and `bundled_data_sync` to diagnose which source the app is reading.
 
 ## Local Production Run
 
@@ -62,4 +69,4 @@ docker run --rm -p 5003:5003 `
 
 ## Notes
 
-- Some hosts have ephemeral filesystems. The committed CSVs are enough to load the dashboard after deploy, and the Refresh Data button updates CSVs for the running instance. For durable refreshed CSVs across restarts, configure a persistent disk and set `DATA_DIR` to that disk path.
+- Some hosts have ephemeral filesystems. The committed CSVs are enough to load the dashboard after deploy, and the Refresh Data button updates CSVs for the running instance. For durable refreshed CSVs across restarts, configure a persistent disk and set `DATA_DIR` to that disk path. With a persistent disk, leave `SYNC_BUNDLED_DATA_ON_STARTUP=1` if GitHub CSV commits should replace older disk data after a redeploy.

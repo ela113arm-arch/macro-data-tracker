@@ -157,7 +157,7 @@ The Total Inventory EIA chart is available on the root modeling dashboard and th
 
 ## Deploy
 
-The app is ready to deploy from GitHub using the included `Dockerfile`, `Procfile`, and `render.yaml`. Set `FRED_API_KEY`, `BEA_API_KEY`, `EIA_API_KEY`, and `REFRESH_TOKEN` as host environment variables; never commit real keys. See `DEPLOYMENT.md` for the full setup.
+The app is ready to deploy from GitHub using the included `Dockerfile`, `Procfile`, and `render.yaml`. Set `FRED_API_KEY`, `BEA_API_KEY`, and `EIA_API_KEY` as host environment variables; never commit real keys. Render picks up committed CSV changes after a redeploy, and `/api/status` reports whether an external `DATA_DIR` is masking the bundled GitHub data. See `DEPLOYMENT.md` for the full setup.
 
 ## Limitations
 
