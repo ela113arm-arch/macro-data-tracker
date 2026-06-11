@@ -2274,48 +2274,55 @@ def fetch_cftc_positioning():
     }
 
     all_data = {}
+    failed_contracts = []
 
     for contract_key, contract_info in contracts.items():
-        try:
-            # Query CFTC API - get last 3 years of weekly data
-            params = {
-                '$where': f"cftc_contract_market_code = '{contract_info['market']}'",
-                '$order': 'report_date_as_yyyy_mm_dd DESC',
-                '$limit': 156  # ~3 years of weekly data
-            }
+        # Query CFTC API - get last 3 years of weekly data
+        params = {
+            '$where': f"cftc_contract_market_code = '{contract_info['market']}'",
+            '$order': 'report_date_as_yyyy_mm_dd DESC',
+            '$limit': 156  # ~3 years of weekly data
+        }
 
-            response = requests.get(base_url, params=params, timeout=30)
+        data = None
+        for attempt in range(3):
+            try:
+                response = requests.get(base_url, params=params, timeout=60)
+                if response.status_code == 200:
+                    data = response.json()
+                    break
+                print(f"  {contract_key}: API error {response.status_code} (attempt {attempt + 1}/3)")
+            except Exception as e:
+                print(f"  Error fetching {contract_key} (attempt {attempt + 1}/3): {e}")
+            time.sleep(5)
 
-            if response.status_code == 200:
-                data = response.json()
-                print(f"  {contract_key}: {len(data)} observations")
+        if data is None:
+            failed_contracts.append(contract_key)
+            continue
 
-                for row in data:
-                    date = row.get('report_date_as_yyyy_mm_dd', '')
-                    if not date:
-                        continue
+        print(f"  {contract_key}: {len(data)} observations")
 
-                    if date not in all_data:
-                        all_data[date] = {'date': date}
+        for row in data:
+            date = row.get('report_date_as_yyyy_mm_dd', '')
+            if not date:
+                continue
 
-                    # Managed Money positions (the key speculative category)
-                    mm_long = float(row.get('m_money_positions_long_all', 0) or 0)
-                    mm_short = float(row.get('m_money_positions_short_all', 0) or 0)
-                    mm_net = mm_long - mm_short
+            if date not in all_data:
+                all_data[date] = {'date': date}
 
-                    # Open interest for percentage calculations
-                    oi = float(row.get('open_interest_all', 1) or 1)
+            # Managed Money positions (the key speculative category)
+            mm_long = float(row.get('m_money_positions_long_all', 0) or 0)
+            mm_short = float(row.get('m_money_positions_short_all', 0) or 0)
+            mm_net = mm_long - mm_short
 
-                    all_data[date][f'{contract_key}_mm_long'] = mm_long
-                    all_data[date][f'{contract_key}_mm_short'] = mm_short
-                    all_data[date][f'{contract_key}_mm_net'] = mm_net
-                    all_data[date][f'{contract_key}_mm_net_pct'] = (mm_net / oi) * 100 if oi > 0 else 0
-                    all_data[date][f'{contract_key}_oi'] = oi
-            else:
-                print(f"  {contract_key}: API error {response.status_code}")
+            # Open interest for percentage calculations
+            oi = float(row.get('open_interest_all', 1) or 1)
 
-        except Exception as e:
-            print(f"  Error fetching {contract_key}: {e}")
+            all_data[date][f'{contract_key}_mm_long'] = mm_long
+            all_data[date][f'{contract_key}_mm_short'] = mm_short
+            all_data[date][f'{contract_key}_mm_net'] = mm_net
+            all_data[date][f'{contract_key}_mm_net_pct'] = (mm_net / oi) * 100 if oi > 0 else 0
+            all_data[date][f'{contract_key}_oi'] = oi
 
         time.sleep(0.3)
 
@@ -2370,7 +2377,13 @@ def fetch_cftc_positioning():
     df['year'] = df['date'].dt.year
     df['week'] = df['date'].dt.isocalendar().week
 
-    df.to_csv(DATA_DIR / 'cftc_positioning.csv', index=False)
+    # If any contract failed, writing would drop its columns and clobber good data
+    output_path = DATA_DIR / 'cftc_positioning.csv'
+    if failed_contracts and output_path.exists():
+        print(f"  Skipping save - {failed_contracts} failed, keeping existing cftc_positioning.csv")
+        return pd.read_csv(output_path)
+
+    df.to_csv(output_path, index=False)
     print(f"  Saved {len(df)} rows to cftc_positioning.csv")
     return df
 
