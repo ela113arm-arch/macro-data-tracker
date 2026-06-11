@@ -33,6 +33,7 @@ macro_data_tracker/
 | CFTC | Commitment of Traders Disaggregated Futures Only | https://publicreporting.cftc.gov/resource/72hh-3qpy.json |
 | ICE | Brent futures historical COT CSVs | https://www.ice.com/publicdocs/futures |
 | Yahoo Finance | Futures and market prices via yfinance | N/A |
+| Robbie Andrew vehicle registrations | Global monthly vehicle registrations by fuel type | https://robbieandrew.github.io/carsales/ |
 
 ## API Enumeration Guide
 
@@ -149,15 +150,28 @@ The exploratory relationship table compares weekly COT/Brent observations with E
 
 The Total Inventory EIA chart is available on the root modeling dashboard and the macro Energy dashboard. Both dashboards also include a week-over-week change view that plots `diff(ntps)` against `diff(wti_real)`, highlights the latest observation and trailing 13 weeks, and displays correlation, R-squared, and beta. The standard refresh button runs the total-inventory fetcher, updating `eia_total_stocks.csv`, `wti_prices.csv`, `cpi_monthly.csv`, and `total_inv_eia_fair_value.csv`.
 
+### EV Fleet Dashboard (Robbie Andrew/Yahoo)
+| File | Description |
+|------|-------------|
+| `ev_carsales_monthly_raw.csv` | Raw all-country monthly registrations by country and fuel type |
+| `ev_brent_monthly.csv` | Monthly Brent futures closes and monthly/year-over-year changes |
+| `ev_monthly_fleet.csv` | Processed monthly ICE/EV sales, cumulative fleet, fleet share, and Brent overlay |
+| `ev_annual_fleet.csv` | Annual rollup of sales and cumulative fleet by country |
+| `ev_policy_events.csv` | China, USA, and India policy markers used in the EV chart annotations |
+
+The EV pipeline classifies BEV, PHEV, and ZEV as EV; petrol, diesel, LPG, ethanol blends, hydrogen, and other fuels as ICE; and splits non-plugin, mild, and generic hybrids 50/50 between EV and ICE. Fleet stock is the cumulative sum of monthly registrations, so it is an upper-bound stock series and does not subtract vehicle retirements, exports, or scrappage. The standard `python data_fetcher.py` refresh and the GitHub Actions scheduled refresh both rebuild these EV CSVs.
+
 ## Usage
 
 1. **Update data**: `python data_fetcher.py`
 2. **Run dashboard**: `python app.py`
 3. **View**: http://localhost:5003
 
+`python data_fetcher.py` refreshes the macro, energy, SPR-adjacent, and EV fleet CSVs. The EV section is available at `/macro?section=ev` after the CSVs are present.
+
 ## Deploy
 
-The app is ready to deploy from GitHub using the included `Dockerfile`, `Procfile`, and `render.yaml`. Set `FRED_API_KEY`, `BEA_API_KEY`, and `EIA_API_KEY` as host environment variables; never commit real keys. Render picks up committed CSV changes after a redeploy, and `/api/status` reports whether an external `DATA_DIR` is masking the bundled GitHub data. See `DEPLOYMENT.md` for the full setup.
+The app is ready to deploy from GitHub using the included `Dockerfile`, `Procfile`, and `render.yaml`. Set `FRED_API_KEY`, `BEA_API_KEY`, and `EIA_API_KEY` as host environment variables; never commit real keys. The `Refresh data` GitHub Actions workflow runs `python data_fetcher.py` on its weekday cron schedule, so committed refreshes include the EV fleet CSVs as well as the existing macro and energy data. Render picks up committed CSV changes after a redeploy, and `/api/status` reports whether an external `DATA_DIR` is masking the bundled GitHub data. See `DEPLOYMENT.md` for the full setup.
 
 ## Limitations
 

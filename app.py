@@ -1821,6 +1821,27 @@ def get_baltic_dry():
     return read_csv('baltic_dry.csv')
 
 
+@app.route('/api/ev/monthly')
+@safe_endpoint
+def get_ev_monthly():
+    """Monthly EV fleet and sales-share data."""
+    return read_csv('ev_monthly_fleet.csv')
+
+
+@app.route('/api/ev/annual')
+@safe_endpoint
+def get_ev_annual():
+    """Annual EV fleet and sales data."""
+    return read_csv('ev_annual_fleet.csv')
+
+
+@app.route('/api/ev/policies')
+@safe_endpoint
+def get_ev_policies():
+    """Policy markers used by the EV fleet dashboard."""
+    return read_csv('ev_policy_events.csv')
+
+
 @app.route('/api/status')
 def status():
     """Check data status"""
@@ -1839,7 +1860,9 @@ def status():
             'treasury_yields', 'jobless_claims', 'ism_pmi', 'housing', 'retail_sales',
             'consumer_sentiment', 'credit_spreads', 'dxy', 'natgas_inventories', 'baltic_dry',
             'days_of_supply', 'crack_spreads', 'rig_count', 'cftc_positioning',
-            'cot_wti_brent_merged', 'total_inv_eia_fair_value', 'crude_production'
+            'cot_wti_brent_merged', 'total_inv_eia_fair_value', 'crude_production',
+            'ev_carsales_monthly_raw', 'ev_brent_monthly', 'ev_monthly_fleet',
+            'ev_annual_fleet', 'ev_policy_events'
         ]
         return jsonify({
             'last_updated': meta.get('last_updated', 'Never'),
