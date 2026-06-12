@@ -58,6 +58,12 @@ MODELING_CACHE = {
     'payload': None,
 }
 MODELING_CACHE_FILE = APP_DIR / '.run' / 'energy_modeling_cache.json'
+MODELING_BUILD_LOCK = threading.Lock()
+MODELING_BUILD_STATE = {
+    'status': 'idle',
+    'started_at': None,
+    'error': None,
+}
 DATA_SYNC_STATE = {
     'enabled': False,
     'status': 'not_run',
@@ -73,6 +79,43 @@ DATA_SYNC_STATE = {
 def get_cache_key():
     """Return a cache key that changes every CACHE_TTL seconds"""
     return int(time.time() // CACHE_TTL)
+
+
+def modeling_data_signature():
+    """Fingerprint of the CSV data directory used to key the modeling cache"""
+    return [
+        [path.name, path.stat().st_mtime_ns, path.stat().st_size]
+        for path in sorted(DATA_DIR.glob('*.csv'))
+    ]
+
+
+def start_modeling_build(force=False):
+    """Build the modeling payload on a background thread.
+
+    Returns False when a build is already running. The internal request goes
+    through the normal endpoint so memory and disk caches are populated the
+    same way as a user-triggered build.
+    """
+    if not MODELING_BUILD_LOCK.acquire(blocking=False):
+        return False
+
+    def runner():
+        MODELING_BUILD_STATE.update({'status': 'building', 'started_at': time.time(), 'error': None})
+        try:
+            with app.test_client() as client:
+                url = '/api/energy/modeling' + ('?refresh=1' if force else '')
+                res = client.get(url)
+            if res.status_code == 200:
+                MODELING_BUILD_STATE.update({'status': 'ready', 'error': None})
+            else:
+                MODELING_BUILD_STATE.update({'status': 'error', 'error': f'Modeling build returned HTTP {res.status_code}'})
+        except Exception as exc:
+            MODELING_BUILD_STATE.update({'status': 'error', 'error': str(exc)})
+        finally:
+            MODELING_BUILD_LOCK.release()
+
+    threading.Thread(target=runner, daemon=True, name='modeling-build').start()
+    return True
 
 
 def safe_endpoint(f):
@@ -1030,10 +1073,7 @@ def get_energy_exploration():
 def get_energy_modeling():
     """Comprehensive forward-looking Brent modeling dashboard payload."""
     refresh = request.args.get('refresh') == '1'
-    signature = [
-        [path.name, path.stat().st_mtime_ns, path.stat().st_size]
-        for path in sorted(DATA_DIR.glob('*.csv'))
-    ]
+    signature = modeling_data_signature()
     if (
         not refresh
         and MODELING_CACHE['payload'] is not None
@@ -1681,6 +1721,53 @@ def get_energy_modeling():
     return payload
 
 
+@app.route('/api/energy/modeling/summary')
+@safe_endpoint
+def get_energy_modeling_summary():
+    """Lightweight Brent model signal for embedding. Never blocks on a model build."""
+    signature = modeling_data_signature()
+    payload = None
+    fresh = False
+    if MODELING_CACHE['payload'] is not None and MODELING_CACHE['signature'] == signature:
+        payload = MODELING_CACHE['payload']
+        fresh = True
+    elif MODELING_CACHE_FILE.exists():
+        try:
+            cached = json.loads(MODELING_CACHE_FILE.read_text(encoding='utf-8'))
+            if cached.get('payload') is not None:
+                payload = cached['payload']
+                fresh = cached.get('signature') == signature
+                if fresh:
+                    MODELING_CACHE.update({'signature': signature, 'built_at': time.time(), 'payload': payload})
+        except (OSError, json.JSONDecodeError):
+            pass
+    elif MODELING_CACHE['payload'] is not None:
+        payload = MODELING_CACHE['payload']
+
+    if not fresh and MODELING_BUILD_STATE['status'] != 'building':
+        start_modeling_build()
+
+    if payload is None:
+        status = MODELING_BUILD_STATE['status']
+        return {
+            'status': 'building' if status in ('idle', 'building', 'ready') else status,
+            'build': dict(MODELING_BUILD_STATE),
+        }
+
+    signal = payload.get('current_signal') or {}
+    summary = payload.get('target_summary') or {}
+    leaderboard = payload.get('model_leaderboard') or []
+    best = next((row for row in leaderboard if 'Baseline' not in str(row.get('model', ''))), None)
+    return {
+        'status': 'ready' if fresh else 'stale',
+        'build': dict(MODELING_BUILD_STATE),
+        'current_signal': signal,
+        'next_target_date': summary.get('next_target_date'),
+        'observations': summary.get('observations'),
+        'best_model': best,
+    }
+
+
 @app.route('/api/treasury/withholding')
 @safe_endpoint
 def get_treasury_withholding():
@@ -2008,6 +2095,31 @@ def clear_cache():
         return jsonify({'success': True, 'message': 'Cache cleared'})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
+
+
+def warm_modeling_cache_on_boot():
+    """Prebuild the Brent modeling cache so the first dashboard visit doesn't block.
+
+    If the disk cache already matches the current data signature it is loaded
+    directly; otherwise a background build starts. Disable with
+    MODELING_WARM_ON_BOOT=0 (e.g. in test environments).
+    """
+    if os.environ.get('MODELING_WARM_ON_BOOT', '1').lower() in ('0', 'false', 'no'):
+        return
+    try:
+        signature = modeling_data_signature()
+        if MODELING_CACHE_FILE.exists():
+            cached = json.loads(MODELING_CACHE_FILE.read_text(encoding='utf-8'))
+            if cached.get('signature') == signature and cached.get('payload') is not None:
+                MODELING_CACHE.update({'signature': signature, 'built_at': time.time(), 'payload': cached['payload']})
+                MODELING_BUILD_STATE.update({'status': 'ready'})
+                return
+    except (OSError, json.JSONDecodeError):
+        pass
+    start_modeling_build()
+
+
+warm_modeling_cache_on_boot()
 
 
 if __name__ == '__main__':

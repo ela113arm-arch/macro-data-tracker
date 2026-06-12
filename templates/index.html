@@ -565,7 +565,8 @@
         <div class="nav-item" data-section="ev">EVs</div>
         <div class="nav-item" data-section="economy">Economy</div>
         <div class="nav-item" data-section="labor">Labor & Inflation</div>
-        <a class="nav-spr-link" href="/spr">SPR Tracker</a>
+        <a class="nav-spr-link" href="/">Brent Model</a>
+        <a class="nav-spr-link" href="/spr" style="margin-left: 0;">SPR Tracker</a>
     </div>
 
     <!-- Key Metrics Bar -->
@@ -634,6 +635,11 @@
                 <div class="stat-label">Trade Balance</div>
                 <div class="stat-value" id="balance-value">--</div>
                 <div class="stat-change">Goods + Services</div>
+            </div>
+            <div class="stat-card" id="brent-model-card" style="cursor: pointer;" title="Open the Brent forecasting dashboard" onclick="window.location.href='/'">
+                <div class="stat-label">Brent Model &middot; Next Week &rarr;</div>
+                <div class="stat-value" id="bm-value">--</div>
+                <div class="stat-change" id="bm-meta">Loading signal...</div>
             </div>
         </div>
 
@@ -2157,13 +2163,13 @@
 
             const quarters = data.map(d => d.quarter);
             const components = [
-                { key: 'pce_goods', name: 'PCE: Goods', color: '#1e40af' },
-                { key: 'pce_services', name: 'PCE: Services', color: '#3b82f6' },
-                { key: 'nonres_investment', name: 'Business Investment', color: '#64748b' },
-                { key: 'res_investment', name: 'Residential', color: '#f59e0b' },
-                { key: 'inventories', name: 'Inventories', color: '#93c5fd' },
-                { key: 'net_exports', name: 'Net Exports', color: '#0d7d4d' },
-                { key: 'government', name: 'Government', color: '#1a2942' }
+                { key: 'pce_goods', name: 'PCE: Goods', color: '#5878a3' },
+                { key: 'pce_services', name: 'PCE: Services', color: '#92abc8' },
+                { key: 'nonres_investment', name: 'Business Investment', color: '#8c94a3' },
+                { key: 'res_investment', name: 'Residential', color: '#c9a16b' },
+                { key: 'inventories', name: 'Inventories', color: '#c5d3e3' },
+                { key: 'net_exports', name: 'Net Exports', color: '#7da08c' },
+                { key: 'government', name: 'Government', color: '#3d4a61' }
             ];
 
             const traces = components.map(c => ({
@@ -2172,7 +2178,7 @@
 
             traces.push({
                 x: quarters, y: data.map(d => d.total_gdp), name: 'Total GDP Growth',
-                type: 'scatter', mode: 'lines+markers', line: { color: '#c41e3a', width: 3 }, marker: { size: 6 }
+                type: 'scatter', mode: 'lines+markers', line: { color: '#b3402e', width: 2.5 }, marker: { size: 5 }
             });
 
             const latest = data[data.length - 1];
@@ -2185,7 +2191,7 @@
                 showlegend: true,
                 legend: { orientation: 'h', y: -0.2, font: { size: 10 } },
                 xaxis: quarterAxis(quarters),
-                yaxis: { ...baseLayout.yaxis, zeroline: true, zerolinecolor: '#1a2942', title: { text: 'Percentage Points', font: { size: 11 } } }
+                yaxis: { ...baseLayout.yaxis, zeroline: true, zerolinecolor: '#94a3b8', title: { text: 'Percentage Points', font: { size: 11 } } }
             });
         }
 
@@ -2637,6 +2643,15 @@
             { key: 'crude_PADD5', name: 'PADD 5 (West Coast)', color: '#c41e3a' },
         ];
 
+        // Muted palette for weekly supply/demand stacks: blue-slate = supply, clay = demand.
+        // Saturation stays low so the net stock-change diamonds carry the signal.
+        const sdPalette = {
+            supply: ['#5878a3', '#92abc8', '#c5d3e3'],
+            demand: ['#a3655c', '#c4938b', '#e2c6c1'],
+            draw: '#b35543',
+            build: '#2f7d5f'
+        };
+
         // Month labels for week axis
         const monthTicks = {
             tickvals: [1, 5, 9, 14, 18, 23, 27, 31, 36, 40, 44, 49],
@@ -2814,7 +2829,7 @@
                             Number.isFinite(v) ? `${v >= 0 ? '+' : ''}${v.toFixed(2)}` : ''
                         );
                         const actualStockChangeColors = actualStockChanges.map(v =>
-                            Number.isFinite(v) && v >= 0 ? '#059669' : '#dc2626'
+                            Number.isFinite(v) && v >= 0 ? sdPalette.build : sdPalette.draw
                         );
 
                         const traces = [];
@@ -2828,7 +2843,7 @@
                                     x: weekLabels,
                                     y: last4ProductWeeks.map(w => w.production || 0),
                                     type: 'bar',
-                                    marker: { color: '#1e40af' },
+                                    marker: { color: sdPalette.supply[0] },
                                 });
                             }
                             traces.push({
@@ -2836,7 +2851,7 @@
                                 x: weekLabels,
                                 y: last4ProductWeeks.map(w => w.imports || 0),
                                 type: 'bar',
-                                marker: { color: '#3b82f6' },
+                                marker: { color: sdPalette.supply[1] },
                             });
                             // SPR Release (only for crude_US)
                             if (product.balanceKey === 'crude_US') {
@@ -2845,7 +2860,7 @@
                                     x: weekLabels,
                                     y: last4ProductWeeks.map(w => (w.spr_change || 0) < 0 ? Math.abs(w.spr_change) : 0),
                                     type: 'bar',
-                                    marker: { color: '#93c5fd' },
+                                    marker: { color: sdPalette.supply[2] },
                                 });
                             }
                             // Demand side (red shades) - NEGATIVE
@@ -2854,7 +2869,7 @@
                                 x: weekLabels,
                                 y: last4ProductWeeks.map(w => -(w.refinery_input || 0)),
                                 type: 'bar',
-                                marker: { color: '#991b1b' },
+                                marker: { color: sdPalette.demand[0] },
                             });
                             if (last4ProductWeeks.some(w => w.exports)) {
                                 traces.push({
@@ -2862,7 +2877,7 @@
                                     x: weekLabels,
                                     y: last4ProductWeeks.map(w => -(w.exports || 0)),
                                     type: 'bar',
-                                    marker: { color: '#dc2626' },
+                                    marker: { color: sdPalette.demand[1] },
                                 });
                             }
                             // SPR Build (only for crude_US)
@@ -2872,7 +2887,7 @@
                                     x: weekLabels,
                                     y: last4ProductWeeks.map(w => (w.spr_change || 0) > 0 ? -w.spr_change : 0),
                                     type: 'bar',
-                                    marker: { color: '#fca5a5' },
+                                    marker: { color: sdPalette.demand[2] },
                                 });
                             }
 
@@ -2885,8 +2900,8 @@
                                 type: 'scatter',
                                 mode: 'markers+text',
                                 customdata: actualStockChanges,
-                                marker: { color: actualStockChangeColors, size: 12, symbol: 'diamond', line: { color: '#000', width: 1 } },
-                                textfont: { size: 9, color: '#1a1a1a' },
+                                marker: { color: actualStockChangeColors, size: 11, symbol: 'diamond', line: { color: '#ffffff', width: 1.5 } },
+                                textfont: { size: 10, color: '#334155' },
                                 hovertemplate: 'Actual stock change<br>%{customdata:.2f} MMbbl/week<br>%{y:.2f} MMbpd equivalent<extra></extra>',
                             });
                         } else {
@@ -2897,14 +2912,14 @@
                                 x: weekLabels,
                                 y: last4ProductWeeks.map(w => w.refinery_output || 0),
                                 type: 'bar',
-                                marker: { color: '#1e40af' },
+                                marker: { color: sdPalette.supply[0] },
                             });
                             traces.push({
                                 name: 'Imports',
                                 x: weekLabels,
                                 y: last4ProductWeeks.map(w => w.imports || 0),
                                 type: 'bar',
-                                marker: { color: '#3b82f6' },
+                                marker: { color: sdPalette.supply[1] },
                             });
                             // Demand side (red shades) - NEGATIVE
                             traces.push({
@@ -2912,14 +2927,14 @@
                                 x: weekLabels,
                                 y: last4ProductWeeks.map(w => -(w.product_supplied || 0)),
                                 type: 'bar',
-                                marker: { color: '#991b1b' },
+                                marker: { color: sdPalette.demand[0] },
                             });
                             traces.push({
                                 name: 'Exports',
                                 x: weekLabels,
                                 y: last4ProductWeeks.map(w => -(w.exports || 0)),
                                 type: 'bar',
-                                marker: { color: '#dc2626' },
+                                marker: { color: sdPalette.demand[1] },
                             });
 
                             traces.push({
@@ -2931,8 +2946,8 @@
                                 type: 'scatter',
                                 mode: 'markers+text',
                                 customdata: actualStockChanges,
-                                marker: { color: actualStockChangeColors, size: 12, symbol: 'diamond', line: { color: '#000', width: 1 } },
-                                textfont: { size: 9, color: '#1a1a1a' },
+                                marker: { color: actualStockChangeColors, size: 11, symbol: 'diamond', line: { color: '#ffffff', width: 1.5 } },
+                                textfont: { size: 10, color: '#334155' },
                                 hovertemplate: 'Actual stock change<br>%{customdata:.2f} MMbbl/week<br>%{y:.2f} MMbpd equivalent<extra></extra>',
                             });
                         }
@@ -2940,11 +2955,12 @@
                         Plotly.newPlot(`sd-chart-${product.key}`, traces, {
                             ...baseLayout,
                             barmode: 'relative',
+                            bargap: 0.45,
                             showlegend: true,
-                            legend: { orientation: 'h', y: -0.24, font: { size: 8 } },
+                            legend: { orientation: 'h', y: -0.24, font: { size: 9 } },
                             margin: { t: 20, r: 18, b: 68, l: 62 },
                             xaxis: { ...baseLayout.xaxis, title: { text: 'Week Ending', font: { size: 10 } }, tickangle: 0 },
-                            yaxis: { ...baseLayout.yaxis, title: { text: 'MMbpd', font: { size: 10 } }, zeroline: true, zerolinecolor: '#1a1a1a', zerolinewidth: 2 }
+                            yaxis: { ...baseLayout.yaxis, title: { text: 'MMbpd', font: { size: 10 } }, zeroline: true, zerolinecolor: '#94a3b8', zerolinewidth: 1.5 }
                         });
                     }
                 }, 200);
@@ -5278,8 +5294,39 @@
             }
         }
 
+        async function loadBrentSignal(attempt = 0) {
+            const valueEl = document.getElementById('bm-value');
+            const metaEl = document.getElementById('bm-meta');
+            if (!valueEl || !metaEl) return;
+            try {
+                const res = await fetch('/api/energy/modeling/summary');
+                const data = await res.json();
+                if (data.status === 'building' || !data.current_signal) {
+                    metaEl.textContent = 'Model computing - updates automatically';
+                    if (attempt < 30) setTimeout(() => loadBrentSignal(attempt + 1), 10000);
+                    return;
+                }
+                const sig = data.current_signal;
+                const pred = sig.ensemble_prediction ?? sig.best_model_prediction;
+                const up = sig.direction === 'Up';
+                valueEl.textContent = Number.isFinite(Number(pred))
+                    ? `${Number(pred) >= 0 ? '+' : ''}${Number(pred).toFixed(2)} $/bbl`
+                    : (sig.direction || '--');
+                valueEl.className = `stat-value ${up ? 'positive' : 'negative'}`;
+                const prob = Number(sig.up_probability);
+                const parts = [sig.direction || '--'];
+                if (Number.isFinite(prob)) parts.push(`${Math.round(prob)}% up prob`);
+                if (sig.current_regime_label) parts.push(sig.current_regime_label);
+                if (data.status === 'stale') parts.push('refreshing');
+                metaEl.textContent = parts.join(' · ');
+            } catch (err) {
+                metaEl.textContent = 'Model unavailable';
+            }
+        }
+
         // Initialize
         loadStatus();
+        loadBrentSignal();
         loadGDP();
         loadContributions();
         loadTrade();

@@ -44,15 +44,18 @@
 
         h1 {
             margin: 0;
-            font-size: 22px;
-            font-weight: 750;
-            letter-spacing: 0;
+            font-size: 21px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
         }
 
         h2 {
             margin: 0 0 12px;
-            font-size: 15px;
-            font-weight: 750;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #edf1f6;
         }
 
         .subhead, .header-meta {
@@ -78,29 +81,30 @@
         .card, .panel {
             background: var(--paper);
             border: 1px solid var(--line);
-            border-radius: 6px;
-            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
         }
 
         .card {
             min-height: 86px;
-            padding: 13px 14px;
+            padding: 14px 16px;
         }
 
         .label {
             color: var(--muted);
             font-size: 11px;
             text-transform: uppercase;
-            letter-spacing: 0.04em;
-            font-weight: 700;
+            letter-spacing: 0.05em;
+            font-weight: 600;
             margin-bottom: 7px;
         }
 
         .value {
-            font-size: 24px;
-            font-weight: 780;
-            letter-spacing: 0;
+            font-size: 23px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
             white-space: nowrap;
+            font-variant-numeric: tabular-nums;
         }
 
         .hint {
@@ -140,21 +144,27 @@
 
         th, td {
             border-bottom: 1px solid #edf1f6;
-            padding: 8px 7px;
+            padding: 7px 9px;
             vertical-align: top;
             text-align: left;
+            white-space: nowrap;
         }
 
         th {
-            color: #475569;
-            font-size: 11px;
+            color: #64748b;
+            font-size: 10.5px;
             text-transform: uppercase;
-            letter-spacing: 0.03em;
-            font-weight: 750;
+            letter-spacing: 0.04em;
+            font-weight: 600;
             background: #f8fafc;
+            position: sticky;
+            top: 0;
+            z-index: 1;
         }
 
         td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+        tbody tr:hover td { background: #f8fafc; }
 
         .table-wrap {
             max-height: 360px;
@@ -167,12 +177,12 @@
             display: inline-flex;
             align-items: center;
             min-height: 22px;
-            padding: 2px 8px;
+            padding: 2px 9px;
             border-radius: 999px;
             background: #eef2ff;
             color: #3730a3;
             font-size: 11px;
-            font-weight: 750;
+            font-weight: 600;
         }
 
         .pill.green { background: #ecfdf5; color: #047857; }
@@ -275,6 +285,31 @@
                     <div class="value" id="sampleSize">--</div>
                     <div class="hint" id="featureCount">--</div>
                 </div>
+            </div>
+
+            <div class="grid" style="margin-bottom: 14px;">
+                <section class="panel span-7">
+                    <h2>Next-Week Forecast</h2>
+                    <div id="forecastChart" class="chart"></div>
+                    <div class="hint">Bars are realized weekly Brent changes over the walk-forward window. The diamond is the ensemble forecast for the next COT week; the whisker is &plusmn;1 RMSE of the best model.</div>
+                </section>
+                <section class="panel span-5">
+                    <h2>Model Consensus</h2>
+                    <div id="consensusChart" class="chart"></div>
+                    <div class="hint">Standalone next-week prediction from each regression model. Sign agreement = stronger signal. Models with runaway predictions (&gt;$25/bbl) are hidden.</div>
+                </section>
+
+                <section class="panel span-7">
+                    <h2>Signal Track Record</h2>
+                    <div id="backtestChart" class="chart"></div>
+                    <div class="hint">Cumulative $/bbl from following the best model's direction each week (flip short when it says down) vs always holding long, over the same walk-forward weeks.</div>
+                </section>
+                <section class="panel span-5">
+                    <h2>Direction Hits</h2>
+                    <div class="label" style="margin-bottom: 6px;">Walk-forward weeks, oldest to newest</div>
+                    <div id="hitStrip" style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 14px;"></div>
+                    <div class="table-wrap"><table id="hitStats"></table></div>
+                </section>
             </div>
 
             <div class="grid">
@@ -401,15 +436,20 @@
             }
         };
 
-        const palette = ['#2563eb', '#059669', '#dc2626', '#b7791f', '#6d28d9', '#0f766e'];
+        const palette = ['#5878a3', '#2f7d5f', '#b35543', '#c9974d', '#7c6bb0', '#4f8d8a'];
+        const accent = {
+            blue: '#5878a3', deepBlue: '#3d4a61', green: '#2f7d5f', red: '#b3402e',
+            clay: '#b35543', gold: '#c9974d', violet: '#7c6bb0', teal: '#4f8d8a', ink: '#111827'
+        };
         const baseLayout = {
             margin: { l: 52, r: 20, t: 12, b: 48 },
             paper_bgcolor: '#ffffff',
             plot_bgcolor: '#ffffff',
-            font: { family: 'Segoe UI, sans-serif', size: 11, color: '#111827' },
+            font: { family: 'Segoe UI, sans-serif', size: 11, color: '#374151' },
             xaxis: { gridcolor: '#edf1f6', zerolinecolor: '#cbd5e1' },
             yaxis: { gridcolor: '#edf1f6', zerolinecolor: '#cbd5e1' },
-            legend: { orientation: 'h', y: -0.18 }
+            legend: { orientation: 'h', y: -0.18 },
+            hoverlabel: { bgcolor: '#ffffff', bordercolor: '#cbd5e1', font: { color: '#111827' } }
         };
         const config = { displayModeBar: false, responsive: true };
 
@@ -532,6 +572,152 @@
             document.getElementById('caveats').innerHTML = (data.caveats || []).map(text => `<span>${fmt.html(text)}</span>`).join('');
         }
 
+        function bestNonBaseline(data) {
+            return (data.model_leaderboard || []).find(row => !String(row.model).includes('Baseline'));
+        }
+
+        function renderForecast(data) {
+            const wf = data.walk_forward || {};
+            const dates = wf.dates || [];
+            const actual = wf.actual || [];
+            const signal = data.current_signal || {};
+            const summary = data.target_summary || {};
+            const best = bestNonBaseline(data);
+            const pred = Number(signal.ensemble_prediction ?? signal.best_model_prediction);
+            const rmse = Number(best?.rmse);
+            const n = Math.min(dates.length, 26);
+            const xs = dates.slice(-n);
+            const ys = actual.slice(-n).map(Number);
+            const nextDate = summary.next_target_date || 'Next week';
+
+            const traces = [{
+                x: xs,
+                y: ys,
+                type: 'bar',
+                name: 'Realized weekly change',
+                marker: { color: ys.map(v => v >= 0 ? 'rgba(47,125,95,0.55)' : 'rgba(179,85,67,0.55)') },
+                hovertemplate: '%{x}<br>%{y:.2f} $/bbl<extra></extra>'
+            }];
+            if (Number.isFinite(pred)) {
+                traces.push({
+                    x: [nextDate],
+                    y: [pred],
+                    type: 'scatter',
+                    mode: 'markers',
+                    name: 'Ensemble forecast',
+                    error_y: Number.isFinite(rmse) ? { type: 'constant', value: rmse, color: '#9aa6ba', thickness: 1.5, width: 7 } : undefined,
+                    marker: { size: 14, symbol: 'diamond', color: pred >= 0 ? accent.green : accent.clay, line: { color: '#ffffff', width: 1.5 } },
+                    hovertemplate: `${fmt.html(nextDate)}<br>Forecast: %{y:.2f} $/bbl<extra></extra>`
+                });
+            }
+            Plotly.newPlot('forecastChart', traces, {
+                ...baseLayout,
+                showlegend: true,
+                legend: { orientation: 'h', y: -0.34 },
+                margin: { l: 52, r: 20, t: 12, b: 74 },
+                xaxis: { ...baseLayout.xaxis, type: 'category', tickangle: -38, tickfont: { size: 9 } },
+                yaxis: { ...baseLayout.yaxis, title: '$/bbl weekly change', zeroline: true }
+            }, config);
+        }
+
+        function renderConsensus(data) {
+            const rows = (data.final_predictions || [])
+                .map(row => ({ model: String(row.model), prediction: Number(row.prediction) }))
+                .filter(row => !row.model.includes('Baseline') && Number.isFinite(row.prediction) && Math.abs(row.prediction) <= 25)
+                .sort((a, b) => a.prediction - b.prediction);
+            if (!rows.length) return;
+            const ensemble = Number(data.current_signal?.ensemble_prediction);
+            Plotly.newPlot('consensusChart', [{
+                x: rows.map(row => row.prediction),
+                y: rows.map(row => row.model),
+                type: 'bar',
+                orientation: 'h',
+                name: 'Model prediction',
+                marker: { color: rows.map(row => row.prediction >= 0 ? accent.green : accent.clay) },
+                hovertemplate: '%{y}: %{x:.2f} $/bbl<extra></extra>'
+            }], {
+                ...baseLayout,
+                showlegend: false,
+                margin: { l: 130, r: 20, t: 12, b: 44 },
+                xaxis: { ...baseLayout.xaxis, title: 'Next-week prediction ($/bbl)', zeroline: true, zerolinecolor: '#94a3b8' },
+                yaxis: { ...baseLayout.yaxis, automargin: true },
+                shapes: Number.isFinite(ensemble) ? [{
+                    type: 'line', x0: ensemble, x1: ensemble, yref: 'paper', y0: 0, y1: 1,
+                    line: { color: accent.ink, width: 1.5, dash: 'dash' }
+                }] : [],
+                annotations: Number.isFinite(ensemble) ? [{
+                    x: ensemble, yref: 'paper', y: 1.04, showarrow: false,
+                    text: `Ensemble ${fmt.signed(ensemble, 2)}`, font: { size: 10, color: accent.ink }
+                }] : []
+            }, config);
+        }
+
+        function renderBacktest(data) {
+            const wf = data.walk_forward || {};
+            const best = bestNonBaseline(data);
+            const preds = (wf.predictions || {})[best?.model] || [];
+            const dates = wf.dates || [];
+            const actual = wf.actual || [];
+            let cumHold = 0, cumStrat = 0;
+            const hold = [], strat = [], hits = [];
+            for (let i = 0; i < actual.length; i++) {
+                const a = Number(actual[i]);
+                const p = Number(preds[i]);
+                if (!Number.isFinite(a) || !Number.isFinite(p)) {
+                    hold.push(cumHold); strat.push(cumStrat); hits.push(null);
+                    continue;
+                }
+                cumHold += a;
+                cumStrat += (p >= 0 ? a : -a);
+                hold.push(cumHold); strat.push(cumStrat);
+                hits.push((p >= 0) === (a >= 0));
+            }
+
+            Plotly.newPlot('backtestChart', [
+                {
+                    x: dates, y: strat, name: `Trade the signal (${best?.model || 'model'})`,
+                    type: 'scatter', mode: 'lines', line: { color: accent.blue, width: 2.5 }
+                },
+                {
+                    x: dates, y: hold, name: 'Always long',
+                    type: 'scatter', mode: 'lines', line: { color: '#9aa6ba', width: 2, dash: 'dash' }
+                }
+            ], {
+                ...baseLayout,
+                showlegend: true,
+                legend: { orientation: 'h', y: -0.3 },
+                margin: { l: 52, r: 20, t: 12, b: 64 },
+                xaxis: { ...baseLayout.xaxis, tickangle: -38, tickfont: { size: 9 } },
+                yaxis: { ...baseLayout.yaxis, title: 'Cumulative $/bbl', zeroline: true, zerolinecolor: '#94a3b8' }
+            }, config);
+
+            const stripEl = document.getElementById('hitStrip');
+            stripEl.innerHTML = dates.map((d, i) => {
+                if (hits[i] === null) return '';
+                const bg = hits[i] ? '#8fbfa3' : '#d9a59c';
+                const label = `${d}: ${hits[i] ? 'hit' : 'miss'} (actual ${fmt.signed(actual[i], 2)}, predicted ${fmt.signed(preds[i], 2)})`;
+                return `<span title="${fmt.html(label)}" style="width: 16px; height: 16px; border-radius: 3px; background: ${bg}; display: inline-block;"></span>`;
+            }).join('');
+
+            const scored = hits.filter(h => h !== null);
+            const wins = scored.filter(Boolean).length;
+            let streak = 0;
+            for (let i = hits.length - 1; i >= 0; i--) {
+                if (hits[i] === null) continue;
+                if (streak === 0) { streak = hits[i] ? 1 : -1; }
+                else if (hits[i] === (streak > 0)) { streak += streak > 0 ? 1 : -1; }
+                else break;
+            }
+            table('hitStats', ['Metric', 'Value'], [
+                ['Scoring model', best?.model || '--'],
+                ['Direction hits', scored.length ? `${wins} / ${scored.length} (${fmt.n(100 * wins / scored.length, 0)}%)` : '--'],
+                ['Current streak', streak === 0 ? '--' : `${Math.abs(streak)} ${streak > 0 ? 'hits' : 'misses'}`],
+                ['Signal P&L', `${fmt.signed(cumStrat, 2)} $/bbl`],
+                ['Always-long P&L', `${fmt.signed(cumHold, 2)} $/bbl`],
+                ['Edge vs long', `${fmt.signed(cumStrat - cumHold, 2)} $/bbl`],
+            ], row => [`<td>${fmt.html(row[0])}</td>`, `<td class="num">${fmt.html(row[1])}</td>`]);
+        }
+
         function renderCluster(data) {
             const points = data.clusters?.points || [];
             const traces = [];
@@ -581,7 +767,7 @@
                 y: rfRows.map(row => fmt.shortFeature(row.feature)),
                 type: 'bar',
                 orientation: 'h',
-                marker: { color: '#2563eb' },
+                marker: { color: accent.blue },
                 hovertext: rfRows.map(row => `${row.feature}<br>${row.group}`),
                 hovertemplate: '%{hovertext}<br>Importance: %{x:.3f}<extra></extra>'
             }], {
@@ -597,7 +783,7 @@
                 y: contribRows.map(row => fmt.shortFeature(row.feature)),
                 type: 'bar',
                 orientation: 'h',
-                marker: { color: contribRows.map(row => (row.contribution || 0) >= 0 ? '#059669' : '#dc2626') },
+                marker: { color: contribRows.map(row => (row.contribution || 0) >= 0 ? accent.green : accent.clay) },
                 hovertext: contribRows.map(row => `${row.feature}<br>${row.group}`),
                 hovertemplate: '%{hovertext}<br>Contribution: %{x:.3f}<extra></extra>'
             }], {
@@ -616,7 +802,7 @@
                 x: ['0', '1', '2', '3', '4'],
                 y: rows.map(row => fmt.shortFeature(row.feature)),
                 type: 'heatmap',
-                colorscale: [[0, '#b91c1c'], [0.5, '#f8fafc'], [1, '#047857']],
+                colorscale: [[0, '#b35543'], [0.5, '#f8fafc'], [1, '#2f7d5f']],
                 zmin: -1,
                 zmax: 1,
                 hovertemplate: 'Lag %{x} weeks<br>%{y}<br>Corr %{z:.2f}<extra></extra>'
@@ -634,7 +820,7 @@
                     y: groups.map(row => row.latest_abs_z_avg),
                     name: 'Latest Abs Z Avg',
                     type: 'bar',
-                    marker: { color: '#0f766e' }
+                    marker: { color: accent.teal }
                 },
                 {
                     x: groups.map(row => row.group),
@@ -643,8 +829,8 @@
                     type: 'scatter',
                     mode: 'lines+markers',
                     yaxis: 'y2',
-                    marker: { color: '#b7791f' },
-                    line: { color: '#b7791f' }
+                    marker: { color: accent.gold },
+                    line: { color: accent.gold }
                 }
             ], {
                 ...baseLayout,
@@ -675,7 +861,7 @@
                     name: best || 'Model',
                     type: 'scatter',
                     mode: 'lines+markers',
-                    line: { color: '#2563eb', width: 2 }
+                    line: { color: accent.blue, width: 2 }
                 }
             ], {
                 ...baseLayout,
@@ -715,7 +901,7 @@
             const curveX = Array.from({ length: 180 }, (_, i) => minX + ((maxX - minX) * i / 179));
             const curveY = curveX.map(x => a / (x + b) + c);
 
-            const quarterColors = { 1: '#111827', 2: '#00a7c7', 3: '#f59e0b', 4: '#7c3aed' };
+            const quarterColors = { 1: '#3d4a61', 2: '#4f8d8a', 3: '#c9974d', 4: '#7c6bb0' };
             const traces = [1, 2, 3, 4].map(q => {
                 const subset = clean.filter(row => Number(row.quarter) === q);
                 return {
@@ -737,7 +923,7 @@
                     name: 'Fair value',
                     type: 'scatter',
                     mode: 'lines',
-                    line: { color: '#dc2626', width: 3.5 },
+                    line: { color: accent.red, width: 3 },
                     hovertemplate: 'NTPS: %{x:.1f}<br>Fair value: $%{y:.2f}<extra></extra>'
                 },
                 ...[2, 1, -1, -2].map(mult => ({
@@ -746,7 +932,7 @@
                     name: `${mult > 0 ? '+' : ''}${mult} sigma`,
                     type: 'scatter',
                     mode: 'lines',
-                    line: { color: '#dc2626', width: 1.2, dash: Math.abs(mult) === 2 ? 'dot' : 'dash' },
+                    line: { color: '#d9a59c', width: 1.2, dash: Math.abs(mult) === 2 ? 'dot' : 'dash' },
                     hoverinfo: 'skip'
                 })),
                 {
@@ -756,8 +942,8 @@
                     name: 'Previous 13 weeks',
                     type: 'scatter',
                     mode: 'lines+markers',
-                    line: { color: '#059669', width: 2 },
-                    marker: { size: trail.map((_, i) => 5 + i * 0.45), color: '#059669' },
+                    line: { color: accent.green, width: 2 },
+                    marker: { size: trail.map((_, i) => 5 + i * 0.45), color: accent.green },
                     hovertemplate: '%{text}<br>NTPS: %{x:.1f} MMbbl<br>WTI real: $%{y:.2f}<extra></extra>'
                 },
                 {
@@ -767,7 +953,7 @@
                     name: 'Latest',
                     type: 'scatter',
                     mode: 'markers',
-                    marker: { size: 15, symbol: 'square', color: '#2563eb', line: { color: '#1e3a8a', width: 2 } },
+                    marker: { size: 14, symbol: 'square', color: accent.blue, line: { color: '#2c3e57', width: 2 } },
                     hovertemplate: '%{text}<br>NTPS: %{x:.1f} MMbbl<br>WTI real: $%{y:.2f}<extra></extra>'
                 }
             );
@@ -868,8 +1054,8 @@
                         name: 'Previous 13 weeks',
                         type: 'scatter',
                         mode: 'lines+markers',
-                        line: { color: '#059669', width: 2 },
-                        marker: { size: wowTrail.map((_, i) => 5 + i * 0.45), color: '#059669' },
+                        line: { color: accent.green, width: 2 },
+                        marker: { size: wowTrail.map((_, i) => 5 + i * 0.45), color: accent.green },
                         hovertemplate: '%{text}<br>NTPS WoW: %{x:.1f} MMbbl<br>WTI real WoW: $%{y:.2f}/bbl<br>Total stocks WoW: %{customdata[0]:.1f} MMbbl<extra></extra>'
                     },
                     {
@@ -880,7 +1066,7 @@
                         name: 'Latest',
                         type: 'scatter',
                         mode: 'markers',
-                        marker: { size: 15, symbol: 'square', color: '#2563eb', line: { color: '#1e3a8a', width: 2 } },
+                        marker: { size: 14, symbol: 'square', color: accent.blue, line: { color: '#2c3e57', width: 2 } },
                         hovertemplate: '%{text}<br>NTPS WoW: %{x:.1f} MMbbl<br>WTI real WoW: $%{y:.2f}/bbl<br>Total stocks WoW: %{customdata[0]:.1f} MMbbl<extra></extra>'
                     }
                 );
@@ -910,23 +1096,51 @@
             }
         }
 
+        async function waitForModelBuild(statusEl, started) {
+            for (let attempt = 0; attempt < 60; attempt++) {
+                try {
+                    const res = await fetch('/api/energy/modeling/summary');
+                    const summary = await res.json();
+                    if (summary.status === 'ready') return;
+                    if (summary.status === 'error') throw new Error(summary.build?.error || 'model build failed');
+                } catch (error) {
+                    if (attempt > 3) throw error;
+                }
+                const elapsed = Math.round((Date.now() - started) / 1000);
+                statusEl.textContent = `Training walk-forward models on the server... ${elapsed}s (first load after a data refresh takes about a minute)`;
+                await new Promise(resolve => setTimeout(resolve, 5000));
+            }
+        }
+
         async function loadDashboard() {
+            const statusEl = document.getElementById('status');
+            const started = Date.now();
             try {
+                const probe = await fetch('/api/energy/modeling/summary');
+                const summary = await probe.json();
+                if (summary.status !== 'ready') {
+                    await waitForModelBuild(statusEl, started);
+                }
+                statusEl.textContent = 'Loading dashboard...';
                 const res = await fetch('/api/energy/modeling');
                 if (!res.ok) throw new Error(`API returned ${res.status}`);
                 const data = await res.json();
+                statusEl.style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
                 renderSummary(data);
+                renderForecast(data);
+                renderConsensus(data);
+                renderBacktest(data);
                 renderTables(data);
                 renderCluster(data);
                 renderImportance(data);
                 renderLagAndGroups(data);
                 renderWalkForward(data);
                 await renderTotalInvEia();
-                document.getElementById('status').style.display = 'none';
-                document.getElementById('dashboard').style.display = 'block';
             } catch (error) {
-                document.getElementById('status').className = 'error';
-                document.getElementById('status').textContent = `Unable to load modeling dashboard: ${error.message}`;
+                statusEl.className = 'error';
+                statusEl.style.display = 'block';
+                statusEl.textContent = `Unable to load modeling dashboard: ${error.message}`;
             }
         }
 
