@@ -837,38 +837,6 @@
                     <div class="chart-desc">NTPS = total stocks minus same ISO week average over 2011-2018. WTI is CL=F converted to latest CPIAUCSL dollars. Refresh button updates EIA, Yahoo Finance, and FRED inputs.</div>
                 </div>
             </div>
-            <div class="card" style="margin-top: 16px;">
-                <div class="card-header">
-                    <span>Week-over-Week Change: WTI vs Normalized Total Petroleum Stocks</span>
-                    <span class="source">EIA / Yahoo / FRED</span>
-                </div>
-                <div class="card-body">
-                    <div id="total-inv-eia-wow-chart" class="chart-lg"><div class="loading">Loading...</div></div>
-                    <div class="inline-stats">
-                        <div class="inline-stat">
-                            <div class="label">Latest NTPS Chg</div>
-                            <div class="value" id="total-inv-wow-ntps">--</div>
-                        </div>
-                        <div class="inline-stat">
-                            <div class="label">Latest WTI Chg</div>
-                            <div class="value" id="total-inv-wow-wti">--</div>
-                        </div>
-                        <div class="inline-stat">
-                            <div class="label">Correlation</div>
-                            <div class="value" id="total-inv-wow-corr">--</div>
-                        </div>
-                        <div class="inline-stat">
-                            <div class="label">R Squared</div>
-                            <div class="value" id="total-inv-wow-r2">--</div>
-                        </div>
-                        <div class="inline-stat">
-                            <div class="label">Beta</div>
-                            <div class="value" id="total-inv-wow-beta">--</div>
-                        </div>
-                    </div>
-                    <div class="chart-desc">Weekly change uses the same Friday-aligned Total Inventory EIA dataset: x-axis is NTPS change in million barrels; y-axis is CPI-adjusted WTI change in dollars per barrel.</div>
-                </div>
-            </div>
         </div>
 
         <!-- EV Fleet Dashboard -->
@@ -1785,6 +1753,13 @@
             rose: '#e11d48'
         };
 
+        // Parse 'YYYY-MM-DD' as a local date. new Date('2026-01-01') is UTC midnight,
+        // which reads back as Dec 31 in US timezones and shifts year/month bucketing.
+        function parseLocalDate(value) {
+            const m = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
+            return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(value);
+        }
+
         const baseLayout = {
             paper_bgcolor: '#ffffff',
             plot_bgcolor: '#ffffff',
@@ -1917,7 +1892,7 @@
             };
 
             // Find the most recent year with data (may not be current calendar year)
-            const yearsInData = [...new Set(data.map(d => new Date(d[dateField]).getFullYear()))].sort((a, b) => b - a);
+            const yearsInData = [...new Set(data.map(d => parseLocalDate(d[dateField]).getFullYear()))].sort((a, b) => b - a);
             const latestYearWithData = yearsInData[0] || new Date().getFullYear();
             const currentYear = latestYearWithData;
             const priorYear = currentYear - 1;
@@ -1926,7 +1901,7 @@
             const intervalConfig = {
                 weekly: {
                     getPeriod: (d) => {
-                        const date = new Date(d);
+                        const date = parseLocalDate(d);
                         const start = new Date(date.getFullYear(), 0, 1);
                         const week = Math.ceil(((date - start) / 86400000 + start.getDay() + 1) / 7);
                         return Math.min(week, 52);
@@ -1937,14 +1912,14 @@
                     xTitle: 'Week'
                 },
                 monthly: {
-                    getPeriod: (d) => new Date(d).getMonth() + 1,
+                    getPeriod: (d) => parseLocalDate(d).getMonth() + 1,
                     maxPeriod: 12,
                     tickvals: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
                     ticktext: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                     xTitle: 'Month'
                 },
                 quarterly: {
-                    getPeriod: (d) => Math.ceil((new Date(d).getMonth() + 1) / 3),
+                    getPeriod: (d) => Math.ceil((parseLocalDate(d).getMonth() + 1) / 3),
                     maxPeriod: 4,
                     tickvals: [1, 2, 3, 4],
                     ticktext: ['Q1', 'Q2', 'Q3', 'Q4'],
@@ -1963,7 +1938,7 @@
             for (const row of data) {
                 const date = row[dateField];
                 const value = row[valueField];
-                const year = new Date(date).getFullYear();
+                const year = parseLocalDate(date).getFullYear();
                 const period = intv.getPeriod(date);
 
                 if (!period || period > intv.maxPeriod || value === undefined || value === null) continue;
@@ -2267,7 +2242,7 @@
             const buildQuarterSeasonalTraces = (rows, key, label) => {
                 const points = rows
                     .map(row => {
-                        const date = new Date(row.date);
+                        const date = parseLocalDate(row.date);
                         const value = Number(row[key]);
                         const quarterMatch = String(row.quarter || '').match(/Q([1-4])/);
                         const quarter = quarterMatch ? Number(quarterMatch[1]) : Math.floor(date.getMonth() / 3) + 1;
@@ -2815,7 +2790,7 @@
                     if (hasWeeklyBalance) {
                         // Create week labels (MM/DD format)
                         const weekLabels = last4ProductWeeks.map(w => {
-                            const d = new Date(w.period);
+                            const d = parseLocalDate(w.period);
                             return `${d.getMonth()+1}/${d.getDate()}`;
                         });
                         const actualStockChanges = last4ProductWeeks.map(w => {
@@ -3091,7 +3066,7 @@
                 // Year-over-Year comparison by month
                 const byYearMonth = {};
                 for (const row of data) {
-                    const d = new Date(row.date);
+                    const d = parseLocalDate(row.date);
                     const year = d.getFullYear();
                     const month = d.getMonth() + 1;
                     const key = `${year}-${month}`;
@@ -3102,7 +3077,7 @@
                 }
 
                 // Get last 12 months for each year
-                const years = [...new Set(data.map(d => new Date(d.date).getFullYear()))].sort();
+                const years = [...new Set(data.map(d => parseLocalDate(d.date).getFullYear()))].sort();
                 const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
                 const yoyTraces = years.slice(-3).map((year, i) => {
@@ -3137,7 +3112,7 @@
                 // Group data by year, calculate cumulative
                 const dailyByYear = {};
                 for (const row of data) {
-                    const d = new Date(row.date);
+                    const d = parseLocalDate(row.date);
                     const year = d.getFullYear();
                     const startOfYear = new Date(year, 0, 1);
                     const dayOfYear = Math.floor((d - startOfYear) / (1000 * 60 * 60 * 24)) + 1;
@@ -3302,7 +3277,7 @@
             const priorValues = {};
 
             for (const row of rows) {
-                const rowYear = new Date(row[dateField]).getFullYear();
+                const rowYear = parseLocalDate(row[dateField]).getFullYear();
                 if (rowYear < startYear) {
                     for (const field of valueFields) {
                         const value = Number(row[field]);
@@ -4587,21 +4562,6 @@
                 const quarterColors = { 1: '#111827', 2: '#00a7c7', 3: '#f59e0b', 4: '#7c3aed' };
                 const fmtValue = (value, digits = 2) => Number.isFinite(value) ? value.toFixed(digits) : '--';
                 const signed = (value, digits = 1) => Number.isFinite(value) ? `${value >= 0 ? '+' : ''}${value.toFixed(digits)}` : '--';
-                const regressionStats = (points) => {
-                    const clean = points.filter(point => Number.isFinite(point.x) && Number.isFinite(point.y));
-                    const n = clean.length;
-                    if (n < 3) return { n, slope: null, intercept: null, corr: null, r2: null };
-                    const meanX = clean.reduce((sum, point) => sum + point.x, 0) / n;
-                    const meanY = clean.reduce((sum, point) => sum + point.y, 0) / n;
-                    const ssX = clean.reduce((sum, point) => sum + Math.pow(point.x - meanX, 2), 0);
-                    const ssY = clean.reduce((sum, point) => sum + Math.pow(point.y - meanY, 2), 0);
-                    const covXY = clean.reduce((sum, point) => sum + ((point.x - meanX) * (point.y - meanY)), 0);
-                    const slope = ssX ? covXY / ssX : null;
-                    const intercept = slope === null ? null : meanY - (slope * meanX);
-                    const corr = ssX && ssY ? covXY / Math.sqrt(ssX * ssY) : null;
-                    const r2 = corr === null ? null : corr * corr;
-                    return { n, slope, intercept, corr, r2 };
-                };
 
                 const traces = [1, 2, 3, 4].map(q => {
                     const subset = rows.filter(row => row.quarter === q);
@@ -4672,111 +4632,6 @@
                 document.getElementById('total-inv-fv').textContent = `$${fmtValue(latest.fair_value, 2)}`;
                 document.getElementById('total-inv-z').textContent = signed(latest.residual_z, 2);
                 document.getElementById('total-inv-r2').textContent = fmtValue(latest.r2, 2);
-
-                const wowRows = rows
-                    .map((row, i) => {
-                        if (i === 0) return null;
-                        const prior = rows[i - 1];
-                        return {
-                            ...row,
-                            ntpsChange: row.ntps - prior.ntps,
-                            wtiRealChange: row.wti_real - prior.wti_real,
-                            totalStocksChange: row.total_stocks - prior.total_stocks
-                        };
-                    })
-                    .filter(row =>
-                        row &&
-                        Number.isFinite(row.ntpsChange) &&
-                        Number.isFinite(row.wtiRealChange)
-                    );
-
-                if (wowRows.length) {
-                    const wowStats = regressionStats(wowRows.map(row => ({ x: row.ntpsChange, y: row.wtiRealChange })));
-                    const wowLatest = wowRows[wowRows.length - 1];
-                    const wowTrail = wowRows.slice(-13);
-                    const xValues = wowRows.map(row => row.ntpsChange);
-                    const xMin = Math.min(...xValues);
-                    const xMax = Math.max(...xValues);
-                    const trendY = Number.isFinite(wowStats.slope)
-                        ? [wowStats.intercept + (wowStats.slope * xMin), wowStats.intercept + (wowStats.slope * xMax)]
-                        : [null, null];
-
-                    const wowTraces = [1, 2, 3, 4].map(q => {
-                        const subset = wowRows.filter(row => row.quarter === q);
-                        return {
-                            x: subset.map(row => row.ntpsChange),
-                            y: subset.map(row => row.wtiRealChange),
-                            text: subset.map(row => row.date),
-                            customdata: subset.map(row => [row.ntps, row.wti_real, row.totalStocksChange]),
-                            name: `Q${q}`,
-                            type: 'scatter',
-                            mode: 'markers',
-                            marker: { size: 6, color: quarterColors[q], opacity: 0.62 },
-                            hovertemplate: '%{text}<br>NTPS WoW: %{x:.1f} MMbbl<br>WTI real WoW: $%{y:.2f}/bbl<br>Total stocks WoW: %{customdata[2]:.1f} MMbbl<br>NTPS level: %{customdata[0]:.1f} MMbbl<br>WTI real: $%{customdata[1]:.2f}<extra></extra>'
-                        };
-                    });
-
-                    wowTraces.push(
-                        {
-                            x: [xMin, xMax],
-                            y: trendY,
-                            name: `Trend: $${fmtValue(wowStats.slope, 2)} per MMbbl`,
-                            type: 'scatter',
-                            mode: 'lines',
-                            line: { color: '#111827', width: 2.5 },
-                            hoverinfo: 'skip'
-                        },
-                        {
-                            x: wowTrail.map(row => row.ntpsChange),
-                            y: wowTrail.map(row => row.wtiRealChange),
-                            text: wowTrail.map(row => row.date),
-                            customdata: wowTrail.map(row => [row.ntps, row.wti_real, row.totalStocksChange]),
-                            name: 'Previous 13 weeks',
-                            type: 'scatter',
-                            mode: 'lines+markers',
-                            line: { color: '#059669', width: 2 },
-                            marker: { size: wowTrail.map((_, i) => 5 + i * 0.45), color: '#059669' },
-                            hovertemplate: '%{text}<br>NTPS WoW: %{x:.1f} MMbbl<br>WTI real WoW: $%{y:.2f}/bbl<br>Total stocks WoW: %{customdata[2]:.1f} MMbbl<extra></extra>'
-                        },
-                        {
-                            x: [wowLatest.ntpsChange],
-                            y: [wowLatest.wtiRealChange],
-                            text: [wowLatest.date],
-                            customdata: [[wowLatest.ntps, wowLatest.wti_real, wowLatest.totalStocksChange]],
-                            name: 'Latest',
-                            type: 'scatter',
-                            mode: 'markers',
-                            marker: { size: 15, symbol: 'square', color: '#2563eb', line: { color: '#1e3a8a', width: 2 } },
-                            hovertemplate: '%{text}<br>NTPS WoW: %{x:.1f} MMbbl<br>WTI real WoW: $%{y:.2f}/bbl<br>Total stocks WoW: %{customdata[2]:.1f} MMbbl<extra></extra>'
-                        }
-                    );
-
-                    Plotly.newPlot('total-inv-eia-wow-chart', wowTraces, {
-                        ...baseLayout,
-                        showlegend: true,
-                        legend: { orientation: 'h', y: -0.24, font: { size: 9 } },
-                        xaxis: {
-                            ...baseLayout.xaxis,
-                            title: { text: 'NTPS weekly change (MMbbl)', font: { size: 11 } },
-                            zeroline: true,
-                            zerolinecolor: '#94a3b8'
-                        },
-                        yaxis: {
-                            ...baseLayout.yaxis,
-                            title: { text: 'WTI real weekly change ($/bbl)', font: { size: 11 } },
-                            zeroline: true,
-                            zerolinecolor: '#94a3b8'
-                        }
-                    });
-
-                    document.getElementById('total-inv-wow-ntps').textContent = `${signed(wowLatest.ntpsChange, 1)} MMbbl`;
-                    document.getElementById('total-inv-wow-wti').textContent = `${signed(wowLatest.wtiRealChange, 2)}/bbl`;
-                    document.getElementById('total-inv-wow-corr').textContent = fmtValue(wowStats.corr, 2);
-                    document.getElementById('total-inv-wow-r2').textContent = fmtValue(wowStats.r2, 2);
-                    document.getElementById('total-inv-wow-beta').textContent = Number.isFinite(wowStats.slope)
-                        ? `$${wowStats.slope.toFixed(2)} / MMbbl`
-                        : '--';
-                }
             } catch (e) {
                 console.error('Error loading Total Inventory EIA chart:', e);
             }
