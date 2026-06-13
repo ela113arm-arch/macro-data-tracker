@@ -150,6 +150,17 @@ The exploratory relationship table compares weekly COT/Brent observations with E
 
 The Total Inventory EIA chart is available on the root modeling dashboard and the macro Energy dashboard. Both dashboards also include a week-over-week change view that plots `diff(ntps)` against `diff(wti_real)`, highlights the latest observation and trailing 13 weeks, and displays correlation, R-squared, and beta. The standard refresh button runs the total-inventory fetcher, updating `eia_total_stocks.csv`, `wti_prices.csv`, `cpi_monthly.csv`, and `total_inv_eia_fair_value.csv`.
 
+### Upstream Activity Pulse (Yahoo/AOGR/EIA)
+| Field | Description |
+|-------|-------------|
+| `wti` | Yahoo Finance `CL=F` Friday weekly close |
+| `frac_spreads_ma4` | AOGR U.S. frac spread count, 4-week moving average |
+| `oil_rigs_ma4` | AOGR Baker Hughes U.S. oil rig count, 4-week moving average |
+| `duc_wells` | EIA STEO monthly U.S. drilled-but-uncompleted wells total |
+| `*_index` | 0-100 normalized activity index used on the macro Energy dashboard |
+
+The macro Energy dashboard includes the Upstream Activity Pulse chart above the Total Inventory EIA section. The standard `python data_fetcher.py` refresh and the GitHub Actions weekday cron both rebuild `upstream_activity.csv`; `EIA_API_KEY` is required for the DUC wells line, while WTI, frac spreads, and oil rigs still refresh if EIA is unavailable.
+
 ### EV Fleet Dashboard (Robbie Andrew/Yahoo)
 | File | Description |
 |------|-------------|
@@ -167,11 +178,11 @@ The EV pipeline classifies BEV, PHEV, and ZEV as EV; petrol, diesel, LPG, ethano
 2. **Run dashboard**: `python app.py`
 3. **View**: http://localhost:5003
 
-`python data_fetcher.py` refreshes the macro, energy, SPR-adjacent, and EV fleet CSVs. The EV section is available at `/macro?section=ev` after the CSVs are present.
+`python data_fetcher.py` refreshes the macro, energy, SPR-adjacent, upstream activity, and EV fleet CSVs. The EV section is available at `/macro?section=ev` after the CSVs are present.
 
 ## Deploy
 
-The app is ready to deploy from GitHub using the included `Dockerfile`, `Procfile`, and `render.yaml`. Set `FRED_API_KEY`, `BEA_API_KEY`, and `EIA_API_KEY` as host environment variables; never commit real keys. The `Refresh data` GitHub Actions workflow runs `python data_fetcher.py` on its weekday cron schedule, so committed refreshes include the EV fleet CSVs as well as the existing macro and energy data. Render picks up committed CSV changes after a redeploy, and `/api/status` reports whether an external `DATA_DIR` is masking the bundled GitHub data. See `DEPLOYMENT.md` for the full setup.
+The app is ready to deploy from GitHub using the included `Dockerfile`, `Procfile`, and `render.yaml`. Set `FRED_API_KEY`, `BEA_API_KEY`, and `EIA_API_KEY` as host environment variables; never commit real keys. The `Refresh data` GitHub Actions workflow runs `python data_fetcher.py` on its weekday cron schedule, so committed refreshes include the EV fleet CSVs, upstream activity CSV, and existing macro and energy data. Render picks up committed CSV changes after a redeploy, and `/api/status` reports whether an external `DATA_DIR` is masking the bundled GitHub data. See `DEPLOYMENT.md` for the full setup.
 
 ## Limitations
 

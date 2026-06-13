@@ -3,10 +3,10 @@ name: Refresh data
 on:
   schedule:
     # All times UTC. Targets ET releases, robust to DST (ET = UTC-4/-5).
-    # Each run executes data_fetcher.py, including the EV fleet registration pipeline.
+    # Each run executes data_fetcher.py, including EV fleet and upstream activity data.
     - cron: "0 14 * * 1-5"   # 9-10am ET: CPI, jobs, claims, retail, GDP, trade (8:30am releases)
     - cron: "0 16 * * 1-5"   # 11am-12pm ET: EIA petroleum (Wed) / nat gas (Thu), ISM
-    - cron: "30 23 * * 1-5"  # 6:30-7:30pm ET: market close, yields, DTS, Fri rig count, CFTC, EV registrations
+    - cron: "30 23 * * 1-5"  # 6:30-7:30pm ET: market close, yields, DTS, Fri rig count, CFTC, EV/upstream data
   workflow_dispatch:
 
 permissions:
@@ -30,7 +30,7 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - name: Fetch macro, energy, and EV data
+      - name: Fetch macro, energy, EV, and upstream activity data
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
           BEA_API_KEY: ${{ secrets.BEA_API_KEY }}
