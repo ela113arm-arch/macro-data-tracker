@@ -598,6 +598,13 @@ def get_rig_count():
     return read_csv('rig_count.csv')
 
 
+@app.route('/api/energy/upstream-activity')
+@safe_endpoint
+def get_upstream_activity():
+    """WTI, frac spreads, oil rigs, and DUC wells for the upstream activity chart"""
+    return read_csv('upstream_activity.csv')
+
+
 @app.route('/api/cftc-positioning')
 @safe_endpoint
 def get_cftc_positioning():
@@ -1948,6 +1955,7 @@ def status():
             'consumer_sentiment', 'credit_spreads', 'dxy', 'natgas_inventories', 'baltic_dry',
             'days_of_supply', 'crack_spreads', 'rig_count', 'cftc_positioning',
             'cot_wti_brent_merged', 'total_inv_eia_fair_value', 'crude_production',
+            'upstream_activity',
             'ev_carsales_monthly_raw', 'ev_brent_monthly', 'ev_monthly_fleet',
             'ev_annual_fleet', 'ev_policy_events'
         ]

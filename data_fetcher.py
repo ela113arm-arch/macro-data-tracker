@@ -4,12 +4,14 @@ Run this to refresh data: python data_fetcher.py
 """
 
 import os
+import re
 import requests
 import pandas as pd
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
 from io import StringIO
+from html import unescape
 import yfinance as yf
 import urllib3
 import numpy as np
@@ -31,6 +33,8 @@ FRED_URL = 'https://api.stlouisfed.org/fred/series/observations'
 BEA_URL = 'https://apps.bea.gov/api/data'
 EIA_URL = 'https://api.eia.gov/v2/petroleum/stoc/wstk/data'
 EIA_PSM_URL = 'https://api.eia.gov/v2/petroleum/sum/snd/data'
+AOGR_HEADERS = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"}
+UPSTREAM_START_DATE = pd.Timestamp("2017-01-01")
 
 # PSM Supply/Demand process codes
 PSM_PROCESSES = {
@@ -2371,6 +2375,260 @@ def fetch_rig_count():
     return df
 
 
+UPSTREAM_DUC_SERIES = {
+    'DUCSHA': 'haynesville_duc',
+    'DUCSPM': 'permian_duc',
+    'DUCSEF': 'eagle_ford_duc',
+    'DUCSAP': 'appalachia_duc',
+    'DUCSBK': 'bakken_duc',
+    'DUCSR48': 'rest_lower_48_duc',
+}
+
+
+def html_text_lines(html):
+    """Convert simple source pages into normalized text lines."""
+    text = re.sub(r'<(br|p|div|li|tr|td|th|h[1-6])\b[^>]*>', '\n', html, flags=re.IGNORECASE)
+    text = re.sub(r'<[^>]+>', '\n', text)
+    return [line.strip() for line in unescape(text).splitlines() if line.strip()]
+
+
+def parse_aogr_frac_page(html):
+    lines = html_text_lines(html)
+    records = []
+    for i, line in enumerate(lines):
+        if re.match(r'\d{2}/\d{2}/\d{4}', line):
+            for candidate in lines[i + 1:min(i + 5, len(lines))]:
+                match = re.match(r'(\d+)\s*/\s*(\d+)', candidate)
+                if match:
+                    records.append({'date': line, 'frac_spreads': int(match.group(1))})
+                    break
+    return records
+
+
+def parse_aogr_rig_page(html):
+    lines = html_text_lines(html)
+    records = []
+    for i, line in enumerate(lines):
+        if re.match(r'\d{2}/\d{2}/\d{4}', line):
+            oil_count = None
+            for j in range(i + 1, min(i + 15, len(lines))):
+                if 'Oil' in lines[j] and 'Wk.' in lines[j] and j + 2 < len(lines):
+                    match = re.search(r'\((\d+)\)', lines[j + 2])
+                    if match:
+                        oil_count = int(match.group(1))
+                    break
+            if oil_count:
+                records.append({'date': line, 'oil_rigs': oil_count})
+    return records
+
+
+def fetch_aogr_upstream_counts():
+    print("  Scraping AOGR frac spread and oil rig counts...")
+    frac_all, rig_all = [], []
+    current_year = pd.Timestamp.now().year
+
+    for year in range(UPSTREAM_START_DATE.year, current_year + 1):
+        try:
+            frac_response = requests.get(
+                f"https://www.aogr.com/web-exclusives/us-frac-spread-count/{year}",
+                headers=AOGR_HEADERS,
+                timeout=30
+            )
+            frac_response.raise_for_status()
+            frac_all.extend(parse_aogr_frac_page(frac_response.text))
+            time.sleep(0.3)
+
+            rig_response = requests.get(
+                f"https://www.aogr.com/web-exclusives/us-rig-count/{year}",
+                headers=AOGR_HEADERS,
+                timeout=30
+            )
+            rig_response.raise_for_status()
+            rig_all.extend(parse_aogr_rig_page(rig_response.text))
+            time.sleep(0.3)
+        except Exception as exc:
+            print(f"    {year} AOGR error: {exc}")
+
+    frac_df = pd.DataFrame(frac_all)
+    if not frac_df.empty:
+        frac_df['date'] = pd.to_datetime(frac_df['date'], errors='coerce')
+        frac_df = (
+            frac_df.dropna(subset=['date'])
+            .drop_duplicates('date')
+            .sort_values('date')
+        )
+        frac_df = frac_df[frac_df['date'] >= UPSTREAM_START_DATE]
+        frac_df = frac_df[frac_df['frac_spreads'].between(1, 400)]
+        frac_df['frac_spreads_ma4'] = frac_df['frac_spreads'].rolling(4, min_periods=1).mean()
+
+    rig_df = pd.DataFrame(rig_all)
+    if not rig_df.empty:
+        rig_df['date'] = pd.to_datetime(rig_df['date'], errors='coerce')
+        rig_df = (
+            rig_df.dropna(subset=['date'])
+            .drop_duplicates('date')
+            .sort_values('date')
+        )
+        rig_df = rig_df[rig_df['date'] >= UPSTREAM_START_DATE]
+        rig_df = rig_df[rig_df['oil_rigs'].between(1, 2000)]
+        rig_df['oil_rigs_ma4'] = rig_df['oil_rigs'].rolling(4, min_periods=1).mean()
+
+    print(f"    AOGR rows: frac={len(frac_df)}, oil_rigs={len(rig_df)}")
+    return frac_df, rig_df
+
+
+def extract_eia_rows(payload, series_id):
+    if not isinstance(payload, dict):
+        print(f"    {series_id}: unexpected EIA payload type {type(payload).__name__}")
+        return []
+
+    if payload.get('error'):
+        error = payload.get('error')
+        message = error.get('message') if isinstance(error, dict) else str(error)
+        print(f"    {series_id}: EIA error: {message}")
+        return []
+
+    response = payload.get('response')
+    if not isinstance(response, dict):
+        print(f"    {series_id}: unexpected EIA response: {response}")
+        return []
+
+    rows = response.get('data', [])
+    if not isinstance(rows, list):
+        print(f"    {series_id}: unexpected EIA data type {type(rows).__name__}")
+        return []
+    return rows
+
+
+def fetch_eia_duc_wells():
+    print("  Fetching EIA STEO DUC wells...")
+    if not API_KEYS.get('EIA'):
+        print("    Missing EIA_API_KEY; DUC wells will be omitted")
+        return pd.DataFrame()
+
+    duc_frames = []
+    for series_id, column in UPSTREAM_DUC_SERIES.items():
+        try:
+            response = requests.get(
+                'https://api.eia.gov/v2/steo/data/',
+                params={
+                    'api_key': API_KEYS.get('EIA', ''),
+                    'frequency': 'monthly',
+                    'data[0]': 'value',
+                    'facets[seriesId][]': series_id,
+                    'start': UPSTREAM_START_DATE.strftime('%Y-%m'),
+                    'sort[0][column]': 'period',
+                    'sort[0][direction]': 'asc',
+                    'length': 160,
+                },
+                timeout=30
+            )
+            rows = extract_eia_rows(response.json(), series_id)
+            if not rows:
+                continue
+
+            frame = pd.DataFrame(rows)
+            if 'period' not in frame.columns or 'value' not in frame.columns:
+                print(f"    {series_id}: missing period/value columns")
+                continue
+
+            frame['date'] = pd.to_datetime(frame['period'], errors='coerce')
+            frame[column] = pd.to_numeric(frame['value'], errors='coerce')
+            frame = frame[['date', column]].dropna(subset=['date'])
+            frame = frame.drop_duplicates('date').sort_values('date')
+            if not frame.empty:
+                duc_frames.append(frame)
+                print(f"    {series_id}: {len(frame)} rows")
+        except Exception as exc:
+            print(f"    {series_id} error: {exc}")
+        time.sleep(0.2)
+
+    if not duc_frames:
+        print("    No DUC data fetched")
+        return pd.DataFrame()
+
+    merged = duc_frames[0]
+    for frame in duc_frames[1:]:
+        merged = merged.merge(frame, on='date', how='outer')
+    merged = merged.sort_values('date')
+    duc_columns = [col for col in UPSTREAM_DUC_SERIES.values() if col in merged.columns]
+    merged['duc_wells'] = merged[duc_columns].sum(axis=1, min_count=1)
+    return merged
+
+
+def fetch_wti_weekly_close():
+    print("  Downloading WTI weekly close from Yahoo Finance...")
+    wti_raw = yf.download('CL=F', start=UPSTREAM_START_DATE.strftime('%Y-%m-%d'), interval='1d', auto_adjust=True, progress=False)
+    if wti_raw.empty:
+        print("    No WTI data fetched")
+        return pd.DataFrame()
+
+    if isinstance(wti_raw.columns, pd.MultiIndex):
+        wti_daily = wti_raw['Close'].iloc[:, 0]
+    else:
+        wti_daily = wti_raw['Close']
+    wti_daily = wti_daily.copy()
+    wti_daily.index = pd.to_datetime(wti_daily.index).tz_localize(None)
+    wti_weekly = wti_daily[wti_daily.index >= UPSTREAM_START_DATE].dropna().resample('W-FRI').last().dropna()
+    return pd.DataFrame({'date': wti_weekly.index, 'wti': wti_weekly.values})
+
+
+def add_normalized_column(frame, source_column, output_column):
+    if source_column not in frame.columns:
+        frame[output_column] = np.nan
+        return
+
+    values = pd.to_numeric(frame[source_column], errors='coerce')
+    valid = values.dropna()
+    if valid.empty or valid.max() == valid.min():
+        frame[output_column] = np.nan
+        return
+    frame[output_column] = ((values - valid.min()) / (valid.max() - valid.min()) * 100).round(4)
+
+
+def fetch_upstream_activity():
+    """Fetch WTI, frac spreads, oil rigs, and DUC wells for the Energy dashboard."""
+    print("Fetching upstream activity dashboard data...")
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+    frac_df, rig_df = fetch_aogr_upstream_counts()
+    duc_df = fetch_eia_duc_wells()
+    wti_df = fetch_wti_weekly_close()
+
+    frames = []
+    if not frac_df.empty:
+        frames.append(frac_df[['date', 'frac_spreads', 'frac_spreads_ma4']])
+    if not rig_df.empty:
+        frames.append(rig_df[['date', 'oil_rigs', 'oil_rigs_ma4']])
+    if not duc_df.empty:
+        frames.append(duc_df)
+    if not wti_df.empty:
+        frames.append(wti_df)
+
+    if not frames:
+        print("  No upstream activity data fetched")
+        return pd.DataFrame()
+
+    merged = frames[0]
+    for frame in frames[1:]:
+        merged = merged.merge(frame, on='date', how='outer')
+    merged = merged.sort_values('date')
+    merged = merged[merged['date'] >= UPSTREAM_START_DATE]
+
+    add_normalized_column(merged, 'frac_spreads_ma4', 'frac_spreads_index')
+    add_normalized_column(merged, 'oil_rigs_ma4', 'oil_rigs_index')
+    add_normalized_column(merged, 'duc_wells', 'duc_wells_index')
+
+    merged['year'] = merged['date'].dt.year
+    merged['month'] = merged['date'].dt.month
+    merged['date'] = merged['date'].dt.strftime('%Y-%m-%d')
+
+    output_path = DATA_DIR / 'upstream_activity.csv'
+    merged.to_csv(output_path, index=False)
+    print(f"  Saved {len(merged)} rows to upstream_activity.csv")
+    return merged
+
+
 def fetch_cftc_positioning():
     """Fetch CFTC Commitment of Traders positioning data from CFTC public API"""
     print("Fetching CFTC COT positioning data...")
@@ -2891,6 +3149,7 @@ def fetch_all():
         fetch_cftc_positioning,
         fetch_cot_wti_brent_merged,
         fetch_total_inv_eia_fair_value,
+        fetch_upstream_activity,
         fetch_ev_fleet_dashboard,
     ]
 
@@ -2956,6 +3215,7 @@ def fetch_all():
             'days_of_supply.csv',
             'crack_spreads.csv',
             'rig_count.csv',
+            'upstream_activity.csv',
             'cftc_positioning.csv',
             'cot_wti_brent_merged.csv',
             'eia_total_stocks.csv',

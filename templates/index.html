@@ -797,6 +797,26 @@
             </div>
         </div>
 
+        <!-- Upstream Activity -->
+        <div class="section" data-page="energy markets">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Upstream Activity Pulse</div>
+                    <div class="section-subtitle">WTI, frac spreads, oil rigs, and DUC wells refreshed from Yahoo Finance, AOGR, and EIA STEO</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span>WTI vs U.S. Upstream Activity</span>
+                    <span class="source">Yahoo / AOGR / EIA STEO</span>
+                </div>
+                <div class="card-body">
+                    <div id="upstream-activity-chart" class="chart-lg"><div class="loading">Loading...</div></div>
+                    <div class="chart-desc">Activity lines use a 0-100 normalized index on the left axis. WTI is plotted on the right dollar axis. Frac spreads and oil rigs use 4-week moving averages; DUC wells are monthly.</div>
+                </div>
+            </div>
+        </div>
+
         <!-- Total Inventory EIA WTI Fair Value -->
         <div class="section" data-page="energy markets">
             <div class="section-header">
@@ -4637,6 +4657,142 @@
             }
         }
 
+        async function loadUpstreamActivity() {
+            try {
+                const res = await fetch('/api/energy/upstream-activity');
+                const data = await res.json();
+                const el = document.getElementById('upstream-activity-chart');
+                if (!el) return;
+                if (!Array.isArray(data) || !data.length || data.error) {
+                    el.innerHTML = '<div class="loading">Upstream activity data is not available. Run the data refresh to build upstream_activity.csv.</div>';
+                    return;
+                }
+
+                const parseNumber = (value) => {
+                    if (value === null || value === undefined || value === '') return null;
+                    const parsed = Number(value);
+                    return Number.isFinite(parsed) ? parsed : null;
+                };
+
+                const rows = data
+                    .map(row => ({
+                        ...row,
+                        wti: parseNumber(row.wti),
+                        frac_spreads: parseNumber(row.frac_spreads),
+                        frac_spreads_ma4: parseNumber(row.frac_spreads_ma4),
+                        frac_spreads_index: parseNumber(row.frac_spreads_index),
+                        oil_rigs: parseNumber(row.oil_rigs),
+                        oil_rigs_ma4: parseNumber(row.oil_rigs_ma4),
+                        oil_rigs_index: parseNumber(row.oil_rigs_index),
+                        duc_wells: parseNumber(row.duc_wells),
+                        duc_wells_index: parseNumber(row.duc_wells_index)
+                    }))
+                    .filter(row => row.date)
+                    .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                const latestFinite = (field) => {
+                    for (let i = rows.length - 1; i >= 0; i--) {
+                        const value = rows[i][field];
+                        if (Number.isFinite(value)) return { value, date: rows[i].date };
+                    }
+                    return { value: null, date: null };
+                };
+                const valueLabel = (field, formatter) => {
+                    const latest = latestFinite(field);
+                    return latest.value === null ? '--' : formatter(latest.value);
+                };
+                const wtiLabel = valueLabel('wti', value => `$${value.toFixed(2)}/bbl`);
+                const fracLabel = valueLabel('frac_spreads_ma4', value => `${value.toFixed(0)} spreads`);
+                const rigLabel = valueLabel('oil_rigs_ma4', value => `${value.toFixed(0)} rigs`);
+                const ducLabel = valueLabel('duc_wells', value => `${value.toLocaleString(undefined, { maximumFractionDigits: 0 })} DUCs`);
+
+                const hasFinite = (field) => rows.some(row => Number.isFinite(row[field]));
+                const activitySeries = [
+                    {
+                        name: `Frac Spreads (${fracLabel})`,
+                        indexField: 'frac_spreads_index',
+                        rawField: 'frac_spreads_ma4',
+                        color: '#c41e3a',
+                        hover: 'Frac spreads 4wk MA'
+                    },
+                    {
+                        name: `Oil Rigs (${rigLabel})`,
+                        indexField: 'oil_rigs_index',
+                        rawField: 'oil_rigs_ma4',
+                        color: '#0d7d4d',
+                        hover: 'Oil rigs 4wk MA'
+                    },
+                    {
+                        name: `DUC Wells (${ducLabel})`,
+                        indexField: 'duc_wells_index',
+                        rawField: 'duc_wells',
+                        color: '#2563eb',
+                        hover: 'DUC wells'
+                    }
+                ].filter(series => hasFinite(series.indexField));
+
+                const traces = activitySeries.map(series => ({
+                    x: rows.map(row => row.date),
+                    y: rows.map(row => Number.isFinite(row[series.indexField]) ? row[series.indexField] : null),
+                    customdata: rows.map(row => Number.isFinite(row[series.rawField]) ? row[series.rawField] : null),
+                    name: series.name,
+                    type: 'scatter',
+                    mode: 'lines',
+                    connectgaps: true,
+                    line: { color: series.color, width: 2.4 },
+                    hovertemplate: `${series.hover}<br>%{x}<br>Index: %{y:.1f}<br>Raw: %{customdata:,.0f}<extra></extra>`
+                }));
+
+                if (hasFinite('wti')) {
+                    traces.push({
+                        x: rows.map(row => row.date),
+                        y: rows.map(row => Number.isFinite(row.wti) ? row.wti : null),
+                        name: `WTI (${wtiLabel})`,
+                        type: 'scatter',
+                        mode: 'lines',
+                        connectgaps: true,
+                        yaxis: 'y2',
+                        line: { color: '#ea580c', width: 2.8 },
+                        hovertemplate: 'WTI<br>%{x}<br>$%{y:.2f}/bbl<extra></extra>'
+                    });
+                }
+                if (!traces.length) {
+                    el.innerHTML = '<div class="loading">Upstream activity data is not available. Run the data refresh to build upstream_activity.csv.</div>';
+                    return;
+                }
+
+                Plotly.newPlot('upstream-activity-chart', traces, {
+                    ...baseLayout,
+                    margin: { ...baseLayout.margin, l: 66, r: 72, b: 86, t: 18 },
+                    showlegend: true,
+                    legend: { orientation: 'h', y: -0.24, font: { size: 9 } },
+                    xaxis: dateAxis({ tickformat: '%Y', dtick: 'M12' }),
+                    yaxis: {
+                        ...baseLayout.yaxis,
+                        title: { text: 'Activity index (0-100)', font: { size: 11 } },
+                        range: [0, 105],
+                        dtick: 25,
+                        zeroline: true,
+                        zerolinecolor: '#cbd5e1'
+                    },
+                    yaxis2: {
+                        title: { text: 'WTI ($/bbl)', font: { size: 11, color: '#ea580c' } },
+                        overlaying: 'y',
+                        side: 'right',
+                        showgrid: false,
+                        tickprefix: '$',
+                        tickfont: { size: 11, color: '#9a3412' },
+                        zeroline: false
+                    },
+                    hovermode: 'x unified'
+                });
+            } catch (e) {
+                console.error('Error loading upstream activity chart:', e);
+                const el = document.getElementById('upstream-activity-chart');
+                if (el) el.innerHTML = '<div class="error">Upstream activity chart failed to load.</div>';
+            }
+        }
+
         async function loadEVFleet() {
             const focusCountries = ['China', 'USA', 'India'];
             const countryColors = {
@@ -5212,6 +5368,7 @@
         loadDaysOfSupply();
         loadPositioning();
         loadCOTBrentPositioning();
+        loadUpstreamActivity();
         loadTotalInvEIA();
         loadEVFleet();
         loadPolicyInflationLabor();
