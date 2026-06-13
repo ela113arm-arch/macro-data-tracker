@@ -648,17 +648,17 @@
             <div class="section-header">
                 <div>
                     <div class="section-title">Policy & Inflation</div>
-                    <div class="section-subtitle">Treasury yields, fed funds, and 12-month CPI</div>
+                    <div class="section-subtitle">Treasury yields, fed funds, and 12-month CPI/PPI</div>
                 </div>
             </div>
             <div class="card">
                 <div class="card-header">
-                    <span>Rates vs Smoothed Inflation</span>
+                    <span>Rates vs Inflation</span>
                     <span class="source">FRED / BLS</span>
                 </div>
                 <div class="card-body">
                     <div id="policy-inflation-labor-chart" class="chart-lg"><div class="loading">Loading...</div></div>
-                    <div class="chart-desc">Rates use the left percent axis. CPI is the 12-month year-over-year rate on the right percent axis.</div>
+                    <div class="chart-desc">Rates use the left percent axis. CPI and PPI Final Demand are 12-month year-over-year rates on the right percent axis.</div>
                     <div id="policy-initial-claims-chart" class="chart" style="margin-top: 18px;"><div class="loading">Loading...</div></div>
                     <div class="chart-desc">Initial jobless claims 12-week moving average. 2020-2021 values are held flat at the last 2019 observation.</div>
                 </div>
@@ -5007,22 +5007,27 @@
 
         async function loadPolicyInflationLabor() {
             try {
-                const [yieldsRes, cpiRes, claimsRes] = await Promise.all([
+                const [yieldsRes, cpiRes, ppiRes, claimsRes] = await Promise.all([
                     fetch('/api/treasury-yields'),
                     fetch('/api/cpi'),
+                    fetch('/api/ppi'),
                     fetch('/api/jobless-claims')
                 ]);
                 const yields = await yieldsRes.json();
                 const cpi = await cpiRes.json();
+                const ppi = await ppiRes.json();
                 let claims = await claimsRes.json();
 
-                if (!Array.isArray(yields) || !Array.isArray(cpi) || !Array.isArray(claims)) return;
+                if (!Array.isArray(yields) || !Array.isArray(cpi) || !Array.isArray(ppi) || !Array.isArray(claims)) return;
 
                 const startDate = '2018-01-01';
                 const rateData = yields
                     .filter(d => d.date >= startDate)
                     .sort((a, b) => new Date(a.date) - new Date(b.date));
                 const cpiData = cpi
+                    .filter(d => d.date >= startDate)
+                    .sort((a, b) => new Date(a.date) - new Date(b.date));
+                const ppiData = ppi
                     .filter(d => d.date >= startDate)
                     .sort((a, b) => new Date(a.date) - new Date(b.date));
 
@@ -5032,6 +5037,15 @@
                 const cpi12mYoY = cpiData.map((row, i) => {
                     const current = Number(row[cpiLevelField]);
                     const prior = i >= 12 ? Number(cpiData[i - 12][cpiLevelField]) : NaN;
+                    if (!Number.isFinite(current) || !Number.isFinite(prior) || prior <= 0) return null;
+                    return ((current / prior) - 1) * 100;
+                });
+                const ppiLevelField = ppiData.some(d => d.ppi_final_demand !== null && d.ppi_final_demand !== undefined)
+                    ? 'ppi_final_demand'
+                    : 'ppi_all';
+                const ppi12mYoY = ppiData.map((row, i) => {
+                    const current = Number(row[ppiLevelField]);
+                    const prior = i >= 12 ? Number(ppiData[i - 12][ppiLevelField]) : NaN;
                     if (!Number.isFinite(current) || !Number.isFinite(prior) || prior <= 0) return null;
                     return ((current / prior) - 1) * 100;
                 });
@@ -5087,6 +5101,14 @@
                         unit: '%',
                         yaxis: 'y2',
                         line: { color: '#dc2626', width: 2.8, shape: 'spline', smoothing: 0.35 }
+                    },
+                    {
+                        x: ppiData.map(d => d.date),
+                        y: ppi12mYoY,
+                        name: `12M ${ppiLevelField === 'ppi_final_demand' ? 'PPI Final Demand' : 'PPI All Commodities'}`,
+                        unit: '%',
+                        yaxis: 'y2',
+                        line: { color: '#f97316', width: 2.4, dash: 'dot', shape: 'spline', smoothing: 0.35 }
                     }
                 ];
 
@@ -5102,43 +5124,85 @@
                         connectgaps: true,
                         yaxis: item.yaxis || 'y',
                         line: item.line,
-                        hovertemplate: `${item.name}<br>%{x}<br>Value: %{y:.2f}${item.unit}<extra></extra>`
+                        hovertemplate: `${item.name}<br>%{x}<br>%{y:.1f}${item.unit}<extra></extra>`
                     };
                 });
 
+                const cleanPercentRange = (values, step, zeroFloor = false) => {
+                    const finiteValues = values
+                        .map(numericOrNull)
+                        .filter(value => value !== null);
+                    if (!finiteValues.length) return undefined;
+
+                    const minValue = Math.min(...finiteValues, 0);
+                    const maxValue = Math.max(...finiteValues, 0);
+                    const minWithPad = zeroFloor ? 0 : minValue - (step * 0.05);
+                    const maxWithPad = maxValue + (step * 0.05);
+                    return [
+                        zeroFloor ? 0 : Math.floor(minWithPad / step) * step,
+                        Math.ceil(maxWithPad / step) * step
+                    ];
+                };
+                const rateAxisValues = series
+                    .filter(item => !item.yaxis)
+                    .flatMap(item => item.y);
+                const inflationAxisValues = series
+                    .filter(item => item.yaxis === 'y2')
+                    .flatMap(item => item.y);
+                const axisTickStyle = {
+                    ticks: 'outside',
+                    ticklen: 5,
+                    tickwidth: 1,
+                    tickcolor: '#cbd5e1',
+                    tickfont: { size: 11, color: '#64748b' }
+                };
+
                 Plotly.newPlot('policy-inflation-labor-chart', traces, {
                     ...baseLayout,
+                    hovermode: 'x unified',
                     showlegend: true,
-                    legend: { orientation: 'h', y: -0.22, font: { size: 10 } },
-                    xaxis: dateAxis({ tickformat: '%Y', dtick: 'M12' }),
+                    margin: { ...baseLayout.margin, l: 64, r: 74, b: 84, t: 32 },
+                    legend: {
+                        orientation: 'h',
+                        x: 0.5,
+                        xanchor: 'center',
+                        y: -0.24,
+                        yanchor: 'top',
+                        font: { size: 10 }
+                    },
+                    xaxis: {
+                        ...dateAxis({ tickformat: '%Y', dtick: 'M12' }),
+                        tickangle: 0,
+                        ...axisTickStyle,
+                        gridcolor: 'rgba(203, 213, 225, 0.45)',
+                        zeroline: false
+                    },
                     yaxis: {
                         ...baseLayout.yaxis,
-                        title: { text: 'Rates (%)', font: { size: 11 } },
+                        ...axisTickStyle,
+                        title: { text: 'Rates (%)', font: { size: 11 }, standoff: 10 },
+                        range: cleanPercentRange(rateAxisValues, 1, true),
+                        dtick: 1,
+                        tickformat: '.0f',
+                        ticksuffix: '%',
                         zeroline: true,
                         zerolinecolor: '#94a3b8',
-                        ticksuffix: '%'
+                        zerolinewidth: 1
                     },
                     yaxis2: {
-                        title: { text: '12M CPI (%)', font: { size: 11 } },
+                        ...axisTickStyle,
+                        title: { text: 'Inflation YoY (%)', font: { size: 11, color: '#64748b' }, standoff: 12 },
+                        range: cleanPercentRange(inflationAxisValues, 2),
+                        dtick: 2,
+                        tickformat: '.0f',
                         overlaying: 'y',
                         side: 'right',
                         showgrid: false,
                         zeroline: true,
                         zerolinecolor: '#fca5a5',
                         ticksuffix: '%',
-                        tickfont: { size: 11, color: '#dc2626' },
-                        titlefont: { size: 11, color: '#dc2626' }
-                    },
-                    shapes: [{
-                        type: 'line',
-                        xref: 'paper',
-                        x0: 0,
-                        x1: 1,
-                        yref: 'y',
-                        y0: 0,
-                        y1: 0,
-                        line: { color: '#94a3b8', width: 1, dash: 'dot' }
-                    }]
+                        zerolinewidth: 1
+                    }
                 });
 
                 claims = forwardFillPeriodWithPriorValue(
