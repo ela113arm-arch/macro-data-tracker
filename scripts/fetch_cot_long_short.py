@@ -39,7 +39,6 @@ WTI_CFTC_CONTRACT_CODE = "067651"
 ICE_COT_URL_TEMPLATE = "https://www.ice.com/publicdocs/futures/COTHist{year}.csv"
 CONTRACT_SIZE_BBL = 1_000
 
-
 HTTP_HEADERS = {
     "User-Agent": "macro-data-tracker/1.0 (+https://github.com/ela113arm-arch/macro-data-tracker)",
 }
@@ -85,10 +84,12 @@ def add_position_metrics(
     out[f"{prefix}_mm_net"] = out[f"{prefix}_mm_long"] - out[f"{prefix}_mm_short"]
 
     if open_interest is not None:
+        open_interest = pd.to_numeric(open_interest, errors="coerce")
+        denominator = open_interest.mask(open_interest == 0)
         out[f"{prefix}_open_interest"] = open_interest
-        out[f"{prefix}_mm_long_pct_oi"] = (long_contracts / open_interest) * 100
-        out[f"{prefix}_mm_short_pct_oi"] = (short_contracts / open_interest) * 100
-        out[f"{prefix}_mm_net_pct_oi"] = ((long_contracts - short_contracts) / open_interest) * 100
+        out[f"{prefix}_mm_long_pct_oi"] = (long_contracts / denominator) * 100
+        out[f"{prefix}_mm_short_pct_oi"] = (short_contracts / denominator) * 100
+        out[f"{prefix}_mm_net_pct_oi"] = ((long_contracts - short_contracts) / denominator) * 100
 
     return out
 
@@ -220,6 +221,39 @@ def add_price_overlay(cot: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+def safe_series(frame: pd.DataFrame, column: str) -> pd.Series:
+    """Get a numeric column or an aligned NaN series if missing."""
+    if column not in frame.columns:
+        return pd.Series(index=frame.index, dtype="float64")
+    return pd.to_numeric(frame[column], errors="coerce")
+
+
+def add_combined_metrics(cot: pd.DataFrame) -> pd.DataFrame:
+    """Add combined Brent + WTI long, short, and net columns even if one source fails."""
+    out = cot.copy()
+    for leg in ["long", "short", "net"]:
+        out[f"COMBINED_mm_{leg}"] = pd.concat(
+            [
+                safe_series(out, f"WTI_CME_mm_{leg}"),
+                safe_series(out, f"BRENT_ICE_mm_{leg}"),
+            ],
+            axis=1,
+        ).sum(axis=1, min_count=1)
+    return out
+
+
+def add_weekly_changes(cot: pd.DataFrame) -> pd.DataFrame:
+    """Add week-over-week changes for all managed-money position columns."""
+    out = cot.copy()
+    position_cols = [
+        col for col in out.columns
+        if col.endswith(("_mm_long", "_mm_short", "_mm_net"))
+    ]
+    for col in position_cols:
+        out[f"{col}_ww"] = pd.to_numeric(out[col], errors="coerce").diff()
+    return out
+
+
 def build_cot_long_short(start: str, output: Path) -> pd.DataFrame:
     """Build merged WTI + Brent COT long/short CSV."""
     start_date = pd.Timestamp(start)
@@ -237,25 +271,14 @@ def build_cot_long_short(start: str, output: Path) -> pd.DataFrame:
         raise RuntimeError("No COT data fetched from CFTC or ICE")
 
     cot = pd.merge(wti, brent, on="date", how="outer").sort_values("date").reset_index(drop=True)
-
-    for leg in ["long", "short", "net"]:
-        cot[f"COMBINED_mm_{leg}"] = cot[[f"WTI_CME_mm_{leg}", f"BRENT_ICE_mm_{leg}"]].sum(axis=1, min_count=1)
-
-    for prefix in ["WTI_CME", "BRENT_ICE", "COMBINED"]:
-        for leg in ["long", "short", "net"]:
-            col = f"{prefix}_mm_{leg}"
-            if col in cot.columns:
-                cot[f"{col}_ww"] = cot[col].diff()
-
+    cot = add_combined_metrics(cot)
+    cot = add_weekly_changes(cot)
     cot = add_price_overlay(cot)
     cot["year"] = cot["date"].dt.year
     cot["week"] = cot["date"].dt.isocalendar().week.astype(int)
 
-    for col in cot.columns:
-        if col != "date":
-            cot[col] = pd.to_numeric(cot[col], errors="ignore")
-    numeric_cols = cot.select_dtypes(include="number").columns
-    cot[numeric_cols] = cot[numeric_cols].round(4)
+    numeric_cols = [col for col in cot.columns if col != "date"]
+    cot[numeric_cols] = cot[numeric_cols].apply(pd.to_numeric, errors="coerce").round(4)
 
     output.parent.mkdir(parents=True, exist_ok=True)
     cot["date"] = cot["date"].dt.strftime("%Y-%m-%d")
