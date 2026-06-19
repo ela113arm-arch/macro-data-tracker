@@ -1,0 +1,42 @@
+name: Refresh COT Long Short Data
+
+on:
+  workflow_dispatch:
+  schedule:
+    # CFTC COT is normally published Friday afternoon ET. Run later Friday evening UTC.
+    - cron: '30 22 * * 5'
+
+permissions:
+  contents: write
+
+jobs:
+  refresh-cot-long-short:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Fetch COT long short data
+        run: python scripts/fetch_cot_long_short.py --start 2020-01-01
+
+      - name: Commit refreshed CSV
+        run: |
+          if git diff --quiet -- data/cot_wti_brent_long_short.csv; then
+            echo "No COT CSV changes to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/cot_wti_brent_long_short.csv
+          git commit -m "Refresh COT long short data"
+          git push
