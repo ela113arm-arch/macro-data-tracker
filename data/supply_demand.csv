@@ -1,5 +1,4 @@
 date,crude_production,crude_refinery_input,crude_stock_change,distillate_refinery_output,distillate_product_supplied,distillate_stock_change,jet_fuel_refinery_output,jet_fuel_product_supplied,jet_fuel_stock_change,spr_stocks,spr_change,year,month
-2016-06-01,8.679,16.433,-0.367,4.954,3.853,-0.173,1.662,1.723,-0.133,,,2016,6
 2016-07-01,8.669,16.621,-0.239,4.933,3.597,0.217,1.737,1.72,0.047,695.0998000000001,,2016,7
 2016-08-01,8.695,16.593,-0.219,4.939,3.88,0.124,1.796,1.722,0.021,695.0952500000001,-0.004549999999994725,2016,8
 2016-09-01,8.547,16.34,-0.505,4.888,3.912,0.024,1.738,1.635,0.071,695.0921999999999,-0.003050000000143882,2016,9
