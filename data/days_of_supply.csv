@@ -1,5 +1,4 @@
 date,crude_US_days,crude_US_inv,crude_US_demand,gasoline_US_days,gasoline_US_inv,gasoline_US_demand,distillate_US_days,distillate_US_inv,distillate_US_demand,week,year,crude_US_days_5yr_avg,crude_US_days_vs_avg,gasoline_US_days_5yr_avg,gasoline_US_days_vs_avg,distillate_US_days_5yr_avg,distillate_US_days_vs_avg
-2026-02-06,26.8,428.829,16.0,31.2,259.058,8.3,28.0,124.665,4.449,6,2026,,,,,,
 2026-02-13,26.1,419.815,16.077,29.2,255.845,8.749,25.3,120.099,4.753,7,2026,,,,,,
 2026-02-20,27.8,435.804,15.661,29.2,254.834,8.733,30.9,120.351,3.895,8,2026,,,,,,
 2026-02-27,27.7,439.279,15.841,30.5,253.13,8.292,32.7,120.78,3.698,9,2026,,,,,,
