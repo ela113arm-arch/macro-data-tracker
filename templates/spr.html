@@ -235,6 +235,7 @@
 
         .chart { height: 360px; }
         .chart.short { height: 300px; }
+        .chart.tall { height: 520px; }
 
         .table-wrap {
             max-height: 390px;
@@ -463,6 +464,15 @@
                         <tbody id="releaseBuyerTable"></tbody>
                     </table>
                 </div>
+            </div>
+
+            <div class="panel span-12">
+                <div class="panel-head">
+                    <h2>Buyer Awards by Tender</h2>
+                    <span class="source">DOE award PDFs</span>
+                </div>
+                <div class="hint" id="buyerTenderNote">Award volumes by normalized company, stacked by FY26 SPR release tender.</div>
+                <div id="buyerTenderChart" class="chart tall"><div class="loading">Loading...</div></div>
             </div>
 
             <div class="panel span-12">
@@ -795,6 +805,88 @@
             }
         }
 
+        function shortTenderName(tranche) {
+            const match = String(tranche || '').match(/No\.\s*([0-9]+(?:\.[a-z])?)/i);
+            return match ? `No. ${match[1]}` : (tranche || '--');
+        }
+
+        function renderBuyerTenderChart(rows) {
+            const chart = document.getElementById('buyerTenderChart');
+            if (!rows.length) {
+                chart.innerHTML = '<div class="loading">No buyer-award data available.</div>';
+                return;
+            }
+
+            const companies = [...new Set(rows.map(row => row.company).filter(Boolean))];
+            const tranches = [...new Set(rows.map(row => row.tranche).filter(Boolean))]
+                .sort((a, b) => {
+                    const dateA = rows.find(row => row.tranche === a)?.award_date || '';
+                    const dateB = rows.find(row => row.tranche === b)?.award_date || '';
+                    return String(dateA).localeCompare(String(dateB)) || String(a).localeCompare(String(b));
+                });
+            const totals = Object.fromEntries(companies.map(company => [company, 0]));
+            const matrix = Object.fromEntries(tranches.map(tranche => [tranche, Object.fromEntries(companies.map(company => [company, 0]))]));
+            const windowByTranche = {};
+
+            for (const row of rows) {
+                const company = row.company;
+                const tranche = row.tranche;
+                const value = Number(row.buyer_volume_mmbbl) || 0;
+                if (!company || !tranche || !value) continue;
+                matrix[tranche][company] = (matrix[tranche][company] || 0) + value;
+                totals[company] = (totals[company] || 0) + value;
+                windowByTranche[tranche] = `${row.delivery_start || '--'} to ${row.delivery_end || '--'}`;
+            }
+
+            const sortedCompanies = companies.sort((a, b) => (totals[b] || 0) - (totals[a] || 0));
+            const maxTotal = Math.max(...sortedCompanies.map(company => totals[company] || 0), 1);
+            const palette = ['#1f4e79', '#6b8e23', '#b7791f', '#7c3aed', '#0f766e', '#b91c1c', '#475569'];
+            const traces = tranches.map((tranche, index) => ({
+                y: sortedCompanies,
+                x: sortedCompanies.map(company => matrix[tranche][company] || 0),
+                type: 'bar',
+                orientation: 'h',
+                name: shortTenderName(tranche),
+                marker: { color: palette[index % palette.length] },
+                customdata: sortedCompanies.map(() => [tranche, windowByTranche[tranche] || '--']),
+                hovertemplate: '%{y}<br>%{customdata[0]}<br>%{x:.3f} MMbbl<br>Delivery: %{customdata[1]}<extra></extra>'
+            }));
+
+            document.getElementById('buyerTenderNote').textContent =
+                `${fmt(Object.values(totals).reduce((sum, value) => sum + value, 0), 2)} MMbbl awarded across ${sortedCompanies.length} companies and ${tranches.length} tenders.`;
+
+            try {
+                Plotly.newPlot(chart, traces, {
+                    ...chartLayout,
+                    barmode: 'stack',
+                    height: Math.max(520, 34 * sortedCompanies.length + 150),
+                    margin: { l: 210, r: 80, t: 44, b: 52 },
+                    legend: {
+                        orientation: 'h',
+                        x: 0,
+                        y: 1.16,
+                        xanchor: 'left',
+                        yanchor: 'bottom',
+                        bgcolor: 'rgba(255,255,255,0.92)',
+                        bordercolor: '#d9e0ea',
+                        borderwidth: 1
+                    },
+                    xaxis: { ...chartLayout.xaxis, title: 'Awarded volume, MMbbl', range: [0, maxTotal * 1.17] },
+                    yaxis: { ...chartLayout.yaxis, autorange: 'reversed', type: 'category' },
+                    annotations: sortedCompanies.map(company => ({
+                        x: (totals[company] || 0) + maxTotal * 0.025,
+                        y: company,
+                        text: `${fmt(totals[company] || 0, 2)}`,
+                        showarrow: false,
+                        xanchor: 'left',
+                        font: { size: 10, color: '#475569' }
+                    }))
+                }, chartConfig);
+            } catch (error) {
+                chart.innerHTML = '<div class="error">Buyer-awards chart failed to render.</div>';
+            }
+        }
+
         function renderSiteChart(siteRows) {
             const rows = [...siteRows].sort((a, b) => Number(b.total_mmbbl) - Number(a.total_mmbbl));
             const sites = rows.map(row => row.site);
@@ -874,13 +966,14 @@
 
         async function loadDashboard() {
             try {
-                const [summary, weekly, events, siteRows, releaseQuality, releaseBuyers, news] = await Promise.all([
+                const [summary, weekly, events, siteRows, releaseQuality, releaseBuyers, buyerAwards, news] = await Promise.all([
                     fetchJson('/api/spr/summary'),
                     fetchJson('/api/spr/weekly-inventory'),
                     fetchJson('/api/spr/events'),
                     fetchJson('/api/spr/site-quality'),
                     fetchJson('/api/spr/release-quality'),
                     fetchJson('/api/spr/release-buyers'),
+                    fetchJson('/api/spr/buyer-awards'),
                     fetchJson('/api/spr/news')
                 ]);
                 releaseQualityRows = releaseQuality;
@@ -892,6 +985,7 @@
                 renderPlanChart(weekly);
                 renderWeeklyChart(weekly, plannedWeekly);
                 renderFilteredReleaseQuality();
+                renderBuyerTenderChart(buyerAwards);
                 renderEventsTable(events);
                 renderNewsTable(news);
                 await updateRefreshStatus();

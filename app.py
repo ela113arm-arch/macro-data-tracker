@@ -683,6 +683,13 @@ def get_spr_release_buyers():
     return read_csv('spr_release_buyers.csv')
 
 
+@app.route('/api/spr/buyer-awards')
+@safe_endpoint
+def get_spr_buyer_awards():
+    """Normalized SPR buyer awards joined to tranche delivery windows."""
+    return read_csv('spr_buyer_award_delivery_windows.csv')
+
+
 @app.route('/api/spr/news')
 @safe_endpoint
 def get_spr_news():
