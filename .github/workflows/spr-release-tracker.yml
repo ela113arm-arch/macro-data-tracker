@@ -1,0 +1,73 @@
+name: SPR Release Tracker
+
+on:
+  workflow_dispatch:
+    inputs:
+      report_month:
+        description: "Optional report month in YYYY-MM format"
+        required: false
+        type: string
+  schedule:
+    # Monthly after the first Wednesday EIA weekly petroleum publication cycle.
+    - cron: "30 15 8 * *"
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    env:
+      EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+      SPR_REPORT_EMAIL_TO: ${{ vars.SPR_REPORT_EMAIL_TO }}
+      SMTP_USERNAME: ${{ secrets.GMAIL_SMTP_USERNAME }}
+      SMTP_PASSWORD: ${{ secrets.GMAIL_SMTP_PASSWORD }}
+      REPORT_MONTH: ${{ github.event.inputs.report_month || '' }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Refresh SPR release data
+        run: |
+          if [ -n "$REPORT_MONTH" ]; then
+            python spr_release_fetcher.py --report-month "$REPORT_MONTH"
+          else
+            python spr_release_fetcher.py
+          fi
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: spr-release-report
+          path: |
+            data/spr_*.csv
+            reports/spr/*.md
+            reports/spr/*.html
+
+      - name: Commit refreshed SPR outputs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/spr_*.csv reports/spr/*.md reports/spr/*.html
+          if git diff --cached --quiet; then
+            echo "No SPR output changes to commit."
+          else
+            git commit -m "Update SPR release tracker"
+            git push
+          fi
+
+      - name: Email latest report when SMTP is configured
+        if: env.SMTP_USERNAME != '' && env.SMTP_PASSWORD != '' && env.SPR_REPORT_EMAIL_TO != ''
+        run: python scripts/send_spr_report_email.py

@@ -1,5 +1,5 @@
-as_of_date,site,state,caverns,sweet_mmbbl,sour_mmbbl,total_mmbbl,source_url
-2026-04-29,Bayou Choctaw,Louisiana,6,0.0,69.0,69.0,https://www.energy.gov/hgeo/opr/spr-quick-facts
-2026-04-29,Big Hill,Texas,14,0.0,162.0,162.0,https://www.energy.gov/hgeo/opr/spr-quick-facts
-2026-04-29,Bryan Mound,Texas,18,130.0,0.0,130.0,https://www.energy.gov/hgeo/opr/spr-quick-facts
-2026-04-29,West Hackberry,Louisiana,21,20.0,21.0,41.0,https://www.energy.gov/hgeo/opr/spr-quick-facts
+site,sweet_mmbbl,sour_mmbbl,total_mmbbl,source_url
+Bayou Choctaw,10.0,13.5,23.5,DOE RFP Section C planned release rows
+Big Hill,0.0,47.0,47.0,DOE RFP Section C planned release rows
+Bryan Mound,15.0,88.0,103.0,DOE RFP Section C planned release rows
+West Hackberry,43.5,41.5,85.0,DOE RFP Section C planned release rows
