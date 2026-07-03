@@ -15,7 +15,7 @@ import threading
 import time
 import warnings
 
-from flask import Flask, render_template, jsonify, request, Response
+from flask import Flask, render_template, jsonify, request, Response, abort, send_from_directory
 import numpy as np
 import pandas as pd
 from pandas.errors import PerformanceWarning
@@ -24,6 +24,7 @@ app = Flask(__name__)
 APP_DIR = Path(__file__).parent
 BUNDLED_DATA_DIR = APP_DIR / 'data'
 DATA_DIR = Path(os.environ.get('DATA_DIR', BUNDLED_DATA_DIR))
+SPR_REPORT_DIR = Path(os.environ.get('SPR_REPORT_DIR', APP_DIR / 'reports' / 'spr'))
 LOCAL_SKLEARN_PACKAGES = APP_DIR / '.sklearn_packages'
 if LOCAL_SKLEARN_PACKAGES.exists():
     sys.path.insert(0, str(LOCAL_SKLEARN_PACKAGES))
@@ -487,6 +488,20 @@ def macro_dashboard():
 @app.route('/spr')
 def spr_dashboard():
     return render_template('spr.html')
+
+
+@app.route('/spr/buyer-awards')
+def spr_buyer_awards_report():
+    return send_from_directory(SPR_REPORT_DIR, 'spr_buyer_awards_report_latest.html')
+
+
+@app.route('/reports/spr/<path:filename>')
+def spr_report_file(filename):
+    if '/' in filename or '\\' in filename:
+        abort(404)
+    if not filename.startswith('spr_') or Path(filename).suffix.lower() not in {'.html', '.md'}:
+        abort(404)
+    return send_from_directory(SPR_REPORT_DIR, filename)
 
 
 @app.route('/api/gdp/components')
@@ -1971,7 +1986,16 @@ def status():
                 f: (DATA_DIR / f'{f}.csv').exists()
                 for f in [
                     'spr_weekly_inventory', 'spr_release_events', 'spr_site_quality',
-                    'spr_release_quality', 'spr_release_buyers', 'spr_news', 'spr_release_summary'
+                    'spr_release_quality', 'spr_release_buyers', 'spr_news', 'spr_release_summary',
+                    'spr_buyer_award_delivery_windows', 'spr_buyer_award_totals',
+                    'spr_buyer_award_window_rows'
+                ]
+            },
+            'spr_reports_exist': {
+                f: (SPR_REPORT_DIR / f).exists()
+                for f in [
+                    'spr_release_report_latest.html',
+                    'spr_buyer_awards_report_latest.html'
                 ]
             },
             'refresh': get_refresh_snapshot(),

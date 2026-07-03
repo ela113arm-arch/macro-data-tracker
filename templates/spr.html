@@ -77,6 +77,36 @@
             white-space: nowrap;
         }
 
+        .report-link {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            border: 1px solid #bfdbfe;
+            border-radius: 5px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            padding: 7px 10px;
+            font-weight: 760;
+            font-size: 12px;
+        }
+
+        .report-link:hover {
+            background: #dbeafe;
+            text-decoration: none;
+        }
+
+        .report-callout {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            margin: 10px 0;
+            padding: 10px 12px;
+            border: 1px solid #dbeafe;
+            border-radius: 6px;
+            background: #f8fbff;
+        }
+
         .refresh-panel {
             min-width: 220px;
         }
@@ -314,6 +344,7 @@
         </div>
         <div class="header-actions">
             <a href="/macro" class="header-link">Macro dashboard</a>
+            <a href="/spr/buyer-awards" class="header-link">Buyer awards report</a>
             <div class="refresh-panel">
                 <div id="refreshStatus" class="refresh-status">Loading refresh status...</div>
                 <button id="refreshBtn" class="refresh-btn" onclick="refreshSprData()">
@@ -396,6 +427,10 @@
                 <div class="toolbar">
                     <div class="hint" id="releaseQualityNote">Awarded release barrels by public quality bucket.</div>
                     <select id="releaseWeekFilter" onchange="renderFilteredReleaseQuality()"></select>
+                </div>
+                <div class="report-callout">
+                    <div class="hint">Full buyer-awards report with company totals, award dates, and tranche delivery windows.</div>
+                    <a class="report-link" href="/spr/buyer-awards">Open buyer report</a>
                 </div>
                 <div id="releaseQualityChart" class="chart short"><div class="loading">Loading...</div></div>
                 <div class="hint">Buyer-level award PDFs publish buyer totals. They do not publish buyer-to-site allocation or buyer-level sweet/sour split, so quality is shown at the tranche/site level where public.</div>
