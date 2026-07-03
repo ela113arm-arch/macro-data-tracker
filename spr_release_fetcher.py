@@ -70,6 +70,24 @@ PLAN_DAYS = 120
 PLANNED_DAILY_MMBL = ANNOUNCED_VOLUME_MMBL / PLAN_DAYS
 PLANNED_WEEKLY_MMBL = PLANNED_DAILY_MMBL * 7
 
+BUYER_COMPANY_ALIASES = {
+    "Energy Transfer Crude Marketing LLC": "Energy Transfer Crude Marketing",
+    "Energy Transfer Crude Marketing": "Energy Transfer Crude Marketing",
+    "Marathon Petroleum Company LP": "Marathon Petroleum Company",
+    "Marathon Petroleum Company": "Marathon Petroleum Company",
+    "Mercuria Energy America LLC": "Mercuria Energy America",
+    "Mercuria Energy America": "Mercuria Energy America",
+    "Phillips 66 Company": "Phillips 66",
+    "Phillips 66": "Phillips 66",
+    "Vitol Inc.": "Vitol",
+    "Vitol Inc": "Vitol",
+    "Vitol": "Vitol",
+}
+BUYER_WINDOW_BASIS = (
+    "Tranche-level RFP delivery window; DOE award PDFs do not publish buyer-specific "
+    "site/month/quality splits."
+)
+
 SITE_NAMES = ["Bayou Choctaw", "Big Hill", "Bryan Mound", "West Hackberry"]
 SITE_PATTERN = "|".join(re.escape(site) for site in sorted(SITE_NAMES, key=len, reverse=True))
 STREAM_PATTERN = r"(?P<stream>Sweet|Sour)"
@@ -1115,6 +1133,394 @@ def _df_to_html_table(df: pd.DataFrame, cols: list[str], limit: int = 12) -> str
     return display.to_html(index=False, escape=True)
 
 
+def _canonical_buyer_name(name: Any) -> str:
+    clean_name = _clean_text(name)
+    return BUYER_COMPANY_ALIASES.get(clean_name, clean_name)
+
+
+def _unique_join(values: Any, separator: str = "; ") -> str:
+    output: list[str] = []
+    for value in values:
+        text = _clean_text(value)
+        if text and text not in output:
+            output.append(text)
+    return separator.join(output)
+
+
+def _flatten_semicolon_join(values: Any) -> str:
+    output: list[str] = []
+    for value in values:
+        for part in _clean_text(value).split(";"):
+            text = part.strip()
+            if text and text not in output:
+                output.append(text)
+    return "; ".join(output)
+
+
+def _date_string(value: Any) -> str:
+    parsed = pd.to_datetime(value, errors="coerce")
+    return "" if pd.isna(parsed) else parsed.strftime("%Y-%m-%d")
+
+
+def _plan_delivery_window_detail(group: pd.DataFrame) -> str:
+    rows = []
+    sort_cols = [col for col in ["delivery_start", "site", "quality_bucket"] if col in group.columns]
+    for _, row in group.sort_values(sort_cols).iterrows():
+        rows.append(
+            f"{row.get('delivery_period', '')}: {row.get('site', '')} "
+            f"{str(row.get('quality_bucket', '')).lower()} "
+            f"{_format_number(row.get('volume_mmbbl', 0), 3)} MMbbl"
+        )
+    return "; ".join(rows)
+
+
+def build_plan_delivery_summary(plan: pd.DataFrame) -> pd.DataFrame:
+    if plan is None or plan.empty:
+        return pd.DataFrame(
+            columns=[
+                "tranche",
+                "delivery_start",
+                "delivery_end",
+                "delivery_windows",
+                "sites",
+                "qualities",
+                "tranche_planned_mmbbl",
+                "tranche_max_planned_bpd",
+                "delivery_window_detail",
+                "rfp_source_url",
+            ]
+        )
+
+    working = plan.copy()
+    working["_delivery_start_dt"] = pd.to_datetime(working.get("delivery_start", ""), errors="coerce")
+    working["_delivery_end_dt"] = pd.to_datetime(working.get("delivery_end", ""), errors="coerce")
+    rows: list[dict[str, Any]] = []
+    for tranche, group in working.groupby("tranche", sort=False):
+        ordered = group.sort_values(["_delivery_start_dt", "site", "quality_bucket"])
+        rows.append(
+            {
+                "tranche": tranche,
+                "delivery_start": _date_string(group["_delivery_start_dt"].min()),
+                "delivery_end": _date_string(group["_delivery_end_dt"].max()),
+                "delivery_windows": _unique_join(ordered.get("delivery_period", [])),
+                "sites": _unique_join(group.get("site", [])),
+                "qualities": _unique_join(group.get("quality_bucket", [])),
+                "tranche_planned_mmbbl": float(pd.to_numeric(group.get("volume_mmbbl", 0), errors="coerce").fillna(0).sum()),
+                "tranche_max_planned_bpd": float(pd.to_numeric(group.get("planned_avg_bpd", 0), errors="coerce").fillna(0).sum()),
+                "delivery_window_detail": _plan_delivery_window_detail(group),
+                "rfp_source_url": str(group["source_url"].iloc[0]) if "source_url" in group.columns and not group.empty else "",
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def build_buyer_award_report_data(
+    buyers: pd.DataFrame,
+    plan: pd.DataFrame,
+    award_summary: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    plan_summary = build_plan_delivery_summary(plan)
+    if buyers is None or buyers.empty:
+        empty_detail = pd.DataFrame()
+        empty_totals = pd.DataFrame()
+        empty_windows = pd.DataFrame()
+        return empty_detail, empty_totals, empty_windows, plan_summary
+
+    award_cols = ["tranche", "award_total_mmbbl", "source_url"]
+    awards_small = (
+        award_summary[award_cols].rename(columns={"source_url": "award_source_url"})
+        if award_summary is not None and not award_summary.empty
+        else pd.DataFrame(columns=["tranche", "award_total_mmbbl", "award_source_url"])
+    )
+
+    detail = buyers.merge(plan_summary, on="tranche", how="left").merge(awards_small, on="tranche", how="left")
+    detail["company"] = detail["buyer"].map(_canonical_buyer_name)
+    detail["award_date"] = detail["date"].map(_date_string)
+    detail["buyer_volume_mmbbl"] = pd.to_numeric(detail["volume_mmbbl"], errors="coerce").fillna(0)
+    award_total = pd.to_numeric(detail["award_total_mmbbl"], errors="coerce").replace(0, pd.NA)
+    detail["buyer_share_of_award_pct"] = (detail["buyer_volume_mmbbl"] / award_total * 100).fillna(0)
+    detail["buyer_volume_mmbbl"] = detail["buyer_volume_mmbbl"].round(3)
+    detail["buyer_share_of_award_pct"] = detail["buyer_share_of_award_pct"].round(1)
+    detail["delivery_window_basis"] = BUYER_WINDOW_BASIS
+    detail["award_source_url"] = detail.get("award_source_url", detail.get("source_url", ""))
+
+    detail_cols = [
+        "company",
+        "buyer",
+        "award_date",
+        "tranche",
+        "buyer_volume_mmbbl",
+        "buyer_share_of_award_pct",
+        "delivery_start",
+        "delivery_end",
+        "delivery_windows",
+        "sites",
+        "qualities",
+        "delivery_window_detail",
+        "delivery_window_basis",
+        "award_source_url",
+        "rfp_source_url",
+    ]
+    for col in detail_cols:
+        if col not in detail.columns:
+            detail[col] = ""
+    detail = detail[detail_cols].sort_values(["award_date", "tranche", "company", "buyer"]).reset_index(drop=True)
+
+    totals = (
+        detail.groupby("company", as_index=False)
+        .agg(
+            total_bought_mmbbl=("buyer_volume_mmbbl", "sum"),
+            award_count=("tranche", "count"),
+            first_award_date=("award_date", "min"),
+            last_award_date=("award_date", "max"),
+            first_delivery_start=("delivery_start", "min"),
+            last_delivery_end=("delivery_end", "max"),
+            raw_buyer_names=("buyer", _unique_join),
+            tranches=("tranche", _unique_join),
+            delivery_windows=("delivery_windows", _flatten_semicolon_join),
+            sites=("sites", _flatten_semicolon_join),
+            qualities=("qualities", _flatten_semicolon_join),
+        )
+        .sort_values("total_bought_mmbbl", ascending=False)
+        .reset_index(drop=True)
+    )
+    totals["delivery_span"] = totals["first_delivery_start"].astype(str) + " to " + totals["last_delivery_end"].astype(str)
+    totals["total_bought_mmbbl"] = pd.to_numeric(totals["total_bought_mmbbl"], errors="coerce").round(3)
+
+    if plan is not None and not plan.empty:
+        plan_rows = plan[
+            [
+                "tranche",
+                "site",
+                "quality_bucket",
+                "volume_mmbbl",
+                "delivery_period",
+                "delivery_start",
+                "delivery_end",
+                "planned_avg_bpd",
+                "source_url",
+            ]
+        ].copy()
+        window_rows = detail.merge(plan_rows, on="tranche", how="left", suffixes=("", "_window"))
+        window_rows = window_rows.rename(
+            columns={
+                "volume_mmbbl": "tranche_window_volume_mmbbl",
+                "source_url": "rfp_window_source_url",
+                "delivery_start_window": "window_delivery_start",
+                "delivery_end_window": "window_delivery_end",
+            }
+        )
+    else:
+        window_rows = pd.DataFrame()
+
+    window_cols = [
+        "company",
+        "buyer",
+        "award_date",
+        "tranche",
+        "buyer_volume_mmbbl",
+        "site",
+        "quality_bucket",
+        "tranche_window_volume_mmbbl",
+        "delivery_period",
+        "window_delivery_start",
+        "window_delivery_end",
+        "planned_avg_bpd",
+        "delivery_window_basis",
+        "award_source_url",
+        "rfp_window_source_url",
+    ]
+    for col in window_cols:
+        if col not in window_rows.columns:
+            window_rows[col] = ""
+    window_rows = window_rows[window_cols].reset_index(drop=True)
+    for col in ["buyer_volume_mmbbl", "tranche_window_volume_mmbbl", "planned_avg_bpd"]:
+        if col in window_rows.columns:
+            window_rows[col] = pd.to_numeric(window_rows[col], errors="coerce").round(3)
+    return detail, totals, window_rows, plan_summary
+
+
+def generate_buyer_awards_report(
+    buyer_detail: pd.DataFrame,
+    buyer_totals: pd.DataFrame,
+    plan_summary: pd.DataFrame,
+    report_dir: Path = REPORT_DIR,
+) -> dict[str, Path]:
+    report_dir.mkdir(parents=True, exist_ok=True)
+    refreshed_text = _utc_now().strftime("%Y-%m-%d %H:%M UTC")
+    report_slug = _utc_now().strftime("%Y_%m_%d")
+    total_awarded = float(buyer_detail["buyer_volume_mmbbl"].sum()) if buyer_detail is not None and not buyer_detail.empty else 0.0
+    buyer_rows = len(buyer_detail) if buyer_detail is not None else 0
+    tranche_count = int(buyer_detail["tranche"].nunique()) if buyer_detail is not None and not buyer_detail.empty else 0
+
+    totals_display = buyer_totals.copy() if buyer_totals is not None else pd.DataFrame()
+    detail_display = buyer_detail.copy() if buyer_detail is not None else pd.DataFrame()
+    plan_display = plan_summary.copy() if plan_summary is not None else pd.DataFrame()
+    for df, cols in [
+        (totals_display, ["total_bought_mmbbl"]),
+        (detail_display, ["buyer_volume_mmbbl"]),
+        (plan_display, ["tranche_planned_mmbbl", "tranche_max_planned_bpd"]),
+    ]:
+        for col in cols:
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors="coerce").round(3)
+    if "buyer_share_of_award_pct" in detail_display.columns:
+        detail_display["buyer_share_of_award_pct"] = pd.to_numeric(
+            detail_display["buyer_share_of_award_pct"], errors="coerce"
+        ).round(1)
+
+    intro = (
+        "This report lists every public FY26 SPR award buyer, the award date, the awarded volume, "
+        "and the delivery window tied to that award tranche. DOE award PDFs publish buyer volumes, "
+        "but not buyer-level allocation by site, quality, or month. The delivery windows below are "
+        "therefore tranche-level windows from the matching RFP."
+    )
+    md_lines = [
+        "# SPR award buyers and delivery windows",
+        "",
+        f"Refreshed: {refreshed_text}",
+        "",
+        intro,
+        "",
+        (
+            f"Total awarded across parsed DOE award PDFs: {_format_number(total_awarded, 2)} MMbbl "
+            f"across {buyer_rows} buyer-award rows and {tranche_count} award tranches."
+        ),
+        "",
+        "## Company totals",
+        "",
+        _df_to_markdown(
+            totals_display,
+            ["company", "total_bought_mmbbl", "award_count", "first_award_date", "last_award_date", "delivery_span", "tranches"],
+            len(totals_display) if totals_display is not None else 0,
+        ),
+        "",
+        "## Award detail",
+        "",
+        _df_to_markdown(
+            detail_display,
+            [
+                "award_date",
+                "company",
+                "buyer_volume_mmbbl",
+                "buyer_share_of_award_pct",
+                "tranche",
+                "delivery_start",
+                "delivery_end",
+                "sites",
+                "qualities",
+                "delivery_windows",
+            ],
+            len(detail_display) if detail_display is not None else 0,
+        ),
+        "",
+        "## Delivery-window detail by tranche",
+        "",
+        _df_to_markdown(
+            plan_display,
+            ["tranche", "delivery_start", "delivery_end", "tranche_planned_mmbbl", "sites", "qualities", "delivery_window_detail"],
+            len(plan_display) if plan_display is not None else 0,
+        ),
+        "",
+        "## Sources and method",
+        "",
+        "- Buyer volumes: DOE SPR award information PDFs from the active and archived exchange-document postings.",
+        "- Delivery windows: RFP Section C planned release rows for the same tranche.",
+        "- Important limitation: where a tranche has multiple site, quality, or month rows, DOE does not publish a buyer-specific allocation. The report links the buyer to the tranche window and keeps the tranche row detail separate.",
+        "",
+    ]
+    markdown = "\n".join(md_lines)
+
+    md_path = report_dir / f"spr_buyer_awards_report_{report_slug}.md"
+    latest_md_path = report_dir / "spr_buyer_awards_report_latest.md"
+    md_path.write_text(markdown, encoding="utf-8")
+    latest_md_path.write_text(markdown, encoding="utf-8")
+
+    chart_div = ""
+    if go is not None and plotly_plot is not None and buyer_totals is not None and not buyer_totals.empty:
+        chart_totals = buyer_totals.sort_values("total_bought_mmbbl", ascending=True)
+        fig = go.Figure(
+            go.Bar(
+                x=chart_totals["total_bought_mmbbl"],
+                y=chart_totals["company"],
+                orientation="h",
+                marker_color="#345c72",
+                text=chart_totals["total_bought_mmbbl"].map(lambda value: f"{float(value):.2f}"),
+                textposition="outside",
+            )
+        )
+        fig.update_layout(
+            template="plotly_white",
+            title="SPR award volume by buyer",
+            xaxis_title="Awarded volume (MMbbl)",
+            yaxis_title="",
+            height=max(520, 32 * len(chart_totals)),
+            margin=dict(l=190, r=70, t=70, b=50),
+        )
+        chart_div = plotly_plot(fig, include_plotlyjs="cdn", output_type="div")
+
+    style = (
+        "body{font-family:Arial,sans-serif;max-width:1260px;margin:32px auto;color:#111;line-height:1.45}"
+        "table{border-collapse:collapse;width:100%;font-size:13px;margin:16px 0}"
+        "th,td{border:1px solid #ddd;padding:6px;text-align:left;vertical-align:top}"
+        "th{background:#f2f4f5}.note{color:#555;max-width:900px}h1,h2{line-height:1.2}"
+    )
+    html_sections = [
+        "<!doctype html><html><head><meta charset='utf-8'>",
+        "<title>SPR award buyers and delivery windows</title>",
+        f"<style>{style}</style></head><body>",
+        "<h1>SPR award buyers and delivery windows</h1>",
+        f"<p class='note'>Refreshed: {html.escape(refreshed_text)}</p>",
+        f"<p>{html.escape(intro)}</p>",
+        (
+            f"<p><strong>Total awarded:</strong> {_format_number(total_awarded, 2)} MMbbl "
+            f"across {buyer_rows} buyer-award rows and {tranche_count} award tranches.</p>"
+        ),
+        chart_div,
+        "<h2>Company totals</h2>",
+        _df_to_html_table(
+            totals_display,
+            ["company", "total_bought_mmbbl", "award_count", "first_award_date", "last_award_date", "delivery_span", "tranches"],
+            len(totals_display) if totals_display is not None else 0,
+        ),
+        "<h2>Award detail</h2>",
+        _df_to_html_table(
+            detail_display,
+            [
+                "award_date",
+                "company",
+                "buyer_volume_mmbbl",
+                "buyer_share_of_award_pct",
+                "tranche",
+                "delivery_start",
+                "delivery_end",
+                "sites",
+                "qualities",
+                "delivery_windows",
+            ],
+            len(detail_display) if detail_display is not None else 0,
+        ),
+        "<h2>Delivery-window detail by tranche</h2>",
+        _df_to_html_table(
+            plan_display,
+            ["tranche", "delivery_start", "delivery_end", "tranche_planned_mmbbl", "sites", "qualities", "delivery_window_detail"],
+            len(plan_display) if plan_display is not None else 0,
+        ),
+        "<h2>Sources and method</h2>",
+        "<ul><li>Buyer volumes: DOE SPR award information PDFs from the active and archived exchange-document postings.</li>"
+        "<li>Delivery windows: RFP Section C planned release rows for the same tranche.</li>"
+        "<li>Important limitation: where a tranche has multiple site, quality, or month rows, DOE does not publish a "
+        "buyer-specific allocation. The report links the buyer to the tranche window and keeps the tranche row detail separate.</li></ul>",
+        "</body></html>",
+    ]
+    html_doc = "\n".join(html_sections)
+    html_path = report_dir / f"spr_buyer_awards_report_{report_slug}.html"
+    latest_html_path = report_dir / "spr_buyer_awards_report_latest.html"
+    html_path.write_text(html_doc, encoding="utf-8")
+    latest_html_path.write_text(html_doc, encoding="utf-8")
+    return {"markdown": md_path, "latest_markdown": latest_md_path, "html": html_path, "latest_html": latest_html_path}
+
+
 def generate_monthly_report(
     summary: pd.DataFrame,
     monthly: pd.DataFrame,
@@ -1312,7 +1718,12 @@ def fetch_all(enrich_pages: bool = True, report_month: str | None = None) -> dic
     monthly = build_monthly_summary(weekly, release_quality, buyers, plan, award_summary)
     summary = build_release_summary(weekly, events, site_quality, release_quality, plan, award_summary)
     news = build_news(events)
+    buyer_detail, buyer_totals, buyer_window_rows, buyer_plan_summary = build_buyer_award_report_data(
+        buyers, plan, award_summary
+    )
     reports = generate_monthly_report(summary, monthly, weekly, plan, buyers, award_summary, announcements, report_month)
+    buyer_reports = generate_buyer_awards_report(buyer_detail, buyer_totals, buyer_plan_summary)
+    reports.update({f"buyer_{key}": value for key, value in buyer_reports.items()})
 
     outputs = {
         "spr_documents.csv": documents,
@@ -1329,6 +1740,9 @@ def fetch_all(enrich_pages: bool = True, report_month: str | None = None) -> dic
         "spr_monthly_summary.csv": monthly,
         "spr_release_summary.csv": summary,
         "spr_news.csv": news,
+        "spr_buyer_award_delivery_windows.csv": buyer_detail,
+        "spr_buyer_award_totals.csv": buyer_totals,
+        "spr_buyer_award_window_rows.csv": buyer_window_rows,
     }
     row_counts: dict[str, int] = {}
     for filename, df in outputs.items():

@@ -1,4 +1,6 @@
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import pandas as pd
 
@@ -7,10 +9,12 @@ from spr_release_fetcher import (
     PLANNED_DAILY_MMBL,
     PLANNED_WEEKLY_MMBL,
     add_inventory_metrics,
+    build_buyer_award_report_data,
     build_monthly_summary,
     build_release_quality,
     build_release_summary,
     build_site_quality,
+    generate_buyer_awards_report,
     parse_award_pdf,
     parse_delivery_rates,
     parse_eia_spr_rows,
@@ -179,6 +183,38 @@ class SprReleaseFetcherTests(unittest.TestCase):
             monthly.loc[monthly["month"].eq("2026-06"), "awarded_release_mmbbl"].iloc[0],
             0.5,
         )
+
+    def test_buyer_award_report_data_uses_tranche_delivery_windows(self):
+        plan, _ = parse_rfp_plan("FY26 SPR Oil Release No. 3", "https://example.com/rfp.pdf", RFP_NO_3_TEXT)
+        buyers, award_summary_dict = parse_award_pdf(
+            "FY26 SPR Oil Release No. 3", "https://example.com/award.pdf", AWARD_TEXT
+        )
+        extra = buyers.iloc[0].copy()
+        extra["buyer"] = "Vitol"
+        extra["volume_mmbbl"] = 0.25
+        buyers = pd.concat([buyers, pd.DataFrame([extra])], ignore_index=True)
+        award_summary = pd.DataFrame([award_summary_dict])
+        award_summary["award_total_mmbbl"] = 0.75
+
+        detail, totals, window_rows, plan_summary = build_buyer_award_report_data(buyers, plan, award_summary)
+
+        self.assertEqual(len(detail), 2)
+        self.assertEqual(totals.iloc[0]["company"], "Vitol")
+        self.assertAlmostEqual(totals.iloc[0]["total_bought_mmbbl"], 0.75)
+        self.assertEqual(totals.iloc[0]["delivery_span"], "2026-07-01 to 2026-09-30")
+        self.assertEqual(set(detail["delivery_windows"]), {"Jul-26; Aug-26; Sep-26"})
+        self.assertIn("do not publish buyer-specific", detail.iloc[0]["delivery_window_basis"])
+        self.assertEqual(len(window_rows), 8)
+        self.assertAlmostEqual(plan_summary.iloc[0]["tranche_planned_mmbbl"], 40.0)
+
+        with TemporaryDirectory() as tmpdir:
+            reports = generate_buyer_awards_report(detail, totals, plan_summary, Path(tmpdir))
+            self.assertTrue(reports["latest_html"].exists())
+            self.assertTrue(reports["latest_markdown"].exists())
+            self.assertIn(
+                "DOE award PDFs publish buyer volumes",
+                reports["latest_markdown"].read_text(encoding="utf-8"),
+            )
 
 
 if __name__ == "__main__":
