@@ -150,6 +150,21 @@ The exploratory relationship table compares weekly COT/Brent observations with E
 
 The Total Inventory EIA chart is available on the root modeling dashboard and the macro Energy dashboard. Both dashboards also include a week-over-week change view that plots `diff(ntps)` against `diff(wti_real)`, highlights the latest observation and trailing 13 weeks, and displays correlation, R-squared, and beta. The standard refresh button runs the total-inventory fetcher, updating `eia_total_stocks.csv`, `wti_prices.csv`, `cpi_monthly.csv`, and `total_inv_eia_fair_value.csv`.
 
+### Strategic Petroleum Reserve Release Tracker (DOE/EIA)
+| File or route | Description |
+|---------------|-------------|
+| `/spr` | SPR dashboard with plan-vs-actual drawdown, monthly award view, weekly EIA drawdown pace, buyer awards by tender, and official-source timeline |
+| `/spr/info` | SPR infrastructure page with storage-site map, capacity, current inventory, drawdown capability, and distribution facts |
+| `/spr/buyer-awards` | Latest generated buyer-awards report with buyer totals, award dates, tenders, and delivery windows |
+| `spr_release_fetcher.py` | Refreshes DOE SPR exchange postings, Energy.gov announcements, award PDFs, RFP release rows, and EIA `WCSSTUS1` weekly SPR stock |
+| `data/spr_monthly_summary.csv` | Monthly dashboard data joining DOE award/RFP rows with EIA observed drawdown |
+| `data/spr_buyer_award_delivery_windows.csv` | Normalized buyer awards joined to tranche-level RFP delivery windows |
+| `data/spr_site_info.csv` | SPR site location, capacity, current inventory, and drawdown-rate reference table |
+
+The monthly SPR chart keeps award timing and physical delivery timing separate. Green bars are DOE award totals by award month. Grey bars are the award PDF announced-up-to amount minus awarded barrels, grouped in the same award/announcement month; delivery-month RFP rows remain in the detailed plan data and do not create future grey bars by themselves. EIA inventory rows use the weekly `WCSSTUS1` Friday period date, while the report notes the estimated following-Wednesday publication date.
+
+Run `python -u spr_release_fetcher.py` to refresh the SPR CSVs and reports locally. The `.github/workflows/spr-release-tracker.yml` workflow runs monthly and can also be dispatched manually with an optional `report_month`; it commits refreshed `data/spr_*.csv` and `reports/spr/*` outputs and emails the latest report when the SMTP secrets and `SPR_REPORT_EMAIL_TO` variable are configured.
+
 ### Upstream Activity Pulse (Yahoo/AOGR/EIA)
 | Field | Description |
 |-------|-------------|
@@ -174,11 +189,12 @@ The EV pipeline classifies BEV, PHEV, and ZEV as EV; petrol, diesel, LPG, ethano
 
 ## Usage
 
-1. **Update data**: `python data_fetcher.py`
-2. **Run dashboard**: `python app.py`
-3. **View**: http://localhost:5003
+1. **Update macro data**: `python data_fetcher.py`
+2. **Update SPR data/reports**: `python -u spr_release_fetcher.py`
+3. **Run dashboard**: `python app.py`
+4. **View**: http://localhost:5003
 
-`python data_fetcher.py` refreshes the macro, energy, SPR-adjacent, upstream activity, and EV fleet CSVs. The EV section is available at `/macro?section=ev` after the CSVs are present.
+`python data_fetcher.py` refreshes the macro, energy, SPR-adjacent, upstream activity, and EV fleet CSVs. The EV section is available at `/macro?section=ev` after the CSVs are present. The SPR release tracker has its own fetcher because it parses DOE exchange PDFs and writes monthly reports in addition to CSV data.
 
 ## Deploy
 

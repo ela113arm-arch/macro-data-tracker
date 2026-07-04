@@ -345,6 +345,7 @@
         </div>
         <div class="header-actions">
             <a href="/macro" class="header-link">Macro dashboard</a>
+            <a href="/spr/info" class="header-link">SPR info page</a>
             <a href="/spr/buyer-awards" class="header-link">Buyer awards report</a>
             <div class="refresh-panel">
                 <div id="refreshStatus" class="refresh-status">Loading refresh status...</div>
@@ -422,12 +423,47 @@
             </div>
             <div class="panel span-5">
                 <div class="panel-head">
-                    <h2>SPR Release by Quality</h2>
+                    <h2>Monthly SPR View</h2>
+                    <span class="source">DOE / EIA</span>
+                </div>
+                <div class="hint">Green bars are DOE award totals by award month; grey bars are award-PDF announced barrels not awarded yet, grouped on the same month. EIA drawdown is grouped by EIA week-ending month.</div>
+                <div id="monthlyChart" class="chart short"><div class="loading">Loading...</div></div>
+            </div>
+
+            <div class="panel span-12">
+                <div class="panel-head">
+                    <h2>Monthly Summary</h2>
+                    <span class="source">Pipeline output</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th class="num">Awarded</th>
+                                <th class="num">Unawarded RFP</th>
+                                <th class="num">Sweet</th>
+                                <th class="num">Sour</th>
+                                <th class="num">Mixed / Not Stated</th>
+                                <th class="num">Buyer Awards</th>
+                                <th class="num">EIA Drawdown</th>
+                                <th class="num">Planned Drawdown</th>
+                                <th class="num">Month-End Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody id="monthlyTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel span-12">
+                <div class="panel-head">
+                    <h2>SPR Release by Quality and Buyer</h2>
                     <span class="source">DOE awards / site quality</span>
                 </div>
                 <div class="toolbar">
-                    <div class="hint" id="releaseQualityNote">Awarded release barrels by public quality bucket.</div>
-                    <select id="releaseWeekFilter" onchange="renderFilteredReleaseQuality()"></select>
+                    <div class="hint" id="releaseQualityNote">Awarded release barrels by public quality bucket and month.</div>
+                    <select id="releaseMonthFilter" onchange="renderFilteredReleaseQuality()"></select>
                 </div>
                 <div class="report-callout">
                     <div class="hint">Full buyer-awards report with company totals, award dates, and tranche delivery windows.</div>
@@ -439,6 +475,7 @@
                     <table>
                         <thead>
                             <tr>
+                                <th>Date</th>
                                 <th>Tranche</th>
                                 <th>Site</th>
                                 <th>Status</th>
@@ -570,6 +607,22 @@
             return url ? link(url, 'PDF') : '--';
         }
 
+        function rowMonth(row) {
+            return row.month || String(row.date || row.week || '').slice(0, 7);
+        }
+
+        function monthLabel(month) {
+            if (!month) return '--';
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const [year, monthNumber] = String(month).split('-').map(value => Number(value));
+            if (!year || !monthNumber || monthNumber < 1 || monthNumber > 12) return month;
+            return `${monthNames[monthNumber - 1]} ${year}`;
+        }
+
+        function qualityLabel(quality) {
+            return quality === 'Open RFP balance' ? 'RFP not yet awarded' : (quality || '--');
+        }
+
         async function fetchJson(url) {
             const res = await fetch(url);
             if (!res.ok) {
@@ -624,19 +677,25 @@
             `).join('');
         }
 
-        function renderPlanChart(weekly) {
+        function renderPlanChart(weekly, maxDailyRate, announcedTarget) {
             const dates = weekly.map(row => row.date);
             const observed = weekly.map(row => Number(row.observed_drawdown_mmbbl));
             const planned = weekly.map(row => Number(row.planned_drawdown_mmbbl));
-
-            Plotly.newPlot('planChart', [
+            const maxRate = Number(maxDailyRate) || 0;
+            const target = Number(announcedTarget) || Math.max(...planned, ...observed);
+            const maxRatePath = weekly.map(row => {
+                const days = Number(row.days_since_plan_start) || 0;
+                return Math.min(target, maxRate * days);
+            });
+            const traces = [
                 {
                     x: dates,
                     y: planned,
                     type: 'scatter',
                     mode: 'lines',
                     name: 'Planned drawdown',
-                    line: { color: '#64748b', width: 2, dash: 'dash' }
+                    line: { color: '#64748b', width: 2, dash: 'dash' },
+                    hovertemplate: 'Planned drawdown<br>%{x|%Y-%m-%d}: %{y:.1f} MMbbl<extra></extra>'
                 },
                 {
                     x: dates,
@@ -645,11 +704,44 @@
                     mode: 'lines+markers',
                     name: 'EIA observed drawdown',
                     line: { color: '#2563eb', width: 3 },
-                    marker: { size: 5 }
+                    marker: { size: 5 },
+                    hovertemplate: 'EIA observed drawdown<br>%{x|%Y-%m-%d}: %{y:.1f} MMbbl<extra></extra>'
                 }
-            ], {
+            ];
+
+            if (maxRate > 0) {
+                traces.push({
+                    x: dates,
+                    y: maxRatePath,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: `Max physical rate (${fmt(maxRate, 1)} MMbbl/d)`,
+                    line: { color: '#991b1b', width: 2, dash: 'dot' },
+                    hovertemplate: `Max physical rate<br>%{x|%Y-%m-%d}: %{y:.1f} MMbbl<br>${fmt(maxRate * 7, 1)} MMbbl/week, capped at ${fmt(target, 0)} MMbbl target<extra></extra>`
+                });
+            }
+
+            Plotly.newPlot('planChart', traces, {
                 ...chartLayout,
-                yaxis: { ...chartLayout.yaxis, title: 'MMbbl from pre-release baseline' }
+                legend: { orientation: 'h', y: -0.2 },
+                xaxis: { ...chartLayout.xaxis, type: 'date' },
+                yaxis: { ...chartLayout.yaxis, title: 'MMbbl from pre-release baseline' },
+                annotations: maxRate > 0 ? [{
+                    x: 1,
+                    y: 1,
+                    xref: 'paper',
+                    yref: 'paper',
+                    xanchor: 'right',
+                    yanchor: 'top',
+                    text: `Max physical rate: ${fmt(maxRate, 1)} MMbbl/d (${fmt(maxRate * 7, 1)} MMbbl/wk)`,
+                    showarrow: false,
+                    align: 'right',
+                    bgcolor: 'rgba(255,255,255,0.88)',
+                    bordercolor: '#fecaca',
+                    borderwidth: 1,
+                    borderpad: 5,
+                    font: { size: 11, color: '#7f1d1d' }
+                }] : []
             }, chartConfig);
         }
 
@@ -681,39 +773,149 @@
             }, chartConfig);
         }
 
+        function renderMonthlyChart(monthly) {
+            if (!monthly.length) {
+                document.getElementById('monthlyChart').innerHTML = '<div class="loading">No monthly SPR data available.</div>';
+                return;
+            }
+
+            const rows = [...monthly].sort((a, b) => String(a.month).localeCompare(String(b.month)));
+            const labels = rows.map(row => row.month_label || monthLabel(row.month));
+            const traces = [
+                [
+                    'Awarded by DOE',
+                    'awarded_release_mmbbl',
+                    '#0f766e',
+                    'Awarded by DOE<br>%{x}: %{y:.1f} MMbbl<extra></extra>'
+                ],
+                [
+                    'Unawarded RFP balance',
+                    'open_not_awarded_mmbbl',
+                    '#cbd5e1',
+                    'Unawarded RFP balance<br>%{x}: %{y:.1f} MMbbl<br>Award PDF announced-up-to amount less awards<extra></extra>'
+                ]
+            ].map(([name, field, color, hovertemplate]) => ({
+                x: labels,
+                y: rows.map(row => Number(row[field]) || 0),
+                type: 'bar',
+                name,
+                marker: { color },
+                hovertemplate
+            }));
+
+            traces.push({
+                x: labels,
+                y: rows.map(row => Number(row.observed_eia_drawdown_mmbbl) || 0),
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'EIA observed drawdown',
+                line: { color: '#0f766e', width: 3 },
+                marker: { size: 6 },
+                hovertemplate: 'EIA observed drawdown<br>%{x}: %{y:.1f} MMbbl<extra></extra>'
+            });
+            traces.push({
+                x: labels,
+                y: rows.map(row => Number(row.planned_drawdown_mmbbl) || 0),
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Implied plan',
+                line: { color: '#92400e', width: 2, dash: 'dot' },
+                hovertemplate: 'Implied plan<br>%{x}: %{y:.1f} MMbbl<extra></extra>'
+            });
+
+            const maxY = Math.max(
+                ...rows.map(row => (Number(row.awarded_release_mmbbl) || 0) + (Number(row.open_not_awarded_mmbbl) || 0)),
+                ...rows.map(row => Number(row.observed_eia_drawdown_mmbbl) || 0),
+                ...rows.map(row => Number(row.planned_drawdown_mmbbl) || 0),
+                1
+            );
+
+            Plotly.purge('monthlyChart');
+            Plotly.newPlot('monthlyChart', traces, {
+                barmode: 'stack',
+                margin: { l: 58, r: 24, t: 46, b: 48 },
+                paper_bgcolor: '#ffffff',
+                plot_bgcolor: '#ffffff',
+                font: { family: 'Segoe UI, sans-serif', size: 11, color: '#111827' },
+                legend: {
+                    orientation: 'h',
+                    x: 0,
+                    y: 1.22,
+                    xanchor: 'left',
+                    yanchor: 'bottom',
+                    font: { size: 10 }
+                },
+                xaxis: {
+                    type: 'category',
+                    categoryorder: 'array',
+                    categoryarray: labels,
+                    showgrid: false,
+                    zeroline: false
+                },
+                yaxis: {
+                    title: 'MMbbl/month',
+                    range: [0, maxY * 1.18],
+                    gridcolor: '#e8edf5',
+                    zeroline: false
+                }
+            }, chartConfig);
+        }
+
+        function renderMonthlyTable(monthly) {
+            const rows = [...monthly].sort((a, b) => String(a.month).localeCompare(String(b.month)));
+            document.getElementById('monthlyTable').innerHTML = rows.map(row => {
+                const mixed = (Number(row.mixed_split_not_stated_mmbbl) || 0) + (Number(row.public_split_not_stated_mmbbl) || 0);
+                return `
+                    <tr>
+                        <td>${row.month_label || monthLabel(row.month)}<div class="hint">${row.month_end_date ? `EIA through ${row.month_end_date}` : ''}</div></td>
+                        <td class="num">${fmt(row.awarded_release_mmbbl)}</td>
+                        <td class="num">${fmt(row.open_not_awarded_mmbbl)}</td>
+                        <td class="num">${fmt(row.sweet_mmbbl)}</td>
+                        <td class="num">${fmt(row.sour_mmbbl)}</td>
+                        <td class="num">${fmt(mixed)}</td>
+                        <td class="num">${fmt(row.buyer_award_mmbbl)}</td>
+                        <td class="num">${fmt(row.observed_eia_drawdown_mmbbl)}</td>
+                        <td class="num">${fmt(row.planned_drawdown_mmbbl)}</td>
+                        <td class="num">${row.month_end_spr_stock_mmbbl ? fmt(row.month_end_spr_stock_mmbbl) : '--'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
         let releaseQualityRows = [];
         let releaseBuyerRows = [];
 
-        function populateReleaseWeekFilter(rows) {
-            const select = document.getElementById('releaseWeekFilter');
-            const weeks = [...new Set(rows.map(row => row.week || row.date).filter(Boolean))]
+        function populateReleaseMonthFilter(rows) {
+            const select = document.getElementById('releaseMonthFilter');
+            const months = [...new Set(rows.map(rowMonth).filter(Boolean))]
                 .sort((a, b) => String(b).localeCompare(String(a)));
             const current = select.value || 'all';
             select.innerHTML = [
-                '<option value="all">All award weeks</option>',
-                ...weeks.map(week => `<option value="${week}">${week}</option>`)
+                '<option value="all">All months</option>',
+                ...months.map(month => `<option value="${month}">${monthLabel(month)}</option>`)
             ].join('');
-            select.value = weeks.includes(current) ? current : 'all';
+            select.value = months.includes(current) ? current : 'all';
         }
 
         function renderFilteredReleaseQuality() {
-            const selectedWeek = document.getElementById('releaseWeekFilter').value || 'all';
-            renderReleaseQualityChart(releaseQualityRows, releaseBuyerRows, selectedWeek);
+            const selectedMonth = document.getElementById('releaseMonthFilter').value || 'all';
+            renderReleaseQualityChart(releaseQualityRows, releaseBuyerRows, selectedMonth);
         }
 
-        function renderReleaseQualityChart(releaseRows, buyerRows, selectedWeek = 'all') {
+        function renderReleaseQualityChart(releaseRows, buyerRows, selectedMonth = 'all') {
             const rows = [...releaseRows]
-                .filter(row => selectedWeek === 'all' || (row.week || row.date) === selectedWeek)
+                .filter(row => selectedMonth === 'all' || rowMonth(row) === selectedMonth)
                 .sort((a, b) => String(a.date).localeCompare(String(b.date)));
             const buyers = [...buyerRows]
-                .filter(row => selectedWeek === 'all' || (row.week || row.date) === selectedWeek)
+                .filter(row => selectedMonth === 'all' || rowMonth(row) === selectedMonth)
                 .sort((a, b) => Number(b.volume_mmbbl) - Number(a.volume_mmbbl));
             document.getElementById('releaseQualityTable').innerHTML = rows.map(row => `
                 <tr>
+                    <td>${row.date || '--'}</td>
                     <td>${row.tranche || '--'}</td>
                     <td>${row.site || '--'}</td>
                     <td>${statusPill(row.status)}</td>
-                    <td>${row.quality_bucket || '--'}<div class="hint">${row.notes || ''}</div></td>
+                        <td>${qualityLabel(row.quality_bucket)}<div class="hint">${row.notes || ''}</div></td>
                     <td class="num">${fmt(row.volume_mmbbl)}</td>
                     <td>${row.quality_method || '--'}</td>
                 </tr>
@@ -755,9 +957,9 @@
             const maxTotal = Math.max(...Object.values(totalsByQuality), 1);
             const selectedTotal = rows.reduce((sum, row) => sum + (Number(row.volume_mmbbl) || 0), 0);
             const buyerTotal = buyers.reduce((sum, row) => sum + (Number(row.volume_mmbbl) || 0), 0);
-            document.getElementById('releaseQualityNote').textContent = selectedWeek === 'all'
+            document.getElementById('releaseQualityNote').textContent = selectedMonth === 'all'
                 ? `All public tranches: ${fmt(selectedTotal, 2)} MMbbl by quality bucket; buyer awards total ${fmt(buyerTotal, 2)} MMbbl.`
-                : `${selectedWeek}: ${fmt(selectedTotal, 2)} MMbbl by quality bucket; buyer awards total ${fmt(buyerTotal, 2)} MMbbl.`;
+                : `${monthLabel(selectedMonth)}: ${fmt(selectedTotal, 2)} MMbbl by quality bucket; buyer awards total ${fmt(buyerTotal, 2)} MMbbl.`;
 
             try {
                 const traces = statusOrder.map(status => ({
@@ -772,7 +974,8 @@
                     marker: {
                         color: qualityOrder.map(quality => status === 'Open / not awarded' ? '#cbd5e1' : colorMap[quality])
                     },
-                    hovertemplate: '%{y}<br>%{fullData.name}: %{x:.1f} MMbbl<extra></extra>'
+                    customdata: qualityOrder.map(qualityLabel),
+                    hovertemplate: '%{customdata}<br>%{fullData.name}: %{x:.1f} MMbbl<extra></extra>'
                 }));
 
                 Plotly.newPlot('releaseQualityChart', traces, {
@@ -790,7 +993,14 @@
                         borderwidth: 1
                     },
                     xaxis: { ...chartLayout.xaxis, title: 'Release volume, MMbbl', range: [0, maxTotal * 1.16], type: 'linear' },
-                    yaxis: { ...chartLayout.yaxis, autorange: 'reversed', type: 'category' },
+                    yaxis: {
+                        ...chartLayout.yaxis,
+                        autorange: 'reversed',
+                        type: 'category',
+                        tickmode: 'array',
+                        tickvals: qualityOrder,
+                        ticktext: qualityOrder.map(qualityLabel)
+                    },
                     annotations: qualityOrder.map(quality => ({
                         x: (totalsByQuality[quality] || 0) + maxTotal * 0.025,
                         y: quality,
@@ -838,16 +1048,19 @@
                 windowByTranche[tranche] = `${row.delivery_start || '--'} to ${row.delivery_end || '--'}`;
             }
 
-            const sortedCompanies = companies.sort((a, b) => (totals[b] || 0) - (totals[a] || 0));
+            const sortedCompanies = companies.sort((a, b) => (totals[a] || 0) - (totals[b] || 0));
             const maxTotal = Math.max(...sortedCompanies.map(company => totals[company] || 0), 1);
-            const palette = ['#1f4e79', '#6b8e23', '#b7791f', '#7c3aed', '#0f766e', '#b91c1c', '#475569'];
+            const palette = ['#1f4e79', '#5b8f4f', '#a18449', '#6646e8', '#137f8a', '#b91c1c', '#475569'];
             const traces = tranches.map((tranche, index) => ({
                 y: sortedCompanies,
                 x: sortedCompanies.map(company => matrix[tranche][company] || 0),
                 type: 'bar',
                 orientation: 'h',
                 name: shortTenderName(tranche),
-                marker: { color: palette[index % palette.length] },
+                marker: {
+                    color: palette[index % palette.length],
+                    line: { color: '#ffffff', width: 0.6 }
+                },
                 customdata: sortedCompanies.map(() => [tranche, windowByTranche[tranche] || '--']),
                 hovertemplate: '%{y}<br>%{customdata[0]}<br>%{x:.3f} MMbbl<br>Delivery: %{customdata[1]}<extra></extra>'
             }));
@@ -856,11 +1069,14 @@
                 `${fmt(Object.values(totals).reduce((sum, value) => sum + value, 0), 2)} MMbbl awarded across ${sortedCompanies.length} companies and ${tranches.length} tenders.`;
 
             try {
+                Plotly.purge(chart);
                 Plotly.newPlot(chart, traces, {
-                    ...chartLayout,
                     barmode: 'stack',
                     height: Math.max(520, 34 * sortedCompanies.length + 150),
                     margin: { l: 210, r: 80, t: 44, b: 52 },
+                    paper_bgcolor: '#ffffff',
+                    plot_bgcolor: '#ffffff',
+                    font: { family: 'Segoe UI, sans-serif', size: 11, color: '#111827' },
                     legend: {
                         orientation: 'h',
                         x: 0,
@@ -871,8 +1087,18 @@
                         bordercolor: '#d9e0ea',
                         borderwidth: 1
                     },
-                    xaxis: { ...chartLayout.xaxis, title: 'Awarded volume, MMbbl', range: [0, maxTotal * 1.17] },
-                    yaxis: { ...chartLayout.yaxis, autorange: 'reversed', type: 'category' },
+                    xaxis: {
+                        type: 'linear',
+                        title: 'Awarded volume, MMbbl',
+                        range: [0, maxTotal * 1.17],
+                        showgrid: false,
+                        zeroline: false
+                    },
+                    yaxis: {
+                        type: 'category',
+                        gridcolor: '#e8edf5',
+                        zeroline: false
+                    },
                     annotations: sortedCompanies.map(company => ({
                         x: (totals[company] || 0) + maxTotal * 0.025,
                         y: company,
@@ -966,11 +1192,13 @@
 
         async function loadDashboard() {
             try {
-                const [summary, weekly, events, siteRows, releaseQuality, releaseBuyers, buyerAwards, news] = await Promise.all([
+                const [summary, weekly, monthly, events, siteRows, siteInfo, releaseQuality, releaseBuyers, buyerAwards, news] = await Promise.all([
                     fetchJson('/api/spr/summary'),
                     fetchJson('/api/spr/weekly-inventory'),
+                    fetchJson('/api/spr/monthly'),
                     fetchJson('/api/spr/events'),
                     fetchJson('/api/spr/site-quality'),
+                    fetchJson('/api/spr/site-info'),
                     fetchJson('/api/spr/release-quality'),
                     fetchJson('/api/spr/release-buyers'),
                     fetchJson('/api/spr/buyer-awards'),
@@ -978,12 +1206,16 @@
                 ]);
                 releaseQualityRows = releaseQuality;
                 releaseBuyerRows = releaseBuyers;
-                populateReleaseWeekFilter(releaseQualityRows);
+                populateReleaseMonthFilter(releaseQualityRows);
                 const plannedWeekly = metricValue(summary, 'planned_weekly_mmbbl');
+                const announcedTarget = metricValue(summary, 'announced_release_mmbbl');
+                const maxDailyRate = siteInfo.reduce((sum, row) => sum + (Number(row.drawdown_capacity_mmbd) || 0), 0);
                 setKpis(summary);
                 renderSummaryTable(summary);
-                renderPlanChart(weekly);
+                renderPlanChart(weekly, maxDailyRate, announcedTarget);
                 renderWeeklyChart(weekly, plannedWeekly);
+                renderMonthlyChart(monthly);
+                renderMonthlyTable(monthly);
                 renderFilteredReleaseQuality();
                 renderBuyerTenderChart(buyerAwards);
                 renderEventsTable(events);
@@ -1024,8 +1256,21 @@
             status.textContent = 'Starting SPR-only refresh...';
 
             try {
-                let res = await fetch('/api/spr/refresh', { method: 'POST' });
+                const makeRefreshRequest = async () => {
+                    const token = localStorage.getItem('macroRefreshToken');
+                    const headers = token ? { 'X-Refresh-Token': token } : {};
+                    return fetch('/api/spr/refresh', { method: 'POST', headers });
+                };
+
+                let res = await makeRefreshRequest();
                 let data = await res.json();
+                if (res.status === 401 && data.requires_token) {
+                    const token = window.prompt('Enter refresh token');
+                    if (!token) throw new Error('Refresh token required.');
+                    localStorage.setItem('macroRefreshToken', token);
+                    res = await makeRefreshRequest();
+                    data = await res.json();
+                }
                 if (!res.ok || !data.success) throw new Error(data.message || 'SPR refresh failed to start.');
 
                 text.textContent = 'Refreshing...';

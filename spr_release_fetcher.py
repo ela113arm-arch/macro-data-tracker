@@ -844,10 +844,28 @@ def build_monthly_summary(
         frames.append(plan_monthly)
 
     if award_summary is not None and not award_summary.empty:
+        awards_working = award_summary.copy()
+        announced_source = (
+            awards_working["award_pdf_announced_up_to_mmbbl"]
+            if "award_pdf_announced_up_to_mmbbl" in awards_working.columns
+            else pd.Series(0, index=awards_working.index)
+        )
+        awards_working["announced_rfp_mmbbl"] = pd.to_numeric(
+            announced_source, errors="coerce"
+        ).fillna(0)
+        awards_working["award_total_mmbbl"] = pd.to_numeric(
+            awards_working["award_total_mmbbl"], errors="coerce"
+        ).fillna(0)
+        awards_working["unawarded_rfp_balance_mmbbl"] = (
+            awards_working["announced_rfp_mmbbl"] - awards_working["award_total_mmbbl"]
+        ).clip(lower=0)
         awards = (
-            award_summary.groupby("month", as_index=False)["award_total_mmbbl"]
-            .sum()
-            .rename(columns={"award_total_mmbbl": "awarded_release_mmbbl"})
+            awards_working.groupby("month", as_index=False)
+            .agg(
+                awarded_release_mmbbl=("award_total_mmbbl", "sum"),
+                announced_rfp_mmbbl=("announced_rfp_mmbbl", "sum"),
+                open_not_awarded_mmbbl=("unawarded_rfp_balance_mmbbl", "sum"),
+            )
         )
         frames.append(awards)
 
@@ -887,6 +905,8 @@ def build_monthly_summary(
         "cumulative_observed_drawdown_mmbbl",
         "planned_release_mmbbl",
         "awarded_release_mmbbl",
+        "announced_rfp_mmbbl",
+        "open_not_awarded_mmbbl",
         "buyer_award_mmbbl",
         "sweet_mmbbl",
         "sour_mmbbl",
@@ -897,9 +917,6 @@ def build_monthly_summary(
             monthly[col] = 0.0
         monthly[col] = pd.to_numeric(monthly[col], errors="coerce").fillna(0)
 
-    monthly["open_not_awarded_mmbbl"] = (monthly["planned_release_mmbbl"] - monthly["awarded_release_mmbbl"]).clip(
-        lower=0
-    )
     monthly["mixed_split_not_stated_mmbbl"] = 0.0
     monthly["open_rfp_balance_mmbbl"] = monthly["open_not_awarded_mmbbl"]
     monthly["official_release_rows_mmbbl"] = monthly["planned_release_mmbbl"]
