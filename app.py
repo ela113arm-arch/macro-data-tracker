@@ -490,6 +490,11 @@ def spr_dashboard():
     return render_template('spr.html')
 
 
+@app.route('/spr/info')
+def spr_info_page():
+    return render_template('spr_info.html')
+
+
 @app.route('/spr/buyer-awards')
 def spr_buyer_awards_report():
     return send_from_directory(SPR_REPORT_DIR, 'spr_buyer_awards_report_latest.html')
@@ -655,6 +660,13 @@ def get_spr_weekly_inventory():
     return read_csv('spr_weekly_inventory.csv')
 
 
+@app.route('/api/spr/monthly')
+@safe_endpoint
+def get_spr_monthly():
+    """Monthly SPR release and observed drawdown metrics."""
+    return read_csv('spr_monthly_summary.csv')
+
+
 @app.route('/api/spr/events')
 @safe_endpoint
 def get_spr_events():
@@ -667,6 +679,13 @@ def get_spr_events():
 def get_spr_site_quality():
     """DOE SPR site and quality inventory snapshot."""
     return read_csv('spr_site_quality.csv')
+
+
+@app.route('/api/spr/site-info')
+@safe_endpoint
+def get_spr_site_info():
+    """SPR storage site infrastructure, inventory, and distribution facts."""
+    return read_csv('spr_site_info.csv')
 
 
 @app.route('/api/spr/release-quality')
@@ -1993,7 +2012,8 @@ def status():
                 f: (DATA_DIR / f'{f}.csv').exists()
                 for f in [
                     'spr_weekly_inventory', 'spr_release_events', 'spr_site_quality',
-                    'spr_release_quality', 'spr_release_buyers', 'spr_news', 'spr_release_summary',
+                    'spr_site_info', 'spr_monthly_summary', 'spr_release_quality',
+                    'spr_release_buyers', 'spr_news', 'spr_release_summary',
                     'spr_buyer_award_delivery_windows', 'spr_buyer_award_totals',
                     'spr_buyer_award_window_rows'
                 ]

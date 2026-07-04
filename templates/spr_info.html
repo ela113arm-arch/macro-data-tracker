@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPR Infrastructure Info</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        :root {
+            --ink: #111827;
+            --muted: #5b6778;
+            --line: #d9e0ea;
+            --paper: #ffffff;
+            --soft: #f5f7fa;
+            --nav: #1f2937;
+            --blue: #2563eb;
+            --green: #059669;
+            --red: #dc2626;
+            --amber: #b7791f;
+            --teal: #0f766e;
+            --rust: #9a4f16;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: #eef2f6;
+            color: var(--ink);
+            font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        header {
+            background: var(--nav);
+            color: #fff;
+            padding: 18px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 18px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 780;
+            letter-spacing: 0;
+        }
+
+        h2 {
+            margin: 0;
+            color: var(--nav);
+            font-size: 14px;
+            font-weight: 760;
+        }
+
+        a { color: var(--blue); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        .subhead {
+            margin-top: 4px;
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 12px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: flex-end;
+            gap: 14px;
+            text-align: right;
+        }
+
+        .header-link {
+            color: #dbeafe;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        main {
+            max-width: 1700px;
+            margin: 0 auto;
+            padding: 22px 28px 40px;
+        }
+
+        .kpis {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .kpi, .panel {
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+        }
+
+        .kpi {
+            min-height: 91px;
+            padding: 13px 14px;
+        }
+
+        .label {
+            color: var(--muted);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-weight: 760;
+            margin-bottom: 7px;
+        }
+
+        .value {
+            color: var(--ink);
+            font-size: 24px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .hint {
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .panel {
+            padding: 15px;
+            min-width: 0;
+        }
+
+        .panel-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 10px;
+        }
+
+        .source {
+            color: var(--muted);
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: 760;
+            white-space: nowrap;
+        }
+
+        .span-4 { grid-column: span 4; }
+        .span-5 { grid-column: span 5; }
+        .span-6 { grid-column: span 6; }
+        .span-7 { grid-column: span 7; }
+        .span-8 { grid-column: span 8; }
+        .span-12 { grid-column: span 12; }
+
+        .chart { height: 390px; }
+        .chart.short { height: 315px; }
+        .map-chart {
+            min-height: 510px;
+            position: relative;
+            border: 1px solid #edf1f6;
+            border-radius: 6px;
+            overflow: hidden;
+            background: #e8f1fb;
+        }
+
+        .map-canvas {
+            position: relative;
+            height: 470px;
+            background: #e8f1fb;
+        }
+
+        .map-svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .site-marker {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            border: 1px solid #111827;
+            border-radius: 999px;
+            background: #0f766e;
+            color: #fff;
+            cursor: pointer;
+            font-size: 0;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
+        }
+
+        .site-marker:hover,
+        .site-marker.active {
+            outline: 3px solid rgba(37, 99, 235, 0.22);
+            z-index: 3;
+        }
+
+        .site-label {
+            position: absolute;
+            transform: translate(9px, -50%);
+            max-width: 132px;
+            padding: 4px 6px;
+            border: 1px solid #d9e0ea;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--ink);
+            font-size: 11px;
+            font-weight: 760;
+            line-height: 1.15;
+            pointer-events: none;
+        }
+
+        .site-label.left {
+            transform: translate(calc(-100% - 9px), -50%);
+            text-align: right;
+        }
+
+        .map-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 16px;
+            align-items: center;
+            min-height: 40px;
+            padding: 8px 10px;
+            border-top: 1px solid #d9e0ea;
+            background: #fff;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .legend-dot {
+            display: inline-block;
+            width: 11px;
+            height: 11px;
+            margin-right: 5px;
+            border-radius: 50%;
+            vertical-align: -1px;
+        }
+
+        .selector-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        select {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 5px;
+            background: #fff;
+            color: var(--ink);
+            font: inherit;
+            padding: 7px 9px;
+        }
+
+        .site-title {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .site-name {
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            min-height: 22px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #3730a3;
+            font-size: 11px;
+            font-weight: 760;
+            white-space: nowrap;
+        }
+
+        .tag.seaway { background: #eff6ff; color: #1d4ed8; }
+        .tag.texoma { background: #ecfdf5; color: #047857; }
+        .tag.capline { background: #fff7ed; color: #9a4f16; }
+
+        .detail-list {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .detail {
+            min-height: 70px;
+            border-top: 1px solid #edf1f6;
+            padding: 10px 0;
+        }
+
+        .detail .metric {
+            font-size: 18px;
+            font-weight: 800;
+            margin-top: 3px;
+        }
+
+        .story {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #edf1f6;
+        }
+
+        .story p {
+            margin: 0 0 8px;
+            color: #344054;
+        }
+
+        .table-wrap {
+            max-height: 430px;
+            overflow: auto;
+            border: 1px solid #edf1f6;
+            border-radius: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        th, td {
+            border-bottom: 1px solid #edf1f6;
+            padding: 8px 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            position: sticky;
+            top: 0;
+            background: #f8fafc;
+            color: #475569;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            font-weight: 760;
+            z-index: 1;
+        }
+
+        td.num, th.num {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .systems {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .system {
+            border-top: 1px solid #edf1f6;
+            padding: 12px 0 0;
+            min-height: 122px;
+        }
+
+        .system h3 {
+            margin: 0 0 7px;
+            font-size: 13px;
+            color: var(--nav);
+        }
+
+        .system p {
+            margin: 0;
+            color: #344054;
+            font-size: 12px;
+        }
+
+        .source-list {
+            margin: 0;
+            padding-left: 18px;
+            color: #344054;
+        }
+
+        .source-list li { margin: 5px 0; }
+
+        .loading, .error {
+            padding: 34px;
+            text-align: center;
+            color: var(--muted);
+        }
+
+        .error {
+            color: #991b1b;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 6px;
+        }
+
+        @media (max-width: 1300px) {
+            .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .span-4, .span-5, .span-6, .span-7, .span-8 { grid-column: span 12; }
+            .systems { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 760px) {
+            header { display: block; }
+            .header-actions { margin-top: 14px; text-align: left; align-items: flex-start; flex-wrap: wrap; }
+            main { padding: 16px; }
+            .kpis { grid-template-columns: 1fr; }
+            .value { font-size: 21px; }
+            .detail-list { grid-template-columns: 1fr; }
+            .chart, .chart.short { height: 330px; }
+            .map-chart { min-height: 360px; }
+            .map-canvas { height: 320px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div>
+            <h1>SPR Infrastructure Info</h1>
+            <div class="subhead">Storage sites, current crude mix, drawdown limits, and delivery pathways for SPR release analysis.</div>
+        </div>
+        <div class="header-actions">
+            <a href="/spr" class="header-link">Release tracker</a>
+            <a href="/spr/buyer-awards" class="header-link">Buyer awards report</a>
+            <a href="/macro" class="header-link">Macro dashboard</a>
+        </div>
+    </header>
+
+    <main>
+        <section class="kpis">
+            <div class="kpi">
+                <div class="label">Storage sites</div>
+                <div class="value" id="kpi-sites">--</div>
+                <div class="hint">Texas and Louisiana Gulf Coast</div>
+            </div>
+            <div class="kpi">
+                <div class="label">Current inventory</div>
+                <div class="value" id="kpi-inventory">--</div>
+                <div class="hint">DOE site table, Jun. 25, 2026</div>
+            </div>
+            <div class="kpi">
+                <div class="label">Authorized capacity</div>
+                <div class="value" id="kpi-capacity">--</div>
+                <div class="hint">System total</div>
+            </div>
+            <div class="kpi">
+                <div class="label">Nominal drawdown</div>
+                <div class="value">4.4</div>
+                <div class="hint">MMbbl/d system maximum</div>
+            </div>
+            <div class="kpi">
+                <div class="label">Market timing</div>
+                <div class="value">13</div>
+                <div class="hint">Days from Presidential decision</div>
+            </div>
+            <div class="kpi">
+                <div class="label">Marine outlet capacity</div>
+                <div class="value">2.62</div>
+                <div class="hint">MMbbl/d contracted plus DOE terminal</div>
+            </div>
+        </section>
+
+        <section class="grid">
+            <div class="panel span-8">
+                <div class="panel-head">
+                    <h2>SPR storage centers and drawdown capacity</h2>
+                    <span class="source">DOE / Energy.gov</span>
+                </div>
+                <div id="siteMap" class="map-chart"><div class="loading">Loading...</div></div>
+                <div class="hint">Marker size is current site inventory. Marker color is site drawdown capacity. Coordinates are approximate map positions for the DOE-listed facilities.</div>
+            </div>
+
+            <div class="panel span-4">
+                <div class="panel-head">
+                    <h2>Site profile</h2>
+                    <span class="source">Selected center</span>
+                </div>
+                <div class="selector-row">
+                    <select id="siteSelect" aria-label="Select SPR storage site"></select>
+                </div>
+                <div id="siteProfile">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+
+            <div class="panel span-7">
+                <div class="panel-head">
+                    <h2>Capacity and current crude mix</h2>
+                    <span class="source">DOE Quick Facts</span>
+                </div>
+                <div id="inventoryChart" class="chart"><div class="loading">Loading...</div></div>
+            </div>
+
+            <div class="panel span-5">
+                <div class="panel-head">
+                    <h2>Site drawdown rates</h2>
+                    <span class="source">2026 distribution brochure</span>
+                </div>
+                <div id="drawdownChart" class="chart"><div class="loading">Loading...</div></div>
+            </div>
+
+            <div class="panel span-12">
+                <div class="panel-head">
+                    <h2>Storage center detail</h2>
+                    <span class="source">Compiled source table</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Site</th>
+                                <th>System</th>
+                                <th>Location</th>
+                                <th class="num">Capacity</th>
+                                <th class="num">Inventory</th>
+                                <th class="num">Sweet</th>
+                                <th class="num">Sour</th>
+                                <th class="num">Drawdown</th>
+                                <th class="num">Caverns</th>
+                                <th>Delivery points</th>
+                            </tr>
+                        </thead>
+                        <tbody id="siteTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel span-6">
+                <div class="panel-head">
+                    <h2>Distribution systems</h2>
+                    <span class="source">Energy.gov</span>
+                </div>
+                <div class="systems">
+                    <div class="system">
+                        <h3>Seaway</h3>
+                        <p>Bryan Mound connects to refinery hubs in Houston, Texas City, and Freeport.</p>
+                    </div>
+                    <div class="system">
+                        <h3>Texoma</h3>
+                        <p>Big Hill and West Hackberry connect to Beaumont-Port Arthur, Lake Charles, New Orleans, and limited Houston outlets.</p>
+                    </div>
+                    <div class="system">
+                        <h3>Capline</h3>
+                        <p>Bayou Choctaw connects to Baton Rouge area refineries and one New Orleans area refinery.</p>
+                    </div>
+                </div>
+                <div class="hint">The SPR also connects to three contracted marine terminals with 2.220 MMbbl/d capacity and one DOE-owned St. James terminal with 400 Mbbl/d capacity.</div>
+            </div>
+
+            <div class="panel span-6">
+                <div class="panel-head">
+                    <h2>How withdrawal works</h2>
+                    <span class="source">DOE storage sites</span>
+                </div>
+                <div class="story">
+                    <p>SPR crude sits in underground salt caverns. During a drawdown, fresh water is pumped into the bottom of a cavern, displacing crude oil to the surface.</p>
+                    <p>After the oil reaches the surface, pipelines and terminals move it into refinery hubs, interstate crude pipelines, or marine terminals. This is why site, delivery point, and rate limits matter for every tender.</p>
+                    <p>The current mockup treats site drawdown as a physical constraint and delivery points as the link between DOE awards and refinery access.</p>
+                </div>
+            </div>
+
+            <div class="panel span-12">
+                <div class="panel-head">
+                    <h2>Sources used in this mockup</h2>
+                    <span class="source">Official DOE links</span>
+                </div>
+                <ul class="source-list">
+                    <li><a href="https://www.energy.gov/hgeo/opr/spr-quick-facts">SPR Quick Facts</a>: current site inventory by sweet/sour crude, current authorized storage capacity, total nominal drawdown, and market timing.</li>
+                    <li><a href="https://www.energy.gov/hgeo/opr/spr-storage-sites">SPR Storage Sites</a>: site locations, authorized capacities, operational years, and salt-cavern operating mechanics.</li>
+                    <li><a href="https://www.energy.gov/hgeo/opr/strategic-petroleum-reserve">Strategic Petroleum Reserve</a>: Seaway, Texoma, and Capline distribution system descriptions plus marine terminal capacity.</li>
+                    <li><a href="https://www.energy.gov/documents/spr-distribution-brochure-2026">SPR Distribution Brochure 2026</a>: facility addresses, site drawdown rates, sales points, and delivery points.</li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const plotConfig = { responsive: true, displayModeBar: false };
+        const colors = {
+            sweet: '#2563eb',
+            sour: '#9a4f16',
+            capacity: '#e5e7eb',
+            drawdown: '#0f766e',
+            muted: '#64748b'
+        };
+
+        function fmt(value, decimals = 1) {
+            const num = Number(value);
+            if (!Number.isFinite(num)) return '--';
+            return num.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+        }
+
+        function toNum(value) {
+            const num = Number(value);
+            return Number.isFinite(num) ? num : 0;
+        }
+
+        function systemClass(system) {
+            return String(system || '').toLowerCase();
+        }
+
+        async function fetchJson(url) {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`${url} returned ${response.status}`);
+            return response.json();
+        }
+
+        function renderKpis(rows) {
+            const totalInventory = rows.reduce((sum, row) => sum + toNum(row.current_total_mmbbl), 0);
+            const totalCapacity = rows.reduce((sum, row) => sum + toNum(row.authorized_capacity_mmbbl), 0);
+            document.getElementById('kpi-sites').textContent = rows.length;
+            document.getElementById('kpi-inventory').textContent = `${fmt(totalInventory)} MMbbl`;
+            document.getElementById('kpi-capacity').textContent = `${fmt(totalCapacity, 0)} MMbbl`;
+        }
+
+        function renderMap(rows) {
+            const lonMin = -96.2;
+            const lonMax = -90.5;
+            const latMin = 28.3;
+            const latMax = 30.7;
+            const maxDraw = Math.max(...rows.map(row => toNum(row.drawdown_capacity_mmbd)));
+            const markerColor = (rate) => {
+                if (rate >= 1.45) return '#0f766e';
+                if (rate >= 1.2) return '#059669';
+                if (rate >= 1.0) return '#38bdf8';
+                return '#94a3b8';
+            };
+            const project = (row) => ({
+                x: ((toNum(row.longitude) - lonMin) / (lonMax - lonMin)) * 100,
+                y: 100 - ((toNum(row.latitude) - latMin) / (latMax - latMin)) * 100
+            });
+
+            const markers = rows.map(row => {
+                const point = project(row);
+                const size = 22 + Math.sqrt(toNum(row.current_total_mmbbl)) * 2;
+                const labelClass = row.site === 'Bryan Mound' ? 'site-label left' : 'site-label';
+                const rate = toNum(row.drawdown_capacity_mmbd);
+                const title = `${row.site}: ${fmt(row.current_total_mmbbl)} MMbbl inventory, ${fmt(rate)} MMbbl/d max drawdown, ${row.distribution_system} system`;
+                return `
+                    <button class="site-marker" data-site="${row.site}" title="${title}" style="left:${point.x}%;top:${point.y}%;width:${size}px;height:${size}px;background:${markerColor(rate)};">
+                        ${row.site}
+                    </button>
+                    <div class="${labelClass}" style="left:${point.x}%;top:${point.y}%;">
+                        ${row.site}<br><span class="source">${fmt(rate)} MMbbl/d</span>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('siteMap').innerHTML = `
+                <div class="map-canvas" aria-label="SPR Gulf Coast site map">
+                    <svg class="map-svg" viewBox="0 0 1000 470" preserveAspectRatio="none" aria-hidden="true">
+                        <rect x="0" y="0" width="1000" height="470" fill="#e8f1fb"></rect>
+                        <path d="M0,0 L1000,0 L1000,215 C910,220 845,236 780,255 C720,272 676,266 620,250 C566,235 520,240 468,270 C418,300 370,318 320,330 C250,348 184,345 120,366 C72,382 36,410 0,432 Z" fill="#f6f8fb" stroke="#cbd5e1" stroke-width="2"></path>
+                        <path d="M35,362 C116,342 205,333 310,316 C383,304 438,275 500,246 C566,216 635,223 700,241 C774,263 850,234 969,217" fill="none" stroke="#94a3b8" stroke-width="2"></path>
+                        <path d="M522,88 L522,430 M760,78 L760,430" stroke="#d9e0ea" stroke-width="1" stroke-dasharray="5,7"></path>
+                        <text x="318" y="105" fill="#64748b" font-size="24" font-family="Segoe UI">Texas</text>
+                        <text x="705" y="110" fill="#64748b" font-size="24" font-family="Segoe UI">Louisiana</text>
+                        <text x="420" y="410" fill="#64748b" font-size="20" font-family="Segoe UI">Gulf Coast</text>
+                    </svg>
+                    ${markers}
+                </div>
+                <div class="map-legend">
+                    <span><span class="legend-dot" style="background:#0f766e"></span>${fmt(maxDraw)} MMbbl/d largest site rate</span>
+                    <span><span class="legend-dot" style="background:#94a3b8"></span>Marker area scales with current inventory</span>
+                    <span>Click a site marker to update the profile.</span>
+                </div>
+            `;
+
+            document.querySelectorAll('.site-marker').forEach(marker => {
+                marker.addEventListener('click', () => {
+                    const site = marker.getAttribute('data-site');
+                    const select = document.getElementById('siteSelect');
+                    select.value = site;
+                    renderSiteProfile(rows.find(row => row.site === site));
+                    document.querySelectorAll('.site-marker').forEach(node => node.classList.toggle('active', node === marker));
+                });
+            });
+        }
+
+        function renderInventoryChart(rows) {
+            const sorted = [...rows].sort((a, b) => toNum(a.authorized_capacity_mmbbl) - toNum(b.authorized_capacity_mmbbl));
+            const names = sorted.map(row => row.site);
+            const sweet = sorted.map(row => toNum(row.current_sweet_mmbbl));
+            const sour = sorted.map(row => toNum(row.current_sour_mmbbl));
+            const unused = sorted.map(row => Math.max(0, toNum(row.authorized_capacity_mmbbl) - toNum(row.current_total_mmbbl)));
+
+            const traces = [
+                { name: 'Sweet inventory', x: sweet, y: names, type: 'bar', orientation: 'h', marker: { color: colors.sweet }, hovertemplate: '%{y}<br>Sweet: %{x:.1f} MMbbl<extra></extra>' },
+                { name: 'Sour inventory', x: sour, y: names, type: 'bar', orientation: 'h', marker: { color: colors.sour }, hovertemplate: '%{y}<br>Sour: %{x:.1f} MMbbl<extra></extra>' },
+                { name: 'Open authorized space', x: unused, y: names, type: 'bar', orientation: 'h', marker: { color: colors.capacity }, hovertemplate: '%{y}<br>Open space: %{x:.1f} MMbbl<extra></extra>' }
+            ];
+
+            Plotly.newPlot('inventoryChart', traces, {
+                barmode: 'stack',
+                margin: { l: 110, r: 16, t: 8, b: 48 },
+                paper_bgcolor: '#ffffff',
+                plot_bgcolor: '#ffffff',
+                xaxis: { title: 'MMbbl', gridcolor: '#eef2f7', zeroline: false },
+                yaxis: { automargin: true },
+                legend: { orientation: 'h', y: -0.2 },
+                font: { family: 'Segoe UI, sans-serif', size: 12, color: '#111827' }
+            }, plotConfig);
+        }
+
+        function renderDrawdownChart(rows) {
+            const sorted = [...rows].sort((a, b) => toNum(a.drawdown_capacity_mmbd) - toNum(b.drawdown_capacity_mmbd));
+            const trace = {
+                type: 'bar',
+                orientation: 'h',
+                x: sorted.map(row => toNum(row.drawdown_capacity_mmbd)),
+                y: sorted.map(row => row.site),
+                marker: { color: ['#94a3b8', '#38bdf8', '#059669', '#0f766e'] },
+                text: sorted.map(row => `${fmt(row.drawdown_capacity_mmbd)} MMbbl/d`),
+                textposition: 'outside',
+                hovertemplate: '%{y}<br>Max drawdown: %{x:.1f} MMbbl/d<extra></extra>'
+            };
+
+            Plotly.newPlot('drawdownChart', [trace], {
+                margin: { l: 110, r: 34, t: 8, b: 42 },
+                paper_bgcolor: '#ffffff',
+                plot_bgcolor: '#ffffff',
+                xaxis: { title: 'MMbbl/d', range: [0, 1.75], gridcolor: '#eef2f7', zeroline: false },
+                yaxis: { automargin: true },
+                font: { family: 'Segoe UI, sans-serif', size: 12, color: '#111827' }
+            }, plotConfig);
+        }
+
+        function fillSiteSelect(rows) {
+            const select = document.getElementById('siteSelect');
+            select.innerHTML = rows.map(row => `<option value="${row.site}">${row.site}</option>`).join('');
+            select.value = 'Bryan Mound';
+            select.addEventListener('change', () => {
+                renderSiteProfile(rows.find(row => row.site === select.value));
+            });
+        }
+
+        function renderSiteProfile(row) {
+            if (!row) return;
+            const capacity = toNum(row.authorized_capacity_mmbbl);
+            const inventory = toNum(row.current_total_mmbbl);
+            const fill = capacity ? (inventory / capacity) * 100 : 0;
+            const daysAtMax = toNum(row.drawdown_capacity_mmbd) ? inventory / toNum(row.drawdown_capacity_mmbd) : 0;
+            document.getElementById('siteProfile').innerHTML = `
+                <div class="site-title">
+                    <div class="site-name">${row.site}</div>
+                    <span class="tag ${systemClass(row.distribution_system)}">${row.distribution_system}</span>
+                </div>
+                <div class="detail-list">
+                    <div class="detail">
+                        <div class="label">Current inventory</div>
+                        <div class="metric">${fmt(row.current_total_mmbbl)} MMbbl</div>
+                        <div class="hint">${fmt(fill)}% of authorized capacity</div>
+                    </div>
+                    <div class="detail">
+                        <div class="label">Max drawdown</div>
+                        <div class="metric">${fmt(row.drawdown_capacity_mmbd)} MMbbl/d</div>
+                        <div class="hint">${fmt(daysAtMax)} days at site maximum</div>
+                    </div>
+                    <div class="detail">
+                        <div class="label">Crude mix</div>
+                        <div class="metric">${fmt(row.current_sweet_mmbbl)} / ${fmt(row.current_sour_mmbbl)}</div>
+                        <div class="hint">Sweet / sour MMbbl</div>
+                    </div>
+                    <div class="detail">
+                        <div class="label">Caverns</div>
+                        <div class="metric">${fmt(row.current_caverns, 0)}</div>
+                        <div class="hint">Operational since ${row.operational_year}</div>
+                    </div>
+                </div>
+                <div class="story">
+                    <p><strong>Location:</strong> ${row.nearby_city}; ${row.address}</p>
+                    <p><strong>Primary markets:</strong> ${row.primary_markets}</p>
+                    <p><strong>Delivery points:</strong> ${row.delivery_points}</p>
+                </div>
+            `;
+        }
+
+        function renderSiteTable(rows) {
+            document.getElementById('siteTable').innerHTML = rows.map(row => `
+                <tr>
+                    <td><strong>${row.site}</strong></td>
+                    <td><span class="tag ${systemClass(row.distribution_system)}">${row.distribution_system}</span></td>
+                    <td>${row.nearby_city}<div class="hint">${row.county_or_parish}, ${row.state}</div></td>
+                    <td class="num">${fmt(row.authorized_capacity_mmbbl)} MMbbl</td>
+                    <td class="num">${fmt(row.current_total_mmbbl)} MMbbl</td>
+                    <td class="num">${fmt(row.current_sweet_mmbbl)} MMbbl</td>
+                    <td class="num">${fmt(row.current_sour_mmbbl)} MMbbl</td>
+                    <td class="num">${fmt(row.drawdown_capacity_mmbd)} MMbbl/d</td>
+                    <td class="num">${fmt(row.current_caverns, 0)}</td>
+                    <td>${row.delivery_points}</td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadPage() {
+            try {
+                const rows = await fetchJson('/api/spr/site-info');
+                const ordered = rows.sort((a, b) => toNum(b.current_total_mmbbl) - toNum(a.current_total_mmbbl));
+                renderKpis(ordered);
+                renderMap(ordered);
+                renderInventoryChart(ordered);
+                renderDrawdownChart(ordered);
+                fillSiteSelect(ordered);
+                renderSiteProfile(ordered.find(row => row.site === 'Bryan Mound') || ordered[0]);
+                renderSiteTable(ordered);
+            } catch (error) {
+                document.querySelectorAll('.loading').forEach(node => {
+                    node.className = 'error';
+                    node.textContent = `Unable to load SPR site info: ${error.message}`;
+                });
+            }
+        }
+
+        loadPage();
+    </script>
+</body>
+</html>
