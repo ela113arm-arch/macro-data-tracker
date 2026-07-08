@@ -1,17 +1,17 @@
 metric,value,unit,label,as_of_date,eia_publish_date_estimate,refreshed_at
-announced_release_mmbbl,172.0,MMbbl,Announced release target,2026-06-26,2026-07-01,2026-07-04T04:42:33Z
-planned_daily_mmbbl,1.4333333333333333,MMbbl/day,Implied announced pace over 120 days,2026-06-26,2026-07-01,2026-07-04T04:42:33Z
-planned_weekly_mmbbl,10.033333333333333,MMbbl/week,Implied announced weekly pace,2026-06-26,2026-07-01,2026-07-04T04:42:33Z
-rfp_planned_rows_mmbbl,258.5,MMbbl,Total DOE RFP planned rows; can exceed target because RFPs solicit replacement/remaining barrels,2026-06-26,2026-07-01,2026-07-04T04:42:33Z
-awarded_mmbbl,133.56,MMbbl,Total awarded in DOE award PDFs,2026-06-26,2026-07-01,2026-07-04T04:42:33Z
-remaining_vs_announced_mmbbl,38.44,MMbbl,Announced target minus public award PDFs,2026-06-26,2026-07-01,2026-07-04T04:42:33Z
-active_open_rfp_balance_mmbbl,39.5,MMbbl,Current active RFP rows less awards in that active tranche,2026-06-26,2026-07-01,2026-07-04T04:42:33Z
-latest_spr_stock_mmbbl,325.655,MMbbl,Latest EIA SPR stock,2026-06-26,2026-07-01,2026-07-04T04:42:33Z
-observed_eia_drawdown_mmbbl,89.78700000000003,MMbbl,Observed EIA drawdown since pre-release baseline,2026-06-26,2026-07-01,2026-07-04T04:42:33Z
-latest_weekly_drawdown_mmbbl,5.536000000000001,MMbbl/week,Latest EIA weekly drawdown,2026-06-26,2026-07-01,2026-07-04T04:42:33Z
-latest_weekly_drawdown_bpd,790857.142857143,b/d,Latest EIA weekly drawdown rate,2026-06-26,2026-07-01,2026-07-04T04:42:33Z
-released_sweet_mmbbl,26.03,MMbbl,Awarded volume mapped to single-quality sweet tranches,2026-06-26,2026-07-01,2026-07-04T04:42:33Z
-released_sour_mmbbl,8.98,MMbbl,Awarded volume mapped to single-quality sour tranches,2026-06-26,2026-07-01,2026-07-04T04:42:33Z
-released_public_split_not_stated_mmbbl,98.55,MMbbl,Awarded volume where buyer-level sweet/sour split is not public,2026-06-26,2026-07-01,2026-07-04T04:42:33Z
-planned_sweet_rows_mmbbl,68.5,MMbbl,RFP planned sweet rows,2026-06-26,2026-07-01,2026-07-04T04:42:33Z
-planned_sour_rows_mmbbl,190.0,MMbbl,RFP planned sour rows,2026-06-26,2026-07-01,2026-07-04T04:42:33Z
+announced_release_mmbbl,172.0,MMbbl,Announced release target,2026-06-26,2026-07-01,2026-07-08T16:58:18Z
+planned_daily_mmbbl,1.4333333333333333,MMbbl/day,Implied announced pace over 120 days,2026-06-26,2026-07-01,2026-07-08T16:58:18Z
+planned_weekly_mmbbl,10.033333333333333,MMbbl/week,Implied announced weekly pace,2026-06-26,2026-07-01,2026-07-08T16:58:18Z
+rfp_planned_rows_mmbbl,258.5,MMbbl,Total DOE RFP planned rows; can exceed target because RFPs solicit replacement/remaining barrels,2026-06-26,2026-07-01,2026-07-08T16:58:18Z
+awarded_mmbbl,133.56,MMbbl,Total awarded in DOE award PDFs,2026-06-26,2026-07-01,2026-07-08T16:58:18Z
+remaining_vs_announced_mmbbl,38.44,MMbbl,Announced target minus public award PDFs,2026-06-26,2026-07-01,2026-07-08T16:58:18Z
+active_open_rfp_balance_mmbbl,39.5,MMbbl,Current active RFP rows less awards in that active tranche,2026-06-26,2026-07-01,2026-07-08T16:58:18Z
+latest_spr_stock_mmbbl,325.655,MMbbl,Latest EIA SPR stock,2026-06-26,2026-07-01,2026-07-08T16:58:18Z
+observed_eia_drawdown_mmbbl,89.78700000000003,MMbbl,Observed EIA drawdown since pre-release baseline,2026-06-26,2026-07-01,2026-07-08T16:58:18Z
+latest_weekly_drawdown_mmbbl,5.536000000000001,MMbbl/week,Latest EIA weekly drawdown,2026-06-26,2026-07-01,2026-07-08T16:58:18Z
+latest_weekly_drawdown_bpd,790857.142857143,b/d,Latest EIA weekly drawdown rate,2026-06-26,2026-07-01,2026-07-08T16:58:18Z
+released_sweet_mmbbl,26.03,MMbbl,Awarded volume mapped to single-quality sweet tranches,2026-06-26,2026-07-01,2026-07-08T16:58:18Z
+released_sour_mmbbl,8.98,MMbbl,Awarded volume mapped to single-quality sour tranches,2026-06-26,2026-07-01,2026-07-08T16:58:18Z
+released_public_split_not_stated_mmbbl,98.55,MMbbl,Awarded volume where buyer-level sweet/sour split is not public,2026-06-26,2026-07-01,2026-07-08T16:58:18Z
+planned_sweet_rows_mmbbl,68.5,MMbbl,RFP planned sweet rows,2026-06-26,2026-07-01,2026-07-08T16:58:18Z
+planned_sour_rows_mmbbl,190.0,MMbbl,RFP planned sour rows,2026-06-26,2026-07-01,2026-07-08T16:58:18Z
