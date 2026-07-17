@@ -51353,6 +51353,11 @@ YYYYMM,Country,Fuel,Value,source_url
 202605,Turkey,LPG,1083.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202605,Turkey,Hybrid,23609.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202605,Turkey,BatteryElectric,13305.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202606,Turkey,Diesel,5639.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202606,Turkey,Petrol,35114.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202606,Turkey,LPG,1155.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202606,Turkey,Hybrid,21140.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202606,Turkey,BatteryElectric,10617.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201012,USA,ICE,1115903.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201012,USA,NonPluginHybrid,28592.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201012,USA,PluginHybrid,326.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
