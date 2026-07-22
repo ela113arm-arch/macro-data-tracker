@@ -6455,18 +6455,18 @@ YYYYMM,Country,Fuel,Value,source_url
 202603,California CNCDA,NonPluginHybrid,28951.666667,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202603,California CNCDA,PluginHybrid,2754.333333,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202603,California CNCDA,ZEV,19087.333333,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
-202604,California CNCDA,ICE,104134.666667,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202604,California CNCDA,ICE,84134.666667,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202604,California CNCDA,NonPluginHybrid,34715.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202604,California CNCDA,PluginHybrid,3773.666667,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
-202604,California CNCDA,ZEV,6722.666667,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
-202605,California CNCDA,ICE,104134.666667,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202604,California CNCDA,ZEV,26722.666667,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202605,California CNCDA,ICE,84134.666667,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202605,California CNCDA,NonPluginHybrid,34715.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202605,California CNCDA,PluginHybrid,3773.666667,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
-202605,California CNCDA,ZEV,6722.666667,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
-202606,California CNCDA,ICE,104134.666667,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202605,California CNCDA,ZEV,26722.666667,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202606,California CNCDA,ICE,84134.666667,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202606,California CNCDA,NonPluginHybrid,34715.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202606,California CNCDA,PluginHybrid,3773.666667,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
-202606,California CNCDA,ZEV,6722.666667,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202606,California CNCDA,ZEV,26722.666667,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201701,Canada,Petrol,125784.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201701,Canada,NonPluginHybrid,1344.666667,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201701,Canada,PluginHybrid,599.333333,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
