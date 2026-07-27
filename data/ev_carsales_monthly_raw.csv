@@ -42869,6 +42869,12 @@ YYYYMM,Country,Fuel,Value,source_url
 202605,Singapore,PluginHybrid,121.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202605,Singapore,BatteryElectric,2930.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202605,Singapore,Others,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202606,Singapore,Diesel,1.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202606,Singapore,Petrol,181.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202606,Singapore,NonPluginHybrid,1126.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202606,Singapore,PluginHybrid,126.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202606,Singapore,BatteryElectric,3357.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202606,Singapore,Others,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202201,Slovakia,Diesel,1064.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202201,Slovakia,Petrol,3030.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202201,Slovakia,NonPluginHybrid,1290.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
