@@ -8269,9 +8269,12 @@ YYYYMM,Country,Fuel,Value,source_url
 202605,China,ICE,559863.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202605,China,PluginHybrid,312978.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202605,China,BatteryElectric,637192.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
-202606,China,ICE,595000.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
-202606,China,PluginHybrid,322000.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
-202606,China,BatteryElectric,685000.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202606,China,ICE,595171.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202606,China,PluginHybrid,322182.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202606,China,BatteryElectric,684571.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202607,China,ICE,509664.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202607,China,PluginHybrid,304116.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202607,China,BatteryElectric,647161.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201901,Colombia,ICE,15865.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201901,Colombia,Hybrid,46.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201901,Colombia,BatteryElectric,30.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
