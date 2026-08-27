@@ -1,4 +1,5 @@
 period,product,production,imports,exports,refinery_input,spr_stocks,spr_change,refinery_output,product_supplied
+2026-08-21,crude_PADD1,,,,0.797,,,,
 2026-08-14,crude_PADD1,,,,0.784,,,,
 2026-08-07,crude_PADD1,,,,0.775,,,,
 2026-07-31,crude_PADD1,,,,0.763,,,,
@@ -18,7 +19,7 @@ period,product,production,imports,exports,refinery_input,spr_stocks,spr_change,r
 2026-04-24,crude_PADD1,,,,0.789,,,,
 2026-04-17,crude_PADD1,,,,0.763,,,,
 2026-04-10,crude_PADD1,,,,0.835,,,,
-2026-04-03,crude_PADD1,,,,0.82,,,,
+2026-08-21,crude_PADD2,,,,4.356,,,,
 2026-08-14,crude_PADD2,,,,4.329,,,,
 2026-08-07,crude_PADD2,,,,4.21,,,,
 2026-07-31,crude_PADD2,,,,4.192,,,,
@@ -38,7 +39,7 @@ period,product,production,imports,exports,refinery_input,spr_stocks,spr_change,r
 2026-04-24,crude_PADD2,,,,3.616,,,,
 2026-04-17,crude_PADD2,,,,3.581,,,,
 2026-04-10,crude_PADD2,,,,3.605,,,,
-2026-04-03,crude_PADD2,,,,3.719,,,,
+2026-08-21,crude_PADD3,,,,9.52,,,,
 2026-08-14,crude_PADD3,,,,9.619,,,,
 2026-08-07,crude_PADD3,,,,9.588,,,,
 2026-07-31,crude_PADD3,,,,9.484,,,,
@@ -58,7 +59,7 @@ period,product,production,imports,exports,refinery_input,spr_stocks,spr_change,r
 2026-04-24,crude_PADD3,,,,9.362,,,,
 2026-04-17,crude_PADD3,,,,9.369,,,,
 2026-04-10,crude_PADD3,,,,9.2,,,,
-2026-04-03,crude_PADD3,,,,9.218,,,,
+2026-08-21,crude_PADD4,,,,0.667,,,,
 2026-08-14,crude_PADD4,,,,0.621,,,,
 2026-08-07,crude_PADD4,,,,0.615,,,,
 2026-07-31,crude_PADD4,,,,0.663,,,,
@@ -78,7 +79,7 @@ period,product,production,imports,exports,refinery_input,spr_stocks,spr_change,r
 2026-04-24,crude_PADD4,,,,0.445,,,,
 2026-04-17,crude_PADD4,,,,0.506,,,,
 2026-04-10,crude_PADD4,,,,0.512,,,,
-2026-04-03,crude_PADD4,,,,0.541,,,,
+2026-08-21,crude_PADD5,,,,2.054,,,,
 2026-08-14,crude_PADD5,,,,2.041,,,,
 2026-08-07,crude_PADD5,,,,1.991,,,,
 2026-07-31,crude_PADD5,,,,2.05,,,,
@@ -98,7 +99,7 @@ period,product,production,imports,exports,refinery_input,spr_stocks,spr_change,r
 2026-04-24,crude_PADD5,,,,1.859,,,,
 2026-04-17,crude_PADD5,,,,1.767,,,,
 2026-04-10,crude_PADD5,,,,1.89,,,,
-2026-04-03,crude_PADD5,,,,1.952,,,,
+2026-08-21,crude_US,13.843,6.158,3.792,17.393,289726.0,-0.5285714285714286,,
 2026-08-14,crude_US,13.83,6.593,4.066,17.395,293426.0,-0.7525714285714286,,
 2026-08-07,crude_US,13.805,7.339,3.058,17.179,298694.0,-0.8735714285714286,,
 2026-07-31,crude_US,13.804,6.198,3.685,17.153,304809.0,-0.4058571428571428,,
@@ -117,8 +118,8 @@ period,product,production,imports,exports,refinery_input,spr_stocks,spr_change,r
 2026-05-01,crude_US,13.573,5.477,4.75,16.029,392700.0,-0.7462857142857143,,
 2026-04-24,crude_US,13.586,5.75,6.438,16.071,397924.0,-1.0172857142857143,,
 2026-04-17,crude_US,13.585,6.078,4.798,15.987,405045.0,-0.5908571428571429,,
-2026-04-10,crude_US,13.596,5.291,5.225,16.042,409181.0,-0.592,,
-2026-04-03,crude_US,13.596,6.324,4.149,16.25,413325.0,,,
+2026-04-10,crude_US,13.596,5.291,5.225,16.042,409181.0,,,
+2026-08-21,distillate_US,,0.176,1.79,,,,5.135,3.839
 2026-08-14,distillate_US,,0.109,1.601,,,,5.226,3.953
 2026-08-07,distillate_US,,0.111,1.935,,,,5.28,3.458
 2026-07-31,distillate_US,,0.099,1.884,,,,5.23,3.941
@@ -138,7 +139,7 @@ period,product,production,imports,exports,refinery_input,spr_stocks,spr_change,r
 2026-04-24,distillate_US,,0.126,1.595,,,,4.94,4.113
 2026-04-17,distillate_US,,0.19,1.601,,,,4.953,4.032
 2026-04-10,distillate_US,,0.118,1.59,,,,4.866,3.84
-2026-04-03,distillate_US,,0.152,1.576,,,,5.035,4.06
+2026-08-21,gasoline_US,,0.565,,,,,9.772,9.043
 2026-08-14,gasoline_US,,0.366,,,,,9.711,8.689
 2026-08-07,gasoline_US,,0.583,,,,,9.568,8.964
 2026-07-31,gasoline_US,,0.463,,,,,9.569,9.031
@@ -158,7 +159,7 @@ period,product,production,imports,exports,refinery_input,spr_stocks,spr_change,r
 2026-04-24,gasoline_US,,0.344,,,,,9.838,9.104
 2026-04-17,gasoline_US,,0.587,,,,,10.076,9.055
 2026-04-10,gasoline_US,,0.316,,,,,9.761,9.088
-2026-04-03,gasoline_US,,0.571,,,,,9.369,8.564
+2026-08-21,jet_fuel_US,,0.028,0.359,,,,2.025,1.772
 2026-08-14,jet_fuel_US,,0.089,0.372,,,,2.047,1.613
 2026-08-07,jet_fuel_US,,0.133,0.443,,,,2.05,1.982
 2026-07-31,jet_fuel_US,,0.015,0.445,,,,2.068,1.629
@@ -178,4 +179,3 @@ period,product,production,imports,exports,refinery_input,spr_stocks,spr_change,r
 2026-04-24,jet_fuel_US,,0.056,0.243,,,,2.034,1.78
 2026-04-17,jet_fuel_US,,0.131,0.37,,,,2.007,1.599
 2026-04-10,jet_fuel_US,,0.086,0.29,,,,1.966,1.88
-2026-04-03,jet_fuel_US,,0.121,0.442,,,,1.906,1.677
