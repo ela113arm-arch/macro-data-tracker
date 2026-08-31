@@ -14017,6 +14017,9 @@ YYYYMM,Country,Fuel,Value,source_url
 202606,Ecuador,ICE,10281.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202606,Ecuador,Hybrid,2693.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202606,Ecuador,BatteryElectric,1438.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202607,Ecuador,ICE,10811.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202607,Ecuador,Hybrid,3091.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202607,Ecuador,BatteryElectric,910.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202201,Estonia,Diesel,301.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202201,Estonia,Petrol,633.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202201,Estonia,NonPluginHybrid,671.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
