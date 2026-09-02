@@ -636,6 +636,13 @@ YYYYMM,Country,Fuel,Value,source_url
 202607,Albania,PluginHybrid,21.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202607,Albania,BatteryElectric,615.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202607,Albania,Others,20.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Albania,Diesel,4177.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Albania,Petrol,1300.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Albania,LPG_LPGBlend,261.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Albania,NonPluginHybrid,193.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Albania,PluginHybrid,17.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Albania,BatteryElectric,615.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Albania,Others,15.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202007,Australia,Diesel,19944.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202007,Australia,Petrol,42728.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202007,Australia,NonPluginHybrid,6665.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
@@ -8553,6 +8560,9 @@ YYYYMM,Country,Fuel,Value,source_url
 202607,Colombia,ICE,14353.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202607,Colombia,Hybrid,9410.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202607,Colombia,BatteryElectric,4870.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Colombia,ICE,13387.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Colombia,Hybrid,9195.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Colombia,BatteryElectric,4542.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202201,Croatia,Diesel,618.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202201,Croatia,Petrol,1397.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202201,Croatia,NonPluginHybrid,605.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
@@ -26753,6 +26763,13 @@ YYYYMM,Country,Fuel,Value,source_url
 202607,Italy,PluginHybrid,13103.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202607,Italy,BatteryElectric,7368.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202607,Italy,Others,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Italy,Diesel,4044.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Italy,Petrol,14146.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Italy,LPG,6213.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Italy,NonPluginHybrid,32969.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Italy,PluginHybrid,8446.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Italy,BatteryElectric,4486.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Italy,Others,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201801,Japan,Diesel,11868.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201801,Japan,Petrol,112962.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201801,Japan,NonPluginHybrid,83564.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
@@ -33462,6 +33479,11 @@ YYYYMM,Country,Fuel,Value,source_url
 202607,Netherlands,PluginHybrid,5724.737185,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202607,Netherlands,BatteryElectric,13294.697997,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202607,Netherlands,Others,99.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Netherlands,Diesel,3.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Netherlands,Petrol,8339.068962,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Netherlands,PluginHybrid,4867.87201,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Netherlands,BatteryElectric,13172.064309,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Netherlands,Others,99.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201801,Netherlands including used,Diesel,14194.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201801,Netherlands including used,Petrol,60099.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201801,Netherlands including used,PluginHybrid,416.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
@@ -33977,6 +33999,11 @@ YYYYMM,Country,Fuel,Value,source_url
 202607,Netherlands including used,PluginHybrid,14364.462316,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202607,Netherlands including used,BatteryElectric,16392.851829,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202607,Netherlands including used,Others,209.5,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Netherlands including used,Diesel,441.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Netherlands including used,Petrol,19883.577265,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Netherlands including used,PluginHybrid,12104.678949,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Netherlands including used,BatteryElectric,15799.64359,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Netherlands including used,Others,198.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201601,New Zealand,Diesel,1622.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201601,New Zealand,Petrol,18573.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201601,New Zealand,NonPluginHybrid,283.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
@@ -49894,6 +49921,12 @@ YYYYMM,Country,Fuel,Value,source_url
 202607,Switzerland,PluginHybrid,2595.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202607,Switzerland,BatteryElectric,4899.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202607,Switzerland,Others,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Switzerland,Diesel,754.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Switzerland,Petrol,2566.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Switzerland,NonPluginHybrid,5981.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Switzerland,PluginHybrid,1903.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Switzerland,BatteryElectric,4843.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Switzerland,Others,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201201,Taiwan,Diesel,1722.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201201,Taiwan,Petrol,34518.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201201,Taiwan,NonPluginHybrid,1011.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
@@ -53632,6 +53665,18 @@ YYYYMM,Country,Fuel,Value,source_url
 202606,Ukraine,Hybrid,3379.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202606,Ukraine,BatteryElectric,3032.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202606,Ukraine,Others,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202607,Ukraine,Diesel,5482.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202607,Ukraine,Petrol,14399.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202607,Ukraine,LPG_LPGBlend,650.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202607,Ukraine,Hybrid,3998.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202607,Ukraine,BatteryElectric,3761.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202607,Ukraine,Others,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Ukraine,Diesel,4749.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Ukraine,Petrol,12566.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Ukraine,LPG_LPGBlend,621.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Ukraine,Hybrid,3726.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Ukraine,BatteryElectric,4105.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Ukraine,Others,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 200101,United Kingdom,Diesel,30148.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 200101,United Kingdom,Petrol,167040.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 200101,United Kingdom,NonPluginHybrid,57.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
