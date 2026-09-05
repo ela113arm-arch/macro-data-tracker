@@ -68,6 +68,10 @@
         }
 
         .nav-item {
+            font-family: inherit;
+            background: none;
+            border: 0;
+            text-align: left;
             padding: 12px 20px;
             color: rgba(255,255,255,0.85);
             font-size: 13px;
@@ -424,7 +428,8 @@
             .stats-row { grid-template-columns: repeat(2, 1fr); }
             .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
             .card.span-2, .card.span-3, .card.span-4 { grid-column: span 1; }
-            .nav { display: none; }
+            .nav { display: none; padding: 8px 16px; }
+            .nav-item, .nav-spr-link { min-height: 44px; font-size: 14px; margin-left: 0; }
             .inline-stats { grid-template-columns: repeat(2, 1fr); }
             .relationship-wrap { grid-template-columns: 1fr; }
             .category-seasonal-grid { grid-template-columns: 1fr; }
@@ -503,66 +508,54 @@
             .card.span-2 { grid-column: span 1; }
         }
 
-        @media (max-width: 768px) {
-            .chart { height: 220px; }
-            .chart-lg { height: 280px; }
-        }
-
-        @media (max-width: 640px) {
-            .stats-row { grid-template-columns: 1fr; }
-            .inline-stats { grid-template-columns: 1fr; }
+        /* Keep charts within their grid tracks instead of widening the page. */
+        .card, .stat-card, .category-card, .relationship-wrap > *,
+        .category-seasonal-grid > * { min-width: 0; }
+        button:focus-visible, a:focus-visible {
+            outline: 3px solid var(--positive);
+            outline-offset: 2px;
         }
 
         @media (max-width: 600px) {
-            .header {
-                display: block;
-                position: relative;
-                padding: 18px 58px 18px 16px;
-            }
-            .header-left {
-                min-width: 0;
-            }
-            .header-left h1 {
-                font-size: 25px;
-                line-height: 1.15;
-                letter-spacing: 0;
-            }
-            .header-left p {
-                font-size: 12px;
-            }
-            .header-right {
-                position: absolute;
-                top: 18px;
-                right: 16px;
-                z-index: 2;
-                justify-content: flex-end !important;
-                gap: 0 !important;
-                opacity: 1;
-            }
-            .header-right > div {
-                display: none;
-            }
-            .hamburger {
-                width: 34px;
-                height: 34px;
-                display: block !important;
-                padding: 0;
-                line-height: 1;
-            }
-            .hamburger::before {
-                content: "\2630";
-                display: block;
-                color: white;
-                font-size: 24px;
-                line-height: 34px;
-            }
+            body { font-size: 16px; }
+            .header { padding: 16px; flex-wrap: wrap; gap: 12px; }
+            .header-left { min-width: 0; }
+            .header-left h1 { font-size: 22px; line-height: 1.2; }
+            .header-left p { font-size: 13px; }
+            .header-right { width: 100%; justify-content: space-between; opacity: 1; }
+            .header-right > div { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; }
+            #refresh-btn { min-height: 44px; margin-top: 0 !important; font-size: 14px !important; }
+            .hamburger { min-width: 44px; min-height: 44px; }
+            .container { padding: 16px 12px; }
+            .stats-row, .inline-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+            .stat-card { padding: 12px; }
+            .stat-value { font-size: 24px; overflow-wrap: anywhere; }
+            .stat-label { font-size: 12px; letter-spacing: 0; }
             .key-metrics {
                 display: flex;
-                flex-direction: column;
-                gap: 8px;
+                overflow-x: auto;
+                gap: 20px;
                 padding: 12px 16px;
+                scroll-snap-type: x proximity;
             }
-            .key-metric-value { font-size: 16px; }
+            .key-metric { flex: 0 0 auto; scroll-snap-align: start; }
+            .key-metric-label, .key-metric-change { font-size: 12px; }
+            .section-header, .card-header, .category-header { flex-wrap: wrap; gap: 8px; }
+            .section-header { margin-bottom: 14px; }
+            .section-subtitle, .chart-desc { font-size: 14px; }
+            .card-header { font-size: 14px; padding: 12px; }
+            .card-header .source { white-space: normal; font-size: 12px; }
+            .card-body, .category-body { padding: 10px 6px; }
+            .chart { height: 360px; min-height: 360px; }
+            .chart-lg { height: 420px; min-height: 420px; }
+            .section-button { min-height: 44px; font-size: 14px; white-space: normal; }
+            select, input:not([type="checkbox"]):not([type="radio"]) { max-width: 100%; min-height: 44px; font-size: 16px !important; }
+            .inline-stat { padding: 10px; overflow-wrap: anywhere; }
+            .inline-stat .label, .category-stat .label, .source-tag { font-size: 12px; }
+            .category-stats { flex-wrap: wrap; gap: 12px; }
+            .data-table { display: block; overflow-x: auto; font-size: 14px; }
+            .data-table th { font-size: 12px; }
+            .footer { padding: 16px; font-size: 12px; overflow-wrap: anywhere; }
         }
 
         /* Deviation badge styles */
@@ -587,7 +580,7 @@
             <p>Economic Indicators & Energy Analysis</p>
         </div>
         <div class="header-right" style="display:flex;align-items:center;gap:16px;">
-            <button class="hamburger" onclick="toggleMobileNav()">&#9776;</button>
+            <button class="hamburger" type="button" aria-label="Toggle navigation" aria-controls="main-nav" aria-expanded="false" onclick="toggleMobileNav()">&#9776;</button>
             <div>
                 <div id="last-updated">Loading...</div>
                 <div id="refresh-status" style="display:none;margin-top:6px;font-size:11px;color:#64748b;"></div>
@@ -600,16 +593,16 @@
         </div>
     </div>
 
-    <div class="nav" id="main-nav">
-        <div class="nav-item active" data-section="overview">Overview</div>
-        <div class="nav-item" data-section="markets">Markets</div>
-        <div class="nav-item" data-section="energy">Energy</div>
-        <div class="nav-item" data-section="ev">EVs</div>
-        <div class="nav-item" data-section="economy">Economy</div>
-        <div class="nav-item" data-section="labor">Labor & Inflation</div>
+    <nav class="nav" id="main-nav" aria-label="Dashboard sections">
+        <button type="button" class="nav-item active" data-section="overview">Overview</button>
+        <button type="button" class="nav-item" data-section="markets">Markets</button>
+        <button type="button" class="nav-item" data-section="energy">Energy</button>
+        <button type="button" class="nav-item" data-section="ev">EVs</button>
+        <button type="button" class="nav-item" data-section="economy">Economy</button>
+        <button type="button" class="nav-item" data-section="labor">Labor & Inflation</button>
         <a class="nav-spr-link" href="/">Brent Model</a>
         <a class="nav-spr-link" href="/spr" style="margin-left: 0;">SPR Tracker</a>
-    </div>
+    </nav>
 
     <!-- Key Metrics Bar -->
     <div class="key-metrics" id="key-metrics-bar">
@@ -1678,7 +1671,9 @@
         function showSection(section) {
             // Update nav active state
             document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.toggle('active', item.dataset.section === section);
+                const active = item.dataset.section === section;
+                item.classList.toggle('active', active);
+                item.setAttribute('aria-pressed', String(active));
             });
 
             // Show/hide sections based on data-page attribute
@@ -1704,7 +1699,13 @@
 
         // Add click handlers to nav items
         document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', () => showSection(item.dataset.section));
+            item.addEventListener('click', () => {
+                showSection(item.dataset.section);
+                if (document.getElementById('main-nav').classList.contains('mobile-open')) {
+                    toggleMobileNav();
+                    document.querySelector('.hamburger').focus();
+                }
+            });
         });
 
         const sectionLoaders = {
@@ -5478,7 +5479,8 @@
         // Mobile Navigation Toggle
         function toggleMobileNav() {
             const nav = document.getElementById('main-nav');
-            nav.classList.toggle('mobile-open');
+            const open = nav.classList.toggle('mobile-open');
+            document.querySelector('.hamburger').setAttribute('aria-expanded', String(open));
         }
 
         async function loadStatus() {
