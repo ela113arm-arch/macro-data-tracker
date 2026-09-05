@@ -14,6 +14,7 @@ import sys
 import threading
 import time
 import warnings
+from forecast_rules import FEATURES, available_dates, choose_model
 
 from flask import Flask, render_template, jsonify, request, Response, abort, send_from_directory
 import numpy as np
@@ -84,7 +85,7 @@ def get_cache_key():
 
 def modeling_data_signature():
     """Fingerprint of the CSV data directory used to key the modeling cache"""
-    return [
+    return [['forecast_rules', 2, 0]] + [
         [path.name, path.stat().st_mtime_ns, path.stat().st_size]
         for path in sorted(DATA_DIR.glob('*.csv'))
     ]
@@ -233,6 +234,8 @@ def add_asof_feature_block(base, source, prefix):
     feature_cols = [col for col in source.columns if col != 'date']
     if not feature_cols:
         return base
+    source = source.copy()
+    source['date'] = available_dates(source['date'], prefix)
     source = source.sort_values('date').rename(columns={'date': f'{prefix}_source_date'})
     merged = pd.merge_asof(
         base.sort_values('date'),
@@ -946,7 +949,7 @@ def get_energy_exploration():
     etf = etf.set_index('date')
     weekly_etf = pd.DataFrame(index=base['date'])
     for cot_date in base['date']:
-        window = etf.loc[(etf.index <= cot_date) & (etf.index >= cot_date - pd.Timedelta(days=6))]
+        window = etf.loc[(etf.index < cot_date) & (etf.index >= cot_date - pd.Timedelta(days=7))]
         for col in ['uso_volume_pressure', 'ung_volume_pressure', 'uso_price_5d_return_pct', 'ung_price_5d_return_pct']:
             weekly_etf.loc[cot_date, col] = window[col].mean() if col in window and not window.empty else np.nan
     weekly_etf = weekly_etf.reset_index().rename(columns={'index': 'date'})
@@ -1096,7 +1099,7 @@ def get_energy_exploration():
         {'field': 'dos_*_wow', 'formula': 'Latest days-of-supply metric minus prior weekly row', 'source': 'days_of_supply.csv', 'alignment': 'Latest weekly period available by COT Tuesday'},
         {'field': 'refinery_crude_input_mom / yoy', 'formula': 'Monthly refinery crude input minus prior month / prior 12th month', 'source': 'refinery_runs.csv', 'alignment': 'Latest monthly observation on or before COT Tuesday'},
         {'field': 'bal_*_wow', 'formula': 'Weekly balance metric by product minus prior weekly row after product pivot', 'source': 'weekly_balance.csv', 'alignment': 'Latest weekly period available by COT Tuesday'},
-        {'field': 'uso_volume_pressure / ung_volume_pressure', 'formula': 'Average over Tuesday-ending week of daily volume / trailing 50-day volume average - 1', 'source': 'cftc_positioning.csv', 'alignment': 'Tuesday-ending six-calendar-day window'},
+        {'field': 'uso_volume_pressure / ung_volume_pressure', 'formula': 'Average over Tuesday-ending week of daily volume / trailing 50-day volume average - 1', 'source': 'cftc_positioning.csv', 'alignment': 'Seven-day window strictly before Tuesday'},
         {'field': 'lag correlations', 'formula': 'Feature shifted 0-4 COT weeks to test whether prior values explain current y_brent_ww', 'source': 'derived analysis frame', 'alignment': 'COT Tuesday weekly rows'},
     ]
 
@@ -1205,7 +1208,7 @@ def get_energy_modeling():
 
     cot_feature_cols = ['WTI_CME_mm_net', 'BRENT_ICE_mm_net', 'COMBINED_mm_net', 'COMBINED_mm_net_ww']
     cot_features = add_derived_feature_block(base[['date'] + cot_feature_cols], 'date', cot_feature_cols, 'positioning')
-    base = base.merge(cot_features, on='date', how='left')
+    base = add_asof_feature_block(base, cot_features, 'positioning')
 
     crack = prepare_date_frame(read_dataframe('crack_spreads.csv'))
     spread_cols = ['gasoline_crack', 'ho_crack', 'crack_321', 'brent_wti_spread']
@@ -1285,7 +1288,7 @@ def get_energy_modeling():
     etf = etf.set_index('date')
     weekly_etf = pd.DataFrame(index=base['date'])
     for cot_date in base['date']:
-        window = etf.loc[(etf.index <= cot_date) & (etf.index >= cot_date - pd.Timedelta(days=6))]
+        window = etf.loc[(etf.index < cot_date) & (etf.index >= cot_date - pd.Timedelta(days=7))]
         for col in ['uso_volume_pressure', 'ung_volume_pressure']:
             weekly_etf.loc[cot_date, f'etf_{col}'] = window[col].mean() if not window.empty else np.nan
     weekly_etf = weekly_etf.reset_index().rename(columns={'index': 'date'})
@@ -1422,16 +1425,8 @@ def get_energy_modeling():
         })
     relationships = sorted(relationships, key=lambda item: abs(item['corr'] or 0), reverse=True)[:60]
 
-    forced_features = [
-        'composite_inventory_tightness', 'composite_positioning_crowding',
-        'composite_macro_risk', 'composite_rates_pressure', 'composite_refining_margin',
-        'etf_uso_volume_pressure', 'etf_ung_volume_pressure',
-    ]
-    selected_features = []
-    for col in forced_features + [row['feature'] for row in relationships]:
-        if col in feature_cols and col not in selected_features:
-            selected_features.append(col)
-    feature_cols = selected_features[:70]
+    # Fixed economic inputs; the full-history relationships above are descriptive only.
+    feature_cols = [col for col in FEATURES if col in base.columns]
     X = train_df[feature_cols].replace([np.inf, -np.inf], np.nan)
     latest_X = latest_row[feature_cols].replace([np.inf, -np.inf], np.nan)
 
@@ -1443,17 +1438,15 @@ def get_energy_modeling():
         'ElasticNet': Pipeline([('imputer', SimpleImputer(strategy='median', keep_empty_features=True)), ('scaler', StandardScaler()), ('model', ElasticNet(alpha=0.05, l1_ratio=0.35, max_iter=5000))]),
         'Random Forest': Pipeline([('imputer', SimpleImputer(strategy='median', keep_empty_features=True)), ('model', RandomForestRegressor(n_estimators=45, max_depth=4, min_samples_leaf=5, random_state=42))]),
         'Gradient Boosting': Pipeline([('imputer', SimpleImputer(strategy='median', keep_empty_features=True)), ('model', GradientBoostingRegressor(n_estimators=35, learning_rate=0.05, max_depth=2, random_state=42))]),
-        'MLP Regressor': Pipeline([('imputer', SimpleImputer(strategy='median', keep_empty_features=True)), ('scaler', StandardScaler()), ('model', MLPRegressor(hidden_layer_sizes=(10,), alpha=0.25, max_iter=150, random_state=42, early_stopping=True))]),
     }
     clf_models = {
         'Logistic Regression': Pipeline([('imputer', SimpleImputer(strategy='median', keep_empty_features=True)), ('scaler', StandardScaler()), ('model', LogisticRegression(C=0.4, max_iter=1000))]),
         'Random Forest Classifier': Pipeline([('imputer', SimpleImputer(strategy='median', keep_empty_features=True)), ('model', RandomForestClassifier(n_estimators=45, max_depth=4, min_samples_leaf=5, random_state=42))]),
         'Gradient Boosting Classifier': Pipeline([('imputer', SimpleImputer(strategy='median', keep_empty_features=True)), ('model', GradientBoostingClassifier(n_estimators=35, learning_rate=0.05, max_depth=2, random_state=42))]),
-        'MLP Classifier': Pipeline([('imputer', SimpleImputer(strategy='median', keep_empty_features=True)), ('scaler', StandardScaler()), ('model', MLPClassifier(hidden_layer_sizes=(10,), alpha=0.20, max_iter=150, random_state=42, early_stopping=True))]),
     }
 
-    initial_train = max(80, len(train_df) - 20)
-    large_threshold = float(y.abs().quantile(0.75))
+    initial_train = max(80, len(train_df) - 104)
+    large_threshold = float(y.iloc[:initial_train].abs().quantile(0.75))
 
     def metric_row(name, actual, pred):
         actual = np.array(actual, dtype=float)
@@ -1463,8 +1456,9 @@ def get_energy_modeling():
             'n': int(len(actual)),
             'mae': to_float(mean_absolute_error(actual, pred)),
             'rmse': to_float(np.sqrt(mean_squared_error(actual, pred))),
-            'directional_accuracy': to_float((np.sign(actual) == np.sign(pred)).mean() * 100),
-            'large_move_hit_rate': to_float((np.sign(actual[np.abs(actual) >= large_threshold]) == np.sign(pred[np.abs(actual) >= large_threshold])).mean() * 100) if (np.abs(actual) >= large_threshold).any() else None,
+            'directional_accuracy': to_float((np.sign(actual[pred != 0]) == np.sign(pred[pred != 0])).mean() * 100) if (pred != 0).any() else None,
+            'active_weeks': int((pred != 0).sum()),
+            'large_move_hit_rate': to_float((np.sign(actual[(np.abs(actual) >= large_threshold) & (pred != 0)]) == np.sign(pred[(np.abs(actual) >= large_threshold) & (pred != 0)])).mean() * 100) if ((np.abs(actual) >= large_threshold) & (pred != 0)).any() else None,
             'avg_prediction': to_float(np.mean(pred)),
         }
 
@@ -1472,9 +1466,14 @@ def get_energy_modeling():
     wf_predictions = {name: [] for name in reg_models}
     wf_actual = []
     wf_dates = []
+    selected_history = []
+    strategy_predictions = []
     for i in range(initial_train, len(train_df)):
         train_slice = slice(0, i)
         test_slice = slice(i, i + 1)
+        # Select BEFORE observing this week's result.
+        selected = choose_model(wf_actual, wf_predictions)
+        selected_history.append(selected)
         actual = y.iloc[i]
         wf_actual.append(float(actual))
         wf_dates.append(train_df['target_date'].iloc[i].strftime('%Y-%m-%d'))
@@ -1487,6 +1486,7 @@ def get_energy_modeling():
             fitted = clone(model)
             fitted.fit(X.iloc[train_slice], y.iloc[train_slice])
             wf_predictions[name].append(float(fitted.predict(X.iloc[test_slice])[0]))
+        strategy_predictions.append(wf_predictions[selected][-1])
 
     for name, preds in wf_predictions.items():
         leaderboard.append(metric_row(name, wf_actual, preds))
@@ -1537,7 +1537,7 @@ def get_energy_modeling():
         probability = float(fitted.predict_proba(latest_X)[0][1]) if hasattr(fitted.named_steps['model'], 'predict_proba') else None
         classifier_predictions.append({'model': name, 'up_probability': to_float(probability), 'direction': 'Up' if pred_class else 'Down'})
 
-    best_model_name = next(row['model'] for row in leaderboard if 'Baseline' not in row['model'])
+    best_model_name = choose_model(wf_actual, wf_predictions)
     best_prediction = next(row['prediction'] for row in final_predictions if row['model'] == best_model_name)
     avg_up_probability = np.nanmean([row['up_probability'] for row in classifier_predictions if row['up_probability'] is not None])
 
@@ -1671,7 +1671,7 @@ def get_energy_modeling():
         'start_date': train_df['date'].min().strftime('%Y-%m-%d'),
         'end_date': train_df['date'].max().strftime('%Y-%m-%d'),
         'latest_feature_date': base['date'].max().strftime('%Y-%m-%d'),
-        'next_target_date': base['target_date'].dropna().max().strftime('%Y-%m-%d') if base['target_date'].notna().any() else None,
+        'next_target_date': (base['date'].max() + pd.Timedelta(days=7)).strftime('%Y-%m-%d'),
         'mean': to_float(target.mean()),
         'median': to_float(target.median()),
         'std': to_float(target.std()),
@@ -1684,10 +1684,13 @@ def get_energy_modeling():
         'target': 'Next COT-week Brent Tuesday-close change',
         'best_regression_model': best_model_name,
         'best_model_prediction': to_float(best_prediction),
-        'ensemble_prediction': to_float(np.mean([row['prediction'] for row in final_predictions if 'Baseline' not in row['model']])),
+        'ensemble_prediction': to_float(best_prediction),
         'up_probability': to_float(avg_up_probability * 100) if np.isfinite(avg_up_probability) else None,
-        'direction': 'Up' if (avg_up_probability >= 0.5 if np.isfinite(avg_up_probability) else best_prediction >= 0) else 'Down',
-        'confidence': to_float(abs((avg_up_probability - 0.5) * 200)) if np.isfinite(avg_up_probability) else None,
+        'direction': 'Flat' if best_prediction == 0 else 'Up' if best_prediction > 0 else 'Down',
+        'confidence': None,
+        'probability_status': 'Uncalibrated diagnostic; not used for model selection',
+        'selection_rule': '26 prior test weeks and at least 5% lower RMSE than zero-change baseline',
+        'computation': 'Python / scikit-learn on Render; cached in process and on disk',
         'current_regime': current_cluster,
         'current_regime_label': f'Regime {current_cluster}',
     }
@@ -1697,12 +1700,12 @@ def get_energy_modeling():
         {'field': '*_chg_1 / *_chg_4 / *_chg_13', 'formula': 'Source value minus value 1, 4, or 13 source rows earlier', 'source': 'All feature sources', 'alignment': 'Computed inside source frequency before backward as-of join'},
         {'field': '*_z_13 / *_z_26', 'formula': '(value - trailing mean) / trailing standard deviation over 13 or 26 source rows', 'source': 'All feature sources', 'alignment': 'Computed before as-of join'},
         {'field': '*_pctile_26', 'formula': 'Trailing 26-row percentile rank of latest source value', 'source': 'All feature sources', 'alignment': 'Computed before as-of join'},
-        {'field': 'composite_inventory_tightness', 'formula': 'Negative z-score sum of crude, gasoline, and distillate inventories; higher means tighter stocks', 'source': 'petroleum_inventories.csv', 'alignment': 'Latest weekly period on or before COT Tuesday'},
-        {'field': 'composite_positioning_crowding', 'formula': '26-row z-score of combined Brent + WTI managed-money net length', 'source': 'cot_wti_brent_merged.csv', 'alignment': 'COT Tuesday'},
-        {'field': 'composite_macro_risk', 'formula': 'DXY z-score minus HYG/LQD ratio z-score plus claims 4WMA z-score', 'source': 'dxy, credit_spreads, jobless_claims', 'alignment': 'Backward as-of to COT Tuesday'},
-        {'field': 'composite_rates_pressure', 'formula': '2Y yield z-score plus 10Y yield z-score minus 2s10s spread z-score', 'source': 'treasury_yields.csv', 'alignment': 'Backward as-of to COT Tuesday'},
-        {'field': 'etf_*_volume_pressure', 'formula': 'Tuesday-ending weekly average of volume / trailing 50-day volume average - 1', 'source': 'cftc_positioning.csv', 'alignment': 'Tuesday-ending six-calendar-day window'},
-        {'field': 'model validation', 'formula': 'Expanding-window walk-forward validation over the latest available target weeks', 'source': 'Derived feature matrix', 'alignment': 'Each validation row trains only on earlier rows'},
+        {'field': 'composite_inventory_tightness', 'formula': 'Negative z-score sum of crude, gasoline, and distillate inventories; higher means tighter stocks', 'source': 'petroleum_inventories.csv', 'alignment': 'Observation date plus seven-day publication buffer on or before Tuesday'},
+        {'field': 'composite_positioning_crowding', 'formula': '26-row z-score of combined Brent + WTI managed-money net length', 'source': 'cot_wti_brent_merged.csv', 'alignment': 'Prior COT Tuesday with a seven-day publication buffer'},
+        {'field': 'composite_macro_risk', 'formula': 'DXY z-score minus HYG/LQD ratio z-score plus claims 4WMA z-score', 'source': 'dxy, credit_spreads, jobless_claims', 'alignment': 'Publication-buffered backward as-of to COT Tuesday'},
+        {'field': 'composite_rates_pressure', 'formula': '2Y yield z-score plus 10Y yield z-score minus 2s10s spread z-score', 'source': 'treasury_yields.csv', 'alignment': 'Publication-buffered backward as-of to COT Tuesday'},
+        {'field': 'etf_*_volume_pressure', 'formula': 'Tuesday-ending weekly average of volume / trailing 50-day volume average - 1', 'source': 'cftc_positioning.csv', 'alignment': 'Seven-day window strictly before Tuesday'},
+        {'field': 'model validation', 'formula': 'Expanding-window walk-forward validation over the latest available target weeks', 'source': 'Derived feature matrix', 'alignment': 'Fixed feature set; fit on earlier rows; historical model choice uses only earlier test errors'},
     ]
 
     payload = clean_json({
@@ -1739,6 +1742,8 @@ def get_energy_modeling():
         'walk_forward': {
             'dates': wf_dates,
             'actual': [to_float(v) for v in wf_actual],
+            'strategy_predictions': strategy_predictions,
+            'selected_models': selected_history,
             'predictions': {name: [to_float(v) for v in values] for name, values in wf_predictions.items()},
         },
         'last_rows': last_rows[[col for col in last_display_cols if col in last_rows.columns]].to_dict('records'),
@@ -1746,9 +1751,17 @@ def get_energy_modeling():
         'feature_columns': feature_cols,
         'excluded_predictors': sorted(excluded_predictors),
         'forbidden_tokens': forbidden_tokens,
+        'validation': {
+            'strategy_metrics': metric_row('Prequential selection', wf_actual, strategy_predictions),
+            'feature_selection': 'Fixed economic features; no outcome screening',
+            'data_vintages': 'Latest revised CSVs; publication buffers are conservative approximations, not point-in-time archives',
+        },
         'caveats': [
+            'Historical tests use revised data with approximate release buffers; they are not vintage-clean.',
+            'Monthly sources are excluded from the predictive feature set.',
+            'Correlations, regimes, and analogs use full history and are descriptive, not validated signals.',
             'Target is next COT-week Brent Tuesday-close change.',
-            'Features are joined backward as-of to the COT Tuesday row.',
+            'Features use conservative release buffers before backward as-of joins to Tuesday.',
             'Direct Brent, WTI, crude-oil, and oil ETF price/return predictors are excluded.',
             'Sample size is small for machine learning; model outputs are exploratory, not trading signals.',
         ],
@@ -1805,7 +1818,7 @@ def get_energy_modeling_summary():
     signal = payload.get('current_signal') or {}
     summary = payload.get('target_summary') or {}
     leaderboard = payload.get('model_leaderboard') or []
-    best = next((row for row in leaderboard if 'Baseline' not in str(row.get('model', ''))), None)
+    best = next((row for row in leaderboard if row.get('model') == signal.get('best_regression_model')), None)
     return {
         'status': 'ready' if fresh else 'stale',
         'build': dict(MODELING_BUILD_STATE),

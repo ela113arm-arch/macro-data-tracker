@@ -268,7 +268,7 @@
                 <div class="card">
                     <div class="label">Up Probability</div>
                     <div class="value" id="upProbability">--</div>
-                    <div class="hint">Average classifier probability</div>
+                    <div class="hint">Uncalibrated classifier diagnostic</div>
                 </div>
                 <div class="card">
                     <div class="label">Current Regime</div>
@@ -276,9 +276,9 @@
                     <div class="hint" id="regimeStats">--</div>
                 </div>
                 <div class="card">
-                    <div class="label">Confidence</div>
+                    <div class="label">Validation</div>
                     <div class="value" id="confidence">--</div>
-                    <div class="hint">Distance from 50/50 direction</div>
+                    <div class="hint">Release-buffered test; revised data</div>
                 </div>
                 <div class="card">
                     <div class="label">Sample</div>
@@ -291,18 +291,18 @@
                 <section class="panel span-7">
                     <h2>Next-Week Forecast</h2>
                     <div id="forecastChart" class="chart"></div>
-                    <div class="hint">Bars are realized weekly Brent changes over the walk-forward window. The diamond is the ensemble forecast for the next COT week; the whisker is &plusmn;1 RMSE of the best model.</div>
+                    <div class="hint">Bars are realized weekly Brent changes over the walk-forward window. The diamond is the selected forecast for the next COT week; the whisker shows historical RMSE, not a confidence interval.</div>
                 </section>
                 <section class="panel span-5">
                     <h2>Model Consensus</h2>
                     <div id="consensusChart" class="chart"></div>
-                    <div class="hint">Standalone next-week prediction from each regression model. Sign agreement = stronger signal. Models with runaway predictions (&gt;$25/bbl) are hidden.</div>
+                    <div class="hint">Candidate model forecasts are diagnostic. The selected forecast must beat zero change on prior test errors; extreme predictions are shown, not hidden.</div>
                 </section>
 
                 <section class="panel span-7">
                     <h2>Signal Track Record</h2>
                     <div id="backtestChart" class="chart"></div>
-                    <div class="hint">Cumulative $/bbl from following the best model's direction each week (flip short when it says down) vs always holding long, over the same walk-forward weeks.</div>
+                    <div class="hint">Cumulative $/bbl using the model selected from prior test results each week. Flat means no position. Excludes trading costs; revised data and release buffers limit realism.</div>
                 </section>
                 <section class="panel span-5">
                     <h2>Direction Hits</h2>
@@ -475,13 +475,13 @@
             const pred = signal.ensemble_prediction ?? signal.best_model_prediction;
 
             document.getElementById('asOf').textContent = `As of ${signal.as_of_date || '--'} | Target date ${summary.next_target_date || '--'}`;
-            document.getElementById('direction').innerHTML = `<span class="pill ${signal.direction === 'Up' ? 'green' : 'red'}">${fmt.html(signal.direction || '--')}</span>`;
+            document.getElementById('direction').innerHTML = `<span class="pill ${signal.direction === 'Up' ? 'green' : signal.direction === 'Down' ? 'red' : ''}">${fmt.html(signal.direction || '--')}</span>`;
             document.getElementById('bestModel').textContent = signal.best_regression_model || '--';
             document.getElementById('prediction').textContent = fmt.signed(pred, 2);
             document.getElementById('upProbability').textContent = fmt.pct(signal.up_probability);
             document.getElementById('regime').textContent = signal.current_regime_label || '--';
             document.getElementById('regimeStats').textContent = regime ? `Avg ${fmt.signed(regime.avg_target, 2)}, hit ${fmt.pct(regime.positive_hit_rate)}` : '--';
-            document.getElementById('confidence').textContent = fmt.pct(signal.confidence);
+            document.getElementById('confidence').textContent = 'Exploratory';
             document.getElementById('sampleSize').textContent = fmt.n(summary.observations, 0);
             document.getElementById('featureCount').textContent = `${fmt.n(summary.feature_count, 0)} modeled features`;
         }
@@ -573,7 +573,7 @@
         }
 
         function bestNonBaseline(data) {
-            return (data.model_leaderboard || []).find(row => !String(row.model).includes('Baseline'));
+            return (data.model_leaderboard || []).find(row => row.model === data.current_signal?.best_regression_model);
         }
 
         function renderForecast(data) {
@@ -623,7 +623,7 @@
         function renderConsensus(data) {
             const rows = (data.final_predictions || [])
                 .map(row => ({ model: String(row.model), prediction: Number(row.prediction) }))
-                .filter(row => !row.model.includes('Baseline') && Number.isFinite(row.prediction) && Math.abs(row.prediction) <= 25)
+                .filter(row => Number.isFinite(row.prediction))
                 .sort((a, b) => a.prediction - b.prediction);
             if (!rows.length) return;
             const ensemble = Number(data.current_signal?.ensemble_prediction);
@@ -647,7 +647,7 @@
                 }] : [],
                 annotations: Number.isFinite(ensemble) ? [{
                     x: ensemble, yref: 'paper', y: 1.04, showarrow: false,
-                    text: `Ensemble ${fmt.signed(ensemble, 2)}`, font: { size: 10, color: accent.ink }
+                    text: `Selected ${fmt.signed(ensemble, 2)}`, font: { size: 10, color: accent.ink }
                 }] : []
             }, config);
         }
@@ -655,7 +655,7 @@
         function renderBacktest(data) {
             const wf = data.walk_forward || {};
             const best = bestNonBaseline(data);
-            const preds = (wf.predictions || {})[best?.model] || [];
+            const preds = wf.strategy_predictions || [];
             const dates = wf.dates || [];
             const actual = wf.actual || [];
             let cumHold = 0, cumStrat = 0;
@@ -668,14 +668,14 @@
                     continue;
                 }
                 cumHold += a;
-                cumStrat += (p >= 0 ? a : -a);
+                cumStrat += Math.sign(p) * a;
                 hold.push(cumHold); strat.push(cumStrat);
-                hits.push((p >= 0) === (a >= 0));
+                hits.push(p === 0 ? null : Math.sign(p) === Math.sign(a));
             }
 
             Plotly.newPlot('backtestChart', [
                 {
-                    x: dates, y: strat, name: `Trade the signal (${best?.model || 'model'})`,
+                    x: dates, y: strat, name: 'Historical model selection (flat = no position)',
                     type: 'scatter', mode: 'lines', line: { color: accent.blue, width: 2.5 }
                 },
                 {
@@ -844,7 +844,7 @@
         function renderWalkForward(data) {
             const wf = data.walk_forward || {};
             const leaderboard = data.model_leaderboard || [];
-            const best = leaderboard.find(row => !String(row.model).includes('Baseline'))?.model;
+            const best = data.current_signal?.best_regression_model;
             const predictions = wf.predictions?.[best] || [];
             Plotly.newPlot('wfChart', [
                 {

@@ -209,3 +209,40 @@ The app is ready to deploy from GitHub using the included `Dockerfile`, `Procfil
 - ICE COT data is downloaded from yearly CSV files and depends on ICE column naming remaining stable
 - COT/price comparisons use Tuesday alignment; Friday closes should not be mixed with COT reporting dates
 - Full data universes may exceed storage limits - use Parquet/SQLite for full dumps
+
+
+## Brent forecast validation
+
+Forecast computation runs in the Flask `/api/energy/modeling` endpoint on Render
+using scikit-learn. It warms on application startup and caches results in process
+and in `.run/energy_modeling_cache.json`. The summary endpoint reads that cache;
+the browser renders charts. The cache fingerprint includes a model-rules version.
+
+The target is the next Tuesday close minus the current Tuesday close, in $/bbl.
+The next target date is seven days after the latest feature Tuesday. Fourteen fixed
+economic features replace outcome-ranked feature selection. Full-history
+correlation tables and regime clusters remain descriptive diagnostics only.
+
+Source observation dates get conservative availability buffers: seven calendar days
+for weekly releases/COT, one day for daily prices, and 90 days for monthly diagnostics.
+Monthly indicators are excluded from the forecasting feature set. These assumptions
+are **not actual release timestamps or historical data vintages**: CSV revisions,
+unusual publication delays, and continuous futures rolls limit backtest realism.
+
+An expanding-window test covers up to 104 weeks after at least 80 training rows.
+Each model's imputer and scaler fit only the training rows. Historical model choice
+uses only errors realized before that prediction: at least 26 prior test weeks and
+5% lower RMSE than predicting zero change are required. Otherwise the model stays
+flat. The final forecast follows that same rule and can select a baseline. The
+unstable neural networks and unconditional equal-weight regression blend are removed.
+Classifier probabilities are uncalibrated diagnostics, not the forecast direction
+or a confidence measure. A flat forecast is no position in the illustrative track
+record; trading costs are not included. Direction accuracy excludes abstentions.
+
+The private Willowdesk Site's `/forecast` page pairs this public numerical model
+with stored X report summaries. X is currently a dated qualitative overlay, not a
+trained price adjustment. X scores, report text, and personal curation must never
+be committed to this public repository or sent to the public Render service.
+New reports appear automatically in the private view. A numerical X challenger
+requires a substantially longer timestamped history and separate out-of-sample
+validation before it can influence the production dollar forecast.
