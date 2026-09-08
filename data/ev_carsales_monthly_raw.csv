@@ -18482,6 +18482,13 @@ YYYYMM,Country,Fuel,Value,source_url
 202607,Germany,BatteryElectric,78609.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202607,Germany,Hydrogen,6.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202607,Germany,Others,2368.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Germany,Diesel,22516.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Germany,Petrol,35536.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Germany,NonPluginHybrid,59197.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Germany,PluginHybrid,25406.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Germany,BatteryElectric,68930.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Germany,Hydrogen,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Germany,Others,971.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202001,Greece,ICE,8593.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202001,Greece,NonPluginHybrid,1136.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202001,Greece,PluginHybrid,38.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
@@ -32329,6 +32336,10 @@ YYYYMM,Country,Fuel,Value,source_url
 202607,Mexico,NonPluginHybrid,11207.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202607,Mexico,PluginHybrid,3232.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202607,Mexico,BatteryElectric,2837.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Mexico,ICE,112316.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Mexico,NonPluginHybrid,11146.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Mexico,PluginHybrid,3205.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Mexico,BatteryElectric,2695.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202007,Nepal,ICE,308.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202007,Nepal,NonPluginHybrid,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202007,Nepal,PluginHybrid,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
