@@ -29422,6 +29422,12 @@ YYYYMM,Country,Fuel,Value,source_url
 202607,Luxembourg,PluginHybrid,291.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202607,Luxembourg,BatteryElectric,1407.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202607,Luxembourg,Others,29.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Luxembourg,Diesel,181.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Luxembourg,Petrol,584.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Luxembourg,NonPluginHybrid,948.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Luxembourg,PluginHybrid,248.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Luxembourg,BatteryElectric,1132.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Luxembourg,Others,10.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 200001,Malaysia,Diesel,1005.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 200001,Malaysia,Petrol,23226.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 200001,Malaysia,Hybrid,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
@@ -31017,6 +31023,11 @@ YYYYMM,Country,Fuel,Value,source_url
 202607,Malaysia,Hybrid,4964.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202607,Malaysia,BatteryElectric,6827.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202607,Malaysia,Others,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Malaysia,Diesel,3016.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Malaysia,Petrol,58011.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Malaysia,Hybrid,4410.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Malaysia,BatteryElectric,8705.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Malaysia,Others,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202201,Malta,Diesel,13.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202201,Malta,Petrol,166.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202201,Malta,NonPluginHybrid,76.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
