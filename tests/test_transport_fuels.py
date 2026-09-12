@@ -8,7 +8,7 @@ class TransportFuelSnapshotTests(unittest.TestCase):
     def test_coverage_and_contributions(self):
         countries = json.loads((Path(__file__).resolve().parents[1] / 'static/transport-fuels/data.json').read_text())
         self.assertEqual(len(countries), 10)
-        self.assertEqual(sum(len(c['rows']) for c in countries), 605)
+        self.assertGreaterEqual(sum(len(c['rows']) for c in countries), 605)
         for country in countries:
             rows = {r['date']: r for r in country['rows']}
             self.assertEqual(len(rows), len(country['rows']))

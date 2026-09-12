@@ -1,0 +1,77 @@
+{
+  "schedule": "Daily ChatGPT source refresh",
+  "last_run_at": null,
+  "countries": {
+    "United States": {
+      "status": "pending",
+      "latest_month": "2026-06-01",
+      "last_attempt_at": null,
+      "last_success_at": null,
+      "message": "Awaiting first full automated source check."
+    },
+    "India": {
+      "status": "pending",
+      "latest_month": "2026-07-01",
+      "last_attempt_at": null,
+      "last_success_at": null,
+      "message": "Awaiting first full automated source check."
+    },
+    "Brazil": {
+      "status": "pending",
+      "latest_month": "2026-07-01",
+      "last_attempt_at": null,
+      "last_success_at": null,
+      "message": "Awaiting first full automated source check."
+    },
+    "Japan": {
+      "status": "pending",
+      "latest_month": "2026-07-01",
+      "last_attempt_at": null,
+      "last_success_at": null,
+      "message": "Awaiting first full automated source check."
+    },
+    "Mexico": {
+      "status": "pending",
+      "latest_month": "2026-07-01",
+      "last_attempt_at": null,
+      "last_success_at": null,
+      "message": "Awaiting first full automated source check."
+    },
+    "United Kingdom": {
+      "status": "pending",
+      "latest_month": "2026-06-01",
+      "last_attempt_at": null,
+      "last_success_at": null,
+      "message": "Awaiting first full automated source check."
+    },
+    "Spain": {
+      "status": "pending",
+      "latest_month": "2026-06-01",
+      "last_attempt_at": null,
+      "last_success_at": null,
+      "message": "Awaiting first full automated source check."
+    },
+    "Australia": {
+      "status": "pending",
+      "latest_month": "2026-06-01",
+      "last_attempt_at": null,
+      "last_success_at": null,
+      "message": "Awaiting first full automated source check."
+    },
+    "South Korea": {
+      "status": "pending",
+      "latest_month": "2026-07-01",
+      "last_attempt_at": null,
+      "last_success_at": null,
+      "message": "Awaiting first full automated source check."
+    },
+    "Canada": {
+      "status": "pending",
+      "latest_month": "2026-06-01",
+      "last_attempt_at": null,
+      "last_success_at": null,
+      "message": "Awaiting first full automated source check."
+    }
+  },
+  "configured_at": "2026-09-12T03:52:17.741309+00:00"
+}
