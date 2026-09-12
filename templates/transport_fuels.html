@@ -1,0 +1,39 @@
+<div class="section" data-page="energy" id="transport-fuels">
+  <div class="section-header">
+    <div>
+      <div class="section-title">International Transport Fuels</div>
+      <div class="section-subtitle">Gasoline, jet fuel & diesel · 10 markets · July 2021–June/July 2026</div>
+    </div>
+    <a class="section-button" href="/static/transport-fuels/standardized_transport_fuel_yoy_mbd_data.csv" download>Download CSV</a>
+  </div>
+  <p class="fuel-note">Uploaded snapshot · Not automatically refreshed. Sales, deliveries, consumption and product supplied differ by country. These three products are an indicator, not total oil demand.</p>
+  <div class="fuel-controls">
+    <label>Country <select id="fuel-country"><option value="all">All 10 markets</option></select></label>
+    <label>View <select id="fuel-view"><option value="yoy">Year-over-year change</option><option value="level">Product levels</option></select></label>
+    <label><input type="checkbox" id="fuel-common-scale"> Same scale across countries</label>
+  </div>
+  <p class="fuel-note">Million barrels per day (M b/d). Each country ends at its own latest available month. With separate scales, compare axis values rather than bar heights.</p>
+  <div id="fuel-status" role="status">Select Energy to load the fuel charts.</div>
+  <div id="fuel-grid"></div>
+  <details class="fuel-method"><summary>Sources & conversion methodology</summary>
+    <p>Monthly volumes are divided by calendar days and standardized to M b/d before calculating change versus the same month a year earlier. Mass conversions: gasoline 8.50, jet fuel 7.77, diesel 7.23 barrels/tonne; volume conversion: 6.28981077 barrels/m³. The black line adds the three product changes. Mixed latest months must not be treated as a single-month global total.</p>
+    <a href="/static/transport-fuels/standardized_chart_catalog.csv" download>Source catalog</a> · <a href="/static/transport-fuels/REPRODUCTION_GUIDE.md" download>Reproduction guide</a>
+  </details>
+</div>
+<style>
+#transport-fuels .fuel-note{font-size:14px;color:var(--text-secondary);margin:12px 0}
+.fuel-controls{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin:16px 0}
+.fuel-controls label{font-size:14px;display:flex;gap:8px;align-items:center}
+.fuel-controls select{font:inherit;padding:8px;border:1px solid var(--border);border-radius:5px;background:white;max-width:100%}
+#fuel-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.fuel-card{min-width:0;background:white;border:1px solid var(--border-soft);border-radius:8px;padding:16px}
+.fuel-card h3{font-size:18px;color:var(--navy)}
+.fuel-card .fuel-latest{font-size:14px;color:var(--text-secondary);margin-top:4px}
+.fuel-plot{width:100%;height:310px}
+.fuel-card details,.fuel-method{font-size:14px;margin-top:12px;color:var(--text-secondary)}
+.fuel-card summary,.fuel-method summary{cursor:pointer;color:var(--navy);padding:6px 0}
+.fuel-card p,.fuel-method p{margin:8px 0;overflow-wrap:anywhere}
+@media(max-width:900px){
+#fuel-grid{grid-template-columns:minmax(0,1fr)}.fuel-card{padding:10px}.fuel-controls{gap:12px}.fuel-controls label{flex-wrap:wrap}}
+</style>
+<script src="/static/transport-fuels/charts.js"></script>

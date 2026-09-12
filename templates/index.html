@@ -818,6 +818,8 @@
             </div>
         </div>
 
+        {% include 'transport_fuels.html' %}
+
         <!-- Petroleum Inventories & Supply/Demand -->
         <div class="section" data-page="energy">
             <div class="section-header">
@@ -1729,6 +1731,7 @@
                 'loadBalticDry'
             ],
             energy: [
+                'loadTransportFuels',
                 'loadPetroleumInventories',
                 'loadRefinery',
                 'loadUpstreamActivity',
