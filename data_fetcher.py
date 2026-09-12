@@ -3177,6 +3177,17 @@ def fetch_all():
     print("\n--- Calculating derived metrics ---")
     fetch_days_of_supply()
 
+    # International transport fuels are an independent ETL. Each official
+    # country source is isolated inside the adapter layer and failures retain
+    # that country's last good bundle without blocking the macro feeds.
+    print("\n--- Refreshing international transport fuels ---")
+    try:
+        from scripts.transport_fuels_fetcher import fetch_transport_fuels_dashboard
+        result = fetch_transport_fuels_dashboard(root=Path(__file__).resolve().parent)
+        print(f"  Transport fuels: {result['published_countries']} published; failures: {result['failed_countries']}")
+    except Exception as exc:
+        print(f"  Error in transport-fuel ETL: {type(exc).__name__}: {exc}")
+
     # Save metadata
     meta = {
         'last_updated': datetime.now().isoformat(),
