@@ -152,10 +152,11 @@ def apply_manifest(manifest_path, root=ROOT, now=None):
             changed = chart_rows != c['rows']
             metadata = {k: v for k, v in c.items() if k != 'rows'}
             metadata['vintage'] = item['vintage']
-            # Preserve dataset/product definitions. Record actual downloads separately.
+            metadata['source_url'] = urls[0]
+            # Preserve product definitions and point source links at the verified download.
             new_master = [{**metadata, 'native_unit': unit, **r} for r in rows]
             master = [r for r in master if r['country'] != name] + new_master
-            c.update(vintage=item['vintage'], rows=chart_rows)
+            c.update(vintage=item['vintage'], source_url=urls[0], rows=chart_rows)
             state.update(status='ok', message='Validated official source; new months and revisions checked.',
                          last_success_at=timestamp, latest_month=rows[-1]['date'],
                          source_urls=urls, vintage=item['vintage'], validation_note=item['validation_note'],
@@ -178,7 +179,7 @@ def apply_manifest(manifest_path, root=ROOT, now=None):
     for row in catalog:
         country = next(c for c in data if c['country'] == row['country'])
         last = country['rows'][-1]
-        row.update(latest_month=last['date'][:7], standardized_period='2021-07 to ' + last['date'][:7], vintage=country['vintage'])
+        row.update(latest_month=last['date'][:7], standardized_period='2021-07 to ' + last['date'][:7], vintage=country['vintage'], source_url=country['source_url'])
         for key in ('gasoline_yoy_mbd', 'jet_fuel_yoy_mbd', 'diesel_yoy_mbd', 'net_yoy_mbd'):
             row[key] = last[key]
     write_csv(directory / 'standardized_chart_catalog.csv', catalog, catalog_fields)
