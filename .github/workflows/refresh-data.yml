@@ -1,6 +1,13 @@
 name: Refresh data
 
 on:
+  push:
+    branches: [master]
+    paths:
+      - 'scripts/transport_fuels_fetcher.py'
+      - 'transport_fuel_sources/**'
+      - 'scripts/update_transport_fuels.py'
+      - '.github/workflows/refresh-data.yml'
   schedule:
     # All times UTC. Targets ET releases, robust to DST (ET = UTC-4/-5).
     # Each run executes data_fetcher.py, including EV fleet and upstream activity data.
@@ -41,7 +48,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/
+          git add data/ static/transport-fuels/data.json static/transport-fuels/refresh-status.json \
+            static/transport-fuels/standardized_transport_fuel_yoy_mbd_data.csv \
+            static/transport-fuels/standardized_chart_catalog.csv
+          git add static/transport-fuels/source-levels/*.csv 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "No data changes - nothing to commit"
           else
