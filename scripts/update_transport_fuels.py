@@ -1,7 +1,8 @@
 """Validate source extracts and publish one consistent chart/CSV/status bundle.
 
-The scheduled ChatGPT refresh retrieves the ten official sources and supplies a
-manifest. This script deliberately does not scrape or guess changing source layouts.
+The existing scheduled GitHub Actions refresh retrieves the official sources and
+supplies a manifest. This script deliberately does not scrape or guess changing
+source layouts.
 """
 import argparse
 import calendar
@@ -21,7 +22,7 @@ START = '2020-07-01'
 CHART_START = '2021-07-01'
 OFFICIAL_DOMAINS = {
     'United States': ('eia.gov',), 'India': ('ppac.gov.in',),
-    'Brazil': ('gov.br',), 'Japan': ('meti.go.jp',),
+    'Brazil': ('gov.br',), 'Japan': ('meti.go.jp', 'e-stat.go.jp'),
     'Mexico': ('pemex.com',), 'United Kingdom': ('gov.uk', 'publishing.service.gov.uk'),
     'Spain': ('cores.es',), 'Australia': ('energy.gov.au',),
     'South Korea': ('petronet.co.kr', 'knoc.co.kr'), 'Canada': ('statcan.gc.ca',),
@@ -65,6 +66,8 @@ def validated_rows(path, unit, today):
                 raise ValueError(f'Invalid {product} value for {period}')
             result[product] = value
             result[product + '_mbd'] = convert(value, unit, product, period)
+            if not math.isfinite(result[product + '_mbd']):
+                raise ValueError(f'Non-finite converted {product} value for {period}')
         rows.append(result)
         expected = next_month(period)
     by_date = {r['date']: r for r in rows}
@@ -75,7 +78,11 @@ def validated_rows(path, unit, today):
         prior = by_date[str(int(row['date'][:4]) - 1) + row['date'][4:]]
         for product in PRODUCTS:
             row[product + '_yoy_mbd'] = row[product + '_mbd'] - prior[product + '_mbd']
+            if not math.isfinite(row[product + '_yoy_mbd']):
+                raise ValueError(f'Non-finite {product} YoY value for {row["date"]}')
         row['net_yoy_mbd'] = sum(row[p + '_yoy_mbd'] for p in PRODUCTS)
+        if not math.isfinite(row['net_yoy_mbd']):
+            raise ValueError(f'Non-finite net YoY value for {row["date"]}')
         output.append(row)
     if not output:
         raise ValueError('Need at least 13 months of history')
@@ -84,7 +91,7 @@ def validated_rows(path, unit, today):
 
 def write_json(path, data):
     temp = path.with_suffix(path.suffix + '.tmp')
-    temp.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n')
+    temp.write_text(json.dumps(data, ensure_ascii=False, indent=2, allow_nan=False) + '\n')
     temp.replace(path)
 
 
@@ -132,6 +139,7 @@ def apply_manifest(manifest_path, root=ROOT, now=None):
             if not item.get('vintage') or not item.get('validation_note'):
                 raise ValueError('Require release vintage and final-month validation note')
             source_path = (manifest_path.parent / item['csv']).resolve()
+            source_bytes = source_path.read_bytes()
             unit = next(r['native_unit'] for r in master if r['country'] == name)
             rows = validated_rows(source_path, unit, now.date())
             if rows[-1]['date'] < c['rows'][-1]['date']:
@@ -147,7 +155,6 @@ def apply_manifest(manifest_path, root=ROOT, now=None):
                             raise ValueError(f'Gross level change needs review: {r["date"]} {product}')
             native_dir = directory / 'source-levels'
             native_dir.mkdir(exist_ok=True)
-            (native_dir / (name.lower().replace(' ', '_') + '.csv')).write_bytes(source_path.read_bytes())
             chart_rows = [{k: v for k, v in r.items() if k == 'date' or k.endswith('_mbd')} for r in rows]
             changed = chart_rows != c['rows']
             metadata = {k: v for k, v in c.items() if k != 'rows'}
@@ -155,15 +162,22 @@ def apply_manifest(manifest_path, root=ROOT, now=None):
             metadata['source_url'] = urls[0]
             # Preserve product definitions and point source links at the verified download.
             new_master = [{**metadata, 'native_unit': unit, **r} for r in rows]
+            # Prepare all values before mutating in-memory country/master rows.
+            # The source bytes are read once, so a later filesystem failure
+            # cannot leave a country half-updated in the published bundle.
+            source_target = native_dir / (name.lower().replace(' ', '_') + '.csv')
+            source_temp = source_target.with_suffix('.csv.tmp')
+            source_temp.write_bytes(source_bytes)
+            source_temp.replace(source_target)
             master = [r for r in master if r['country'] != name] + new_master
             c.update(vintage=item['vintage'], source_url=urls[0], rows=chart_rows)
             state.update(status='ok', message='Validated official source; new months and revisions checked.',
                          last_success_at=timestamp, latest_month=rows[-1]['date'],
                          source_urls=urls, vintage=item['vintage'], validation_note=item['validation_note'],
-                         source_extract_sha256=hashlib.sha256(source_path.read_bytes()).hexdigest())
+                         source_extract_sha256=hashlib.sha256(source_bytes).hexdigest())
             if changed:
                 state['last_data_change_at'] = timestamp
-        except (ValueError, KeyError, OSError, TypeError) as exc:
+        except (ValueError, KeyError, OSError, TypeError, csv.Error) as exc:
             state.update(status='error', message=str(exc)[:500])
             failures.append(name)
         status['countries'][name] = state

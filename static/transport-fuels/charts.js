@@ -43,11 +43,12 @@
         freshness.textContent = `Refresh failed · Keeping last good data. ${checkedAt ? 'Last successful check: ' + checkedAt : 'No successful automated check yet.'} ${check.message || ''}`;
         freshness.classList.add('fuel-warning');
       } else if (checkedAt) {
-        const overdue = Date.now() - Date.parse(check.last_success_at) > 48 * 60 * 60 * 1000;
+        // The ETL runs weekdays; 96h spans the normal Friday-to-Monday gap.
+        const overdue = Date.now() - Date.parse(check.last_success_at) > 96 * 60 * 60 * 1000;
         freshness.textContent = `${overdue ? 'Source check overdue · ' : ''}Last verified: ${checkedAt}`;
         if (overdue) freshness.classList.add('fuel-warning');
       } else {
-        const overdue = refreshStatus?.configured_at && Date.now() - Date.parse(refreshStatus.configured_at) > 48 * 60 * 60 * 1000;
+        const overdue = refreshStatus?.configured_at && Date.now() - Date.parse(refreshStatus.configured_at) > 96 * 60 * 60 * 1000;
         freshness.textContent = refreshStatus ? (overdue ? 'First automated source check overdue · Retaining uploaded data.' : 'Awaiting first full automated source check.') : 'Refresh status unavailable · Data shown below may be stale.';
         freshness.classList.add('fuel-warning');
       }
