@@ -1229,10 +1229,10 @@
             <div class="section-header">
                 <div>
                     <div class="section-title">Employment</div>
-                    <div class="section-subtitle">Nonfarm payrolls by state - monthly time series (thousands)</div>
+                    <div class="section-subtitle">Nonfarm payrolls by state - monthly time series (thousands). 2020-2021 held flat at the last pre-COVID observation.</div>
                 </div>
             </div>
-            <div class="grid-3" id="employment-charts">
+            <div class="grid-2" id="employment-charts">
                 <!-- Will be populated by JS -->
             </div>
         </div>
@@ -2141,10 +2141,16 @@
             const parsed = parseLocalDate(value);
             return Number.isNaN(parsed.getTime()) ? String(value) : parsed.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
         };
+        // Blank and null observations are missing data, not zero. This matters for
+        // state payroll series, which can lag the national release by a month.
+        const finiteNumberOrNull = value => {
+            if (value === null || value === undefined || (typeof value === 'string' && value.trim() === '')) return null;
+            const numeric = Number(value);
+            return Number.isFinite(numeric) ? numeric : null;
+        };
         const latestDateFor = (rows, field, dateField = 'date') => {
             for (let i = rows.length - 1; i >= 0; i--) {
-                const numeric = Number(rows[i][field]);
-                if (Number.isFinite(numeric) && rows[i][dateField]) return rows[i][dateField];
+                if (finiteNumberOrNull(rows[i][field]) !== null && rows[i][dateField]) return rows[i][dateField];
             }
             return null;
         };
@@ -3608,8 +3614,8 @@
                 const rowYear = parseLocalDate(row[dateField]).getFullYear();
                 if (rowYear < startYear) {
                     for (const field of valueFields) {
-                        const value = Number(row[field]);
-                        if (Number.isFinite(value)) priorValues[field] = value;
+                        const value = finiteNumberOrNull(row[field]);
+                        if (value !== null) priorValues[field] = value;
                     }
                 } else if (rowYear >= startYear && rowYear <= endYear) {
                     for (const field of valueFields) {
@@ -3626,9 +3632,11 @@
                 let data = await res.json();
                 if (!data.length) return;
                 if (flattenYear) {
+                    const startYear = Array.isArray(flattenYear) ? flattenYear[0] : flattenYear;
+                    const endYear = Array.isArray(flattenYear) ? flattenYear[1] : flattenYear;
                     data = forwardFillPeriodWithPriorValue(data, {
-                        startYear: flattenYear,
-                        endYear: flattenYear,
+                        startYear,
+                        endYear,
                         fields: metrics.map(m => m.key)
                     });
                 }
@@ -3674,9 +3682,11 @@
                 let data = await res.json();
                 if (!data.length) return;
                 if (flattenYear) {
+                    const startYear = Array.isArray(flattenYear) ? flattenYear[0] : flattenYear;
+                    const endYear = Array.isArray(flattenYear) ? flattenYear[1] : flattenYear;
                     data = forwardFillPeriodWithPriorValue(data, {
-                        startYear: flattenYear,
-                        endYear: flattenYear,
+                        startYear,
+                        endYear,
                         fields: metrics.map(m => m.key)
                     });
                 }
@@ -3684,7 +3694,7 @@
                 data.sort((a, b) => new Date(a.date) - new Date(b.date));
                 const dates = data.map(d => d.date);
                 const usableMetrics = metrics.filter(m =>
-                    data.some(d => d[m.key] !== null && d[m.key] !== undefined && Number.isFinite(Number(d[m.key])))
+                    data.some(d => finiteNumberOrNull(d[m.key]) !== null)
                 );
 
                 const container = document.getElementById(containerId);
@@ -3709,10 +3719,7 @@
                 `).join('');
 
                 for (const m of usableMetrics) {
-                    const values = data.map(d => {
-                        const value = Number(d[m.key]);
-                        return Number.isFinite(value) ? value : null;
-                    });
+                    const values = data.map(d => finiteNumberOrNull(d[m.key]));
                     setTimeout(() => {
                         const traces = [{
                             x: dates,
@@ -3720,6 +3727,7 @@
                             name: m.name,
                             type: 'scatter',
                             mode: 'lines',
+                            connectgaps: false,
                             line: { color: m.color || colors.navy, width: 2.25 }
                         }];
 
@@ -3806,7 +3814,7 @@
                 chartPrefix: 'emp-chart',
                 source: 'BLS via FRED',
                 yAxisLabel: 'Thousands',
-                flattenYear: 2020,
+                flattenYear: [2020, 2021],
                 metrics: [
                     { key: 'us_total', name: 'US Total Nonfarm', desc: 'Total nonfarm payroll employment across all US industries' },
                     { key: 'california', name: 'California', desc: 'Nonfarm payrolls in California, the largest state economy' },
