@@ -1864,6 +1864,128 @@ def get_employment():
     return read_csv('employment.csv')
 
 
+EMPLOYMENT_INDEX_GROUPS = {
+    'job_creation': ['total_payroll_growth', 'private_payroll_growth'],
+    'hiring_demand': ['hires_rate', 'openings_rate', 'quits_rate'],
+    'job_security': ['initial_per_1000', 'insured_unemployment', 'layoffs_per_100'],
+    'breadth': ['state_breadth', 'mfg_payroll_growth'],
+}
+EMPLOYMENT_INDEX_WEIGHTS = {
+    'job_creation': 0.30,
+    'hiring_demand': 0.30,
+    'job_security': 0.30,
+    'breadth': 0.10,
+}
+EMPLOYMENT_INDEX_INVERSE = {'initial_per_1000', 'insured_unemployment', 'layoffs_per_100'}
+EMPLOYMENT_INDEX_STATES = [
+    'california', 'texas', 'new_york', 'florida', 'illinois',
+    'pennsylvania', 'ohio', 'georgia', 'michigan', 'washington',
+]
+
+
+def build_employment_index():
+    """Build the transparent Willowdesk Employment Activity Index from raw CSVs."""
+    employment = prepare_date_frame(read_dataframe('employment.csv')).set_index('date')
+    jolts = prepare_date_frame(read_dataframe('jolts.csv')).set_index('date')
+    claims = prepare_date_frame(read_dataframe('jobless_claims.csv')).set_index('date')
+    manufacturing = prepare_date_frame(read_dataframe('ism_pmi.csv')).set_index('date')
+
+    month_index = pd.date_range(employment.index.min(), employment.index.max(), freq='MS')
+    employment = employment.reindex(month_index)
+    jolts = jolts.reindex(month_index)
+    manufacturing = manufacturing.reindex(month_index)
+
+    claim_fields = ['initial_claims', 'insured_unemployment']
+    monthly_claims = claims[claim_fields].resample('MS').mean()
+    claim_counts = claims[claim_fields].resample('MS').count()
+    expected_week_counts = pd.Series(
+        [sum(pd.Timestamp(month.year, month.month, day).weekday() == 5
+             for day in range(1, month.days_in_month + 1))
+         for month in monthly_claims.index],
+        index=monthly_claims.index,
+    )
+    monthly_claims = monthly_claims.where(claim_counts.eq(expected_week_counts, axis=0))
+    monthly_claims = monthly_claims.reindex(month_index)
+
+    def annualized_three_month_growth(series):
+        return ((series / series.shift(3)) ** 4 - 1) * 100
+
+    inputs = pd.DataFrame(index=month_index)
+    inputs['total_payroll_growth'] = annualized_three_month_growth(employment['us_total'])
+    inputs['private_payroll_growth'] = annualized_three_month_growth(employment['us_private'])
+    for field in ['hires_rate', 'openings_rate', 'quits_rate']:
+        inputs[field] = jolts[field].rolling(3, min_periods=3).mean()
+
+    inputs['initial_per_1000'] = (
+        monthly_claims['initial_claims'] / employment['us_total']
+    ).rolling(3, min_periods=3).mean()
+    inputs['insured_unemployment'] = monthly_claims['insured_unemployment'].rolling(3, min_periods=3).mean()
+    inputs['layoffs_per_100'] = (
+        100 * jolts['layoffs'] / employment['us_total']
+    ).rolling(3, min_periods=3).mean()
+
+    states = [field for field in EMPLOYMENT_INDEX_STATES if field in employment.columns]
+    state_change = employment[states] - employment[states].shift(3)
+    inputs['state_breadth'] = (
+        (state_change.gt(0).sum(axis=1) + 0.5 * state_change.eq(0).sum(axis=1))
+        * 100 / len(states)
+    ).where(state_change.notna().all(axis=1))
+    inputs['mfg_payroll_growth'] = annualized_three_month_growth(manufacturing['mfg_employment'])
+
+    complete = inputs.replace([np.inf, -np.inf], np.nan).dropna(how='any')
+    baseline_mask = (complete.index.year <= 2019) | complete.index.year.isin([2023, 2024, 2025])
+    baseline = complete.loc[baseline_mask]
+    if len(baseline) < 24:
+        return {'series': [], 'metadata': {'error': 'Insufficient history to calculate the index.'}}
+
+    baseline_mean = baseline.mean()
+    baseline_std = baseline.std(ddof=1).replace(0, np.nan).fillna(1.0)
+    z_scores = (complete - baseline_mean) / baseline_std
+    for field in EMPLOYMENT_INDEX_INVERSE:
+        z_scores[field] *= -1
+
+    component_scores = 50 + 20 * z_scores.clip(-2.5, 2.5)
+    pillar_scores = pd.DataFrame({
+        group: component_scores[fields].mean(axis=1)
+        for group, fields in EMPLOYMENT_INDEX_GROUPS.items()
+    })
+    index = pillar_scores.mul(pd.Series(EMPLOYMENT_INDEX_WEIGHTS)).sum(axis=1)
+    prior_index = index.shift(3)
+
+    series = []
+    for date in index.index:
+        row = {
+            'date': date.strftime('%Y-%m-%d'),
+            'index': float(index.loc[date]),
+            'change_3m': float(index.loc[date] - prior_index.loc[date]) if pd.notna(prior_index.loc[date]) else None,
+        }
+        row.update({group: float(pillar_scores.loc[date, group]) for group in EMPLOYMENT_INDEX_GROUPS})
+        series.append(row)
+
+    latest_date = index.index[-1]
+    latest_change_3m = index.iloc[-1] - index.iloc[-4] if len(index) >= 4 else None
+    metadata = {
+        'latest_date': latest_date.strftime('%Y-%m-%d'),
+        'latest_index': float(index.iloc[-1]),
+        'latest_change_3m': float(latest_change_3m) if latest_change_3m is not None else None,
+        'baseline_start': baseline.index[0].strftime('%Y-%m-%d'),
+        'baseline_end': baseline.index[-1].strftime('%Y-%m-%d'),
+        'baseline_observations': int(len(baseline)),
+        'component_weights': EMPLOYMENT_INDEX_WEIGHTS,
+        'latest_pillars': {
+            group: float(pillar_scores.iloc[-1][group]) for group in EMPLOYMENT_INDEX_GROUPS
+        },
+    }
+    return clean_json({'series': series, 'metadata': metadata})
+
+
+@app.route('/api/employment-index')
+@safe_endpoint
+def get_employment_index():
+    """Willowdesk composite employment activity index."""
+    return build_employment_index()
+
+
 @app.route('/api/jolts')
 @safe_endpoint
 def get_jolts():
