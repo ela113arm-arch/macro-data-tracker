@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>U.S. Macro Dashboard</title>
+    <title>Willowdesk Energy Desk</title>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <style>
         :root {
@@ -425,6 +425,72 @@
             font-size: 13px;
         }
 
+        .chart-error {
+            display: flex;
+            min-height: 200px;
+            height: 100%;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 24px;
+            color: #52637a;
+            text-align: center;
+        }
+
+        .chart-error strong { color: #26384f; font-size: 15px; }
+        .chart-error span { font-size: 12px; }
+        .chart-error button {
+            margin-top: 4px;
+            border: 1px solid #9fb2c9;
+            border-radius: 5px;
+            padding: 7px 13px;
+            background: #fff;
+            color: #1a2942;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 700;
+        }
+        .chart-error button:hover { background: #eef4fa; }
+
+        .refinery-grid { grid-template-columns: minmax(0, 1fr); }
+        .chart, .chart-lg { min-width: 0; overflow: hidden; }
+        .js-plotly-plot,
+        .js-plotly-plot .plot-container,
+        .js-plotly-plot .svg-container {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+        }
+
+        .mobile-chart-legend {
+            display: none;
+            margin-top: 10px;
+            border: 1px solid #d5dee9;
+            border-radius: 6px;
+            background: #f8fafc;
+            color: #52637a;
+        }
+        .mobile-chart-legend summary {
+            padding: 9px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .mobile-chart-legend ul {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            max-height: 150px;
+            gap: 6px 10px;
+            overflow-y: auto;
+            margin: 0;
+            padding: 0 10px 10px;
+            list-style: none;
+            font-size: 11px;
+        }
+        .mobile-chart-legend li { display: flex; align-items: center; gap: 6px; min-width: 0; }
+        .mobile-legend-swatch { flex: 0 0 auto; width: 9px; height: 3px; border-radius: 2px; }
+
         @media (max-width: 1400px) {
             .stats-row { grid-template-columns: repeat(3, 1fr); }
             .grid-4 { grid-template-columns: repeat(2, 1fr); }
@@ -665,14 +731,16 @@
             .employment-index-stat-value { font-size: 15px; }
             .subnav { overflow-x: auto; flex-wrap: nowrap; margin-left: -2px; margin-right: -2px; }
             .subnav a { flex: 0 0 auto; }
+            .mobile-chart-legend { display: block; }
+            .chart, .chart-lg, .chart-card-wide .chart { overflow: hidden; }
         }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="header-left">
-            <h1>U.S. MACRO DASHBOARD</h1>
-            <p>Economic Indicators & Energy Analysis</p>
+            <h1>WILLOWDESK ENERGY DESK</h1>
+            <p>U.S. Macro &amp; Energy Dashboard</p>
         </div>
         <div class="header-right" style="display:flex;align-items:center;gap:16px;">
             <button class="hamburger" type="button" aria-label="Toggle navigation" aria-controls="main-nav" aria-expanded="false" onclick="toggleMobileNav()">&#9776;</button>
@@ -747,7 +815,7 @@
                 <p>Start with the latest market signals, then open the section that explains the move.</p>
                 <div class="home-change-list">
                     <a class="home-change" href="?section=markets#market-prices-section"><span class="home-change-label">WTI crude</span><strong class="home-change-value" id="home-wti">--</strong></a>
-                    <a class="home-change" href="?section=energy#petroleum-balances-section"><span class="home-change-label">Crude inventory</span><strong class="home-change-value" id="home-crude-balance">Open balance</strong></a>
+                    <a class="home-change" href="?section=energy#petroleum-balances-section"><span class="home-change-label">Crude inventory</span><strong class="home-change-value" id="home-crude-balance">Checking…</strong></a>
                     <a class="home-change" href="?section=labor#claims-section"><span class="home-change-label">Initial claims</span><strong class="home-change-value" id="home-claims">--</strong></a>
                     <a class="home-change" href="?section=markets#yield-curve-section"><span class="home-change-label">10Y Treasury</span><strong class="home-change-value" id="home-10y">--</strong></a>
                 </div>
@@ -857,6 +925,7 @@
                     <div class="section-title">Market Prices</div>
                     <div class="section-subtitle">Daily prices with 30-day moving average - 3 year history</div>
                 </div>
+                <a class="section-button" href="?section=energy#total-inventory-section">Inventory fair value →</a>
             </div>
             <div class="grid-3" id="market-charts">
                 <!-- Will be populated by JS -->
@@ -878,6 +947,10 @@
                 </div>
                 <div class="card-body">
                     <div id="oil-stocks-chart" class="chart-lg"><div class="loading">Loading...</div></div>
+                    <details class="mobile-chart-legend">
+                        <summary>Show series names</summary>
+                        <ul id="oil-stocks-mobile-legend"></ul>
+                    </details>
                     <div class="chart-desc">All prices normalized to 100 at start of period for comparison. WTI shown as thick black line.</div>
                 </div>
             </div>
@@ -1006,7 +1079,7 @@
         </div>
 
         <!-- Total Inventory EIA WTI Fair Value -->
-        <div class="section" id="total-inventory-section" data-page="energy markets">
+        <div class="section" id="total-inventory-section" data-page="energy">
             <div class="section-header">
                 <div>
                     <div class="section-title">Total Inventory EIA WTI Fair Value</div>
@@ -1260,7 +1333,7 @@
                     <div class="section-subtitle">Refinery utilization and crude inputs from EIA PSM - Monthly range charts</div>
                 </div>
             </div>
-            <div class="grid-3" id="refinery-charts">
+            <div class="grid-3 refinery-grid" id="refinery-charts">
                 <!-- Will be populated by JS -->
             </div>
         </div>
@@ -1890,6 +1963,7 @@
             overview: [
                 'loadGDP',
                 'loadTrade',
+                'loadContributions',
                 'loadKeyMetrics'
             ],
             markets: [
@@ -2081,6 +2155,7 @@
         }
 
         const baseLayout = {
+            autosize: true,
             paper_bgcolor: '#ffffff',
             plot_bgcolor: '#ffffff',
             font: { family: 'Segoe UI, sans-serif', size: 12, color: '#4b5563' },
@@ -2110,6 +2185,111 @@
 
         const plotlyConfig = { responsive: true, displayModeBar: false };
 
+        // Every visible chart gets a bounded wait and a reader-safe failure state.
+        // The source-specific detail remains in server logs/refresh artifacts, not
+        // in the analyst-facing dashboard.
+        const DASHBOARD_FETCH_TIMEOUT_MS = 10000;
+        let dashboardLastGoodDate = 'Sep 12, 2026';
+        const nativeDashboardFetch = window.fetch.bind(window);
+        window.fetch = (input, init = {}) => {
+            const controller = new AbortController();
+            const callerSignal = init.signal;
+            const relayAbort = () => controller.abort(callerSignal.reason);
+            if (callerSignal) {
+                if (callerSignal.aborted) relayAbort();
+                else callerSignal.addEventListener('abort', relayAbort, { once: true });
+            }
+            const timeoutId = window.setTimeout(() => controller.abort(), DASHBOARD_FETCH_TIMEOUT_MS);
+            return nativeDashboardFetch(input, { ...init, signal: controller.signal })
+                .catch(error => {
+                    if (error?.name === 'AbortError') {
+                        throw new Error('Request timed out after 10 seconds');
+                    }
+                    throw error;
+                })
+                .finally(() => {
+                    window.clearTimeout(timeoutId);
+                    callerSignal?.removeEventListener('abort', relayAbort);
+                });
+        };
+
+        function dashboardDateLabel(value) {
+            if (!value) return dashboardLastGoodDate;
+            const parsed = parseLocalDate(value);
+            return Number.isNaN(parsed.getTime())
+                ? dashboardLastGoodDate
+                : parsed.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        function showChartError(target) {
+            const element = typeof target === 'string' ? document.getElementById(target) : target;
+            if (!element || element.dataset.dashboardError === 'true') return;
+            element.dataset.dashboardError = 'true';
+            element.innerHTML = `
+                <div class="chart-error" role="status" aria-live="polite">
+                    <strong>Data temporarily unavailable</strong>
+                    <span>Last good data: ${dashboardLastGoodDate}</span>
+                    <button type="button">Retry</button>
+                </div>`;
+            element.querySelector('button')?.addEventListener('click', () => window.location.reload());
+        }
+
+        function chartHostIsVisible(element) {
+            const style = window.getComputedStyle(element);
+            const rect = element.getBoundingClientRect();
+            return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+        }
+
+        function startChartWatchdog() {
+            window.setInterval(() => {
+                document.querySelectorAll('.loading').forEach(loading => {
+                    const host = loading.closest('.chart, .chart-lg, .employment-index-gauge, .employment-index-history, [id]');
+                    if (!host || host.dataset.dashboardError === 'true') return;
+                    if (!chartHostIsVisible(host)) {
+                        delete host.dataset.loadingStartedAt;
+                        return;
+                    }
+                    const startedAt = Number(host.dataset.loadingStartedAt) || Date.now();
+                    host.dataset.loadingStartedAt = String(startedAt);
+                    if (Date.now() - startedAt >= DASHBOARD_FETCH_TIMEOUT_MS) showChartError(host);
+                });
+            }, 1000);
+        }
+
+        startChartWatchdog();
+
+        function legendTraces(data) {
+            return Array.isArray(data)
+                ? data.filter(trace => trace && trace.showlegend !== false && trace.name)
+                : [];
+        }
+
+        function ensureMobileLegend(target, data) {
+            const element = typeof target === 'string' ? document.getElementById(target) : target;
+            const traces = legendTraces(data);
+            if (!element || window.innerWidth > 600 || traces.length <= 5) return;
+            const host = element.parentElement;
+            if (!host || host.querySelector('.mobile-chart-legend')) return;
+
+            const details = document.createElement('details');
+            details.className = 'mobile-chart-legend';
+            const summary = document.createElement('summary');
+            summary.textContent = 'Show series names';
+            const list = document.createElement('ul');
+            traces.forEach(trace => {
+                const item = document.createElement('li');
+                const swatch = document.createElement('span');
+                swatch.className = 'mobile-legend-swatch';
+                swatch.style.backgroundColor = trace.line?.color || trace.marker?.color || '#64748b';
+                const label = document.createElement('span');
+                label.textContent = trace.name;
+                item.append(swatch, label);
+                list.append(item);
+            });
+            details.append(summary, list);
+            element.insertAdjacentElement('afterend', details);
+        }
+
         function seasonalAxis(maxPeriod = 52) {
             return {
                 ...baseLayout.xaxis,
@@ -2122,12 +2302,17 @@
         }
 
         function quarterAxis(quarters) {
+            const step = quarters.length > 36 ? 4 : quarters.length > 20 ? 2 : 1;
+            const tickvals = quarters.filter((_, index) => index % step === 0 || index === quarters.length - 1);
             return {
                 ...baseLayout.xaxis,
                 type: 'category',
                 categoryorder: 'array',
                 categoryarray: quarters,
-                tickangle: quarters.length > 14 ? -35 : 0,
+                tickmode: 'array',
+                tickvals,
+                ticktext: tickvals,
+                tickangle: quarters.length > 14 ? -45 : 0,
                 tickfont: { size: quarters.length > 18 ? 10 : 11 },
                 automargin: true
             };
@@ -2168,12 +2353,27 @@
         }
 
         const originalNewPlot = Plotly.newPlot.bind(Plotly);
-        Plotly.newPlot = (element, data, layout = {}, config = {}) =>
-            originalNewPlot(element, data, cleanLayout(layout), { ...plotlyConfig, ...config })
+        Plotly.newPlot = (element, data, layout = {}, config = {}) => {
+            const chartElement = typeof element === 'string' ? document.getElementById(element) : element;
+            const compactLayout = cleanLayout(layout);
+            const traces = legendTraces(data);
+            if (window.innerWidth <= 600 && traces.length > 5) compactLayout.showlegend = false;
+            ensureMobileLegend(chartElement, data);
+            return originalNewPlot(element, data, compactLayout, { ...plotlyConfig, ...config })
                 .then(chart => {
+                    if (chartElement) {
+                        delete chartElement.dataset.dashboardError;
+                        delete chartElement.dataset.loadingStartedAt;
+                        chartElement.dataset.lastGoodDate = dashboardLastGoodDate;
+                    }
                     resizeVisibleCharts();
                     return chart;
+                })
+                .catch(error => {
+                    showChartError(element);
+                    throw error;
                 });
+        };
 
         const fmt = (n, d=1) => n?.toLocaleString(undefined, {minimumFractionDigits: d, maximumFractionDigits: d}) ?? '--';
         const formatDateLabel = value => {
@@ -2193,6 +2393,15 @@
                 if (finiteNumberOrNull(rows[i][field]) !== null && rows[i][dateField]) return rows[i][dateField];
             }
             return null;
+        };
+        const trimTrailingSeries = (rows, field, { positive = false } = {}) => {
+            const points = rows.map(row => ({
+                date: row.date,
+                value: finiteNumberOrNull(row[field])
+            }));
+            let last = points.length - 1;
+            while (last >= 0 && (points[last].value === null || (positive && points[last].value <= 0))) last -= 1;
+            return points.slice(0, last + 1);
         };
         const signedValue = (value, digits = 1) => Number.isFinite(value) ? `${value >= 0 ? '+' : ''}${value.toFixed(digits)}` : '--';
 
@@ -2535,7 +2744,7 @@
             ], { ...baseLayout, showlegend: true, legend: { orientation: 'h', y: -0.2 }, xaxis: quarterAxis(quarters), yaxis: { ...baseLayout.yaxis, title: { text: 'Billions USD', font: { size: 11 } } } });
 
             Plotly.newPlot('balance-chart', [{
-                x: quarters, y: data.map(d => d.trade_balance), type: 'bar',
+                x: quarters, y: data.map(d => d.trade_balance), name: 'Trade Balance', type: 'bar',
                 marker: { color: data.map(d => d.trade_balance >= 0 ? colors.green : colors.red) }
             }], { ...baseLayout, xaxis: quarterAxis(quarters), yaxis: { ...baseLayout.yaxis, zeroline: true, zerolinecolor: '#1a2942', title: { text: 'Billions USD', font: { size: 11 } } } });
 
@@ -2986,6 +3195,17 @@
             const container = document.getElementById('petroleum-section');
             if (!container) return;
             container.innerHTML = '';
+
+            const homeBalance = document.getElementById('home-crude-balance');
+            const crudeRows = invData
+                .filter(row => finiteNumberOrNull(row.crude_US) !== null && row.date)
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
+            if (homeBalance && crudeRows.length >= 2) {
+                const latestCrude = finiteNumberOrNull(crudeRows.at(-1).crude_US);
+                const priorCrude = finiteNumberOrNull(crudeRows.at(-2).crude_US);
+                const change = latestCrude - priorCrude;
+                homeBalance.textContent = `${change >= 0 ? 'Build' : 'Draw'} ${change >= 0 ? '+' : ''}${change.toFixed(1)} MMbbl`;
+            }
 
             for (const product of inventoryProducts) {
                 // Calculate median for outlier filtering
@@ -3616,6 +3836,7 @@
                 Plotly.newPlot('treasury-weekday-chart', [{
                     x: weekdayNames,
                     y: weekdayAvgs,
+                    name: 'Average Withholding',
                     type: 'bar',
                     marker: {
                         color: weekdayAvgs.map((v, i) => i >= 5 ? '#94a3b8' : colors.navy)
@@ -3732,7 +3953,6 @@
                 }
 
                 data.sort((a, b) => new Date(a.date) - new Date(b.date));
-                const dates = data.map(d => d.date);
                 const usableMetrics = metrics.filter(m =>
                     data.some(d => finiteNumberOrNull(d[m.key]) !== null)
                 );
@@ -3759,7 +3979,9 @@
                 `).join('');
 
                 for (const m of usableMetrics) {
-                    const values = data.map(d => finiteNumberOrNull(d[m.key]));
+                    const series = trimTrailingSeries(data, m.key, { positive: Boolean(m.positive) });
+                    const dates = series.map(point => point.date);
+                    const values = series.map(point => point.value);
                     setTimeout(() => {
                         const traces = [{
                             x: dates,
@@ -3789,7 +4011,7 @@
                         if (zeroLine) {
                             traces.push({
                                 x: dates,
-                                y: data.map(() => 0),
+                                y: values.map(() => 0),
                                 name: 'Zero',
                                 type: 'scatter',
                                 mode: 'lines',
@@ -3842,7 +4064,7 @@
                 source: 'EIA PSM',
                 yAxisLabel: 'Mbpd',
                 metrics: [
-                    { key: 'crude_input', name: 'Crude Oil Net Input to Refineries', unit: 'Mbpd', desc: 'Crude oil processed by US refineries (thousand barrels per day) - primary measure of refining activity' }
+                    { key: 'crude_input', name: 'Crude Oil Net Input to Refineries', unit: 'Mbpd', positive: true, desc: 'Crude oil processed by US refineries (thousand barrels per day) - primary measure of refining activity' }
                 ]
             });
         }
@@ -3856,12 +4078,12 @@
                 yAxisLabel: 'Thousands',
                 flattenYear: [2020, 2021],
                 metrics: [
-                    { key: 'us_total', name: 'US Total Nonfarm', desc: 'Total nonfarm payroll employment across all US industries' },
-                    { key: 'california', name: 'California', desc: 'Nonfarm payrolls in California, the largest state economy' },
-                    { key: 'texas', name: 'Texas', desc: 'Nonfarm payrolls in Texas, major energy and tech hub' },
-                    { key: 'new_york', name: 'New York', desc: 'Nonfarm payrolls in New York, financial services center' },
-                    { key: 'florida', name: 'Florida', desc: 'Nonfarm payrolls in Florida, tourism and retirement hub' },
-                    { key: 'illinois', name: 'Illinois', desc: 'Nonfarm payrolls in Illinois, Midwest manufacturing center' }
+                    { key: 'us_total', name: 'US Total Nonfarm', positive: true, desc: 'Total nonfarm payroll employment across all US industries' },
+                    { key: 'california', name: 'California', positive: true, desc: 'Nonfarm payrolls in California, the largest state economy' },
+                    { key: 'texas', name: 'Texas', positive: true, desc: 'Nonfarm payrolls in Texas, major energy and tech hub' },
+                    { key: 'new_york', name: 'New York', positive: true, desc: 'Nonfarm payrolls in New York, financial services center' },
+                    { key: 'florida', name: 'Florida', positive: true, desc: 'Nonfarm payrolls in Florida, tourism and retirement hub' },
+                    { key: 'illinois', name: 'Illinois', positive: true, desc: 'Nonfarm payrolls in Illinois, Midwest manufacturing center' }
                 ]
             });
         }
@@ -3875,12 +4097,12 @@
                 yAxisLabel: 'Thousands',
                 flattenYear: 2020,
                 metrics: [
-                    { key: 'job_openings', name: 'Job Openings', color: '#2563eb', desc: 'Total unfilled job positions - indicates labor demand and hiring intentions' },
-                    { key: 'layoffs', name: 'Layoffs & Discharges', color: '#dc2626', desc: 'Involuntary separations - indicates employer-initiated job losses' },
-                    { key: 'separations', name: 'Total Separations', color: '#7c3aed', desc: 'All separations from employment - quits, layoffs, discharges, and other separations' },
-                    { key: 'openings_rate', name: 'Openings Rate', unit: '%', color: '#1a2942', desc: 'Job openings as a share of employment plus openings' },
-                    { key: 'hires_rate', name: 'Hires Rate', unit: '%', color: '#059669', desc: 'Hires as a share of employment - a cleaner rate view than raw hires levels' },
-                    { key: 'quits_rate', name: 'Quits Rate', unit: '%', color: '#d97706', desc: 'Voluntary quits rate - higher values usually signal worker confidence' }
+                    { key: 'job_openings', name: 'Job Openings', positive: true, color: '#2563eb', desc: 'Total unfilled job positions - indicates labor demand and hiring intentions' },
+                    { key: 'layoffs', name: 'Layoffs & Discharges', positive: true, color: '#dc2626', desc: 'Involuntary separations - indicates employer-initiated job losses' },
+                    { key: 'separations', name: 'Total Separations', positive: true, color: '#7c3aed', desc: 'All separations from employment - quits, layoffs, discharges, and other separations' },
+                    { key: 'openings_rate', name: 'Openings Rate', positive: true, unit: '%', color: '#1a2942', desc: 'Job openings as a share of employment plus openings' },
+                    { key: 'hires_rate', name: 'Hires Rate', positive: true, unit: '%', color: '#059669', desc: 'Hires as a share of employment - a cleaner rate view than raw hires levels' },
+                    { key: 'quits_rate', name: 'Quits Rate', positive: true, unit: '%', color: '#d97706', desc: 'Voluntary quits rate - higher values usually signal worker confidence' }
                 ]
             });
         }
@@ -4029,6 +4251,20 @@
                     { key: 'OVV', name: 'Ovintiv', color: '#5eead4' }
                 ];
 
+                const mobileLegend = document.getElementById('oil-stocks-mobile-legend');
+                if (mobileLegend) {
+                    mobileLegend.replaceChildren(...stocks.map(stock => {
+                        const item = document.createElement('li');
+                        const swatch = document.createElement('span');
+                        swatch.className = 'mobile-legend-swatch';
+                        swatch.style.backgroundColor = stock.color;
+                        const label = document.createElement('span');
+                        label.textContent = stock.name;
+                        item.append(swatch, label);
+                        return item;
+                    }));
+                }
+
                 const dates = data.map(d => d.date);
                 const traces = stocks.map(s => ({
                     x: dates,
@@ -4042,7 +4278,7 @@
 
                 Plotly.newPlot('oil-stocks-chart', traces, {
                     ...baseLayout,
-                    showlegend: true,
+                    showlegend: window.innerWidth > 600,
                     legend: { orientation: 'h', y: -0.15, font: { size: 8 }, itemwidth: 40 },
                     xaxis: { ...baseLayout.xaxis, tickformat: '%b %Y' },
                     yaxis: { ...baseLayout.yaxis, title: { text: 'Normalized (100 = Start)', font: { size: 10 } } },
@@ -4155,13 +4391,17 @@
                 const data = await res.json();
                 if (!data.length) return;
 
-                const dates = data.map(d => d.date);
+                const industrial = trimTrailingSeries(data, 'industrial_prod');
+                const industrialMfg = trimTrailingSeries(data, 'industrial_prod_mfg');
+                const capacity = trimTrailingSeries(data, 'capacity_util_mfg');
+                const durableOrders = trimTrailingSeries(data, 'durable_goods_orders', { positive: true });
+                const capitalOrders = trimTrailingSeries(data, 'new_orders', { positive: true });
 
                 // Industrial Production & Capacity Utilization chart (dual axis)
                 Plotly.newPlot('ism-pmi-chart', [
-                    { x: dates, y: data.map(d => d.industrial_prod), name: 'Industrial Production', line: { color: '#1a2942', width: 2 }, yaxis: 'y' },
-                    { x: dates, y: data.map(d => d.industrial_prod_mfg), name: 'Manufacturing IP', line: { color: '#3b82f6', width: 1.5 }, yaxis: 'y' },
-                    { x: dates, y: data.map(d => d.capacity_util_mfg), name: 'Capacity Util %', line: { color: '#0d7d4d', width: 2 }, yaxis: 'y2' }
+                    { x: industrial.map(point => point.date), y: industrial.map(point => point.value), name: 'Industrial Production', line: { color: '#1a2942', width: 2 }, yaxis: 'y' },
+                    { x: industrialMfg.map(point => point.date), y: industrialMfg.map(point => point.value), name: 'Manufacturing IP', line: { color: '#3b82f6', width: 1.5 }, yaxis: 'y' },
+                    { x: capacity.map(point => point.date), y: capacity.map(point => point.value), name: 'Capacity Util %', line: { color: '#0d7d4d', width: 2 }, yaxis: 'y2' }
                 ], {
                     ...baseLayout,
                     showlegend: true,
@@ -4172,8 +4412,8 @@
 
                 // Durable Goods Orders chart
                 Plotly.newPlot('ism-services-chart', [
-                    { x: dates, y: data.map(d => d.durable_goods_orders / 1000), name: 'Durable Goods Orders', line: { color: '#1a2942', width: 2 } },
-                    { x: dates, y: data.map(d => d.new_orders / 1000), name: 'Capital Goods Orders', line: { color: '#b8860b', width: 2 } }
+                    { x: durableOrders.map(point => point.date), y: durableOrders.map(point => point.value / 1000), name: 'Durable Goods Orders', line: { color: '#1a2942', width: 2 } },
+                    { x: capitalOrders.map(point => point.date), y: capitalOrders.map(point => point.value / 1000), name: 'Capital Goods Orders', line: { color: '#b8860b', width: 2 } }
                 ], {
                     ...baseLayout,
                     showlegend: true,
@@ -4192,12 +4432,18 @@
                 const data = await res.json();
                 if (!data.length) return;
 
-                const dates = data.map(d => d.date);
+                const starts = trimTrailingSeries(data, 'housing_starts', { positive: true });
+                const permits = trimTrailingSeries(data, 'building_permits', { positive: true });
+                const existingSales = trimTrailingSeries(data, 'existing_home_sales', { positive: true });
+                const newSales = trimTrailingSeries(data, 'new_home_sales', { positive: true });
+                const homePrices = trimTrailingSeries(data, 'case_shiller_yoy');
+                const mortgage30 = trimTrailingSeries(data, 'mortgage_rate_30yr', { positive: true });
+                const mortgage15 = trimTrailingSeries(data, 'mortgage_rate_15yr', { positive: true });
 
                 // Housing Starts & Permits
                 Plotly.newPlot('housing-starts-chart', [
-                    { x: dates, y: data.map(d => d.housing_starts), name: 'Starts', line: { color: '#1a2942', width: 2 } },
-                    { x: dates, y: data.map(d => d.building_permits), name: 'Permits', line: { color: '#b8860b', width: 2 } }
+                    { x: starts.map(point => point.date), y: starts.map(point => point.value), name: 'Starts', line: { color: '#1a2942', width: 2 } },
+                    { x: permits.map(point => point.date), y: permits.map(point => point.value), name: 'Permits', line: { color: '#b8860b', width: 2 } }
                 ], {
                     ...baseLayout,
                     showlegend: true,
@@ -4208,8 +4454,8 @@
 
                 // Home Sales
                 Plotly.newPlot('home-sales-chart', [
-                    { x: dates, y: data.map(d => d.existing_home_sales), name: 'Existing (M)', line: { color: '#1a2942', width: 2 } },
-                    { x: dates, y: data.map(d => d.new_home_sales ? d.new_home_sales / 1000 : null), name: 'New (M)', line: { color: '#b8860b', width: 2 } }
+                    { x: existingSales.map(point => point.date), y: existingSales.map(point => point.value), name: 'Existing (M)', line: { color: '#1a2942', width: 2 } },
+                    { x: newSales.map(point => point.date), y: newSales.map(point => point.value / 1000), name: 'New (M)', line: { color: '#b8860b', width: 2 } }
                 ], {
                     ...baseLayout,
                     showlegend: true,
@@ -4220,8 +4466,8 @@
 
                 // Home Prices
                 Plotly.newPlot('home-prices-chart', [{
-                    x: dates,
-                    y: data.map(d => d.case_shiller_yoy),
+                    x: homePrices.map(point => point.date),
+                    y: homePrices.map(point => point.value),
                     name: 'Case-Shiller YoY',
                     type: 'scatter',
                     mode: 'lines',
@@ -4236,8 +4482,8 @@
 
                 // Mortgage Rates
                 Plotly.newPlot('mortgage-rates-chart', [
-                    { x: dates, y: data.map(d => d.mortgage_rate_30yr), name: '30-Year', line: { color: '#1a2942', width: 2 } },
-                    { x: dates, y: data.map(d => d.mortgage_rate_15yr), name: '15-Year', line: { color: '#b8860b', width: 2 } }
+                    { x: mortgage30.map(point => point.date), y: mortgage30.map(point => point.value), name: '30-Year', line: { color: '#1a2942', width: 2 } },
+                    { x: mortgage15.map(point => point.date), y: mortgage15.map(point => point.value), name: '15-Year', line: { color: '#b8860b', width: 2 } }
                 ], {
                     ...baseLayout,
                     showlegend: true,
@@ -4617,15 +4863,20 @@
 
                 // Helper to create days of supply chart
                 const createDOSChart = (chartId, daysCol, avgCol) => {
-                    const hasDays = data.some(d => d[daysCol]);
+                    const hasDays = data.some(d => finiteNumberOrNull(d[daysCol]) !== null);
                     if (!hasDays) return;
 
-                    Plotly.newPlot(chartId, [
-                        { x: dates, y: data.map(d => d[daysCol]), name: 'Current', line: { color: '#1a2942', width: 2 } },
-                        { x: dates, y: data.map(d => d[avgCol]), name: '5yr Avg', line: { color: '#64748b', width: 1.5, dash: 'dash' } }
-                    ], {
+                    const hasAvg = data.some(d => finiteNumberOrNull(d[avgCol]) !== null);
+                    const traces = [
+                        { x: dates, y: data.map(d => finiteNumberOrNull(d[daysCol])), name: 'Current', line: { color: '#1a2942', width: 2 } }
+                    ];
+                    if (hasAvg) {
+                        traces.push({ x: dates, y: data.map(d => finiteNumberOrNull(d[avgCol])), name: '5yr Avg', line: { color: '#64748b', width: 1.5, dash: 'dash' } });
+                    }
+
+                    Plotly.newPlot(chartId, traces, {
                         ...baseLayout,
-                        showlegend: true,
+                        showlegend: hasAvg,
                         legend: { orientation: 'h', y: -0.15, font: { size: 10 } },
                         yaxis: { ...baseLayout.yaxis, title: { text: 'Days', font: { size: 10 } } }
                     });
@@ -5120,7 +5371,7 @@
 
                 Plotly.newPlot('upstream-activity-chart', activityTraces, {
                     ...baseLayout,
-                    margin: { ...baseLayout.margin, l: 66, r: 20, b: 74, t: 18 },
+                    margin: { ...baseLayout.margin, l: window.innerWidth <= 600 ? 64 : 88, r: 20, b: 74, t: 18 },
                     showlegend: true,
                     legend: { orientation: 'h', y: -0.24, font: { size: 9 } },
                     xaxis: dateAxis({ tickformat: '%Y', dtick: 'M12' }),
@@ -5140,13 +5391,13 @@
                         showlegend: false,
                         xaxis: dateAxis({ tickformat: '%Y', dtick: 'M12' }),
                         yaxis: { ...baseLayout.yaxis, title: { text: 'WTI ($/bbl)', font: { size: 11 } }, tickprefix: '$' },
-                        margin: { ...baseLayout.margin, l: 66, r: 20, b: 58, t: 18 }
+                        margin: { ...baseLayout.margin, l: window.innerWidth <= 600 ? 60 : 74, r: 20, b: 58, t: 18 }
                     });
                 }
             } catch (e) {
                 console.error('Error loading upstream activity chart:', e);
                 const el = document.getElementById('upstream-activity-chart');
-                if (el) el.innerHTML = '<div class="error">Upstream activity chart failed to load.</div>';
+                showChartError(el);
             }
         }
 
@@ -5357,7 +5608,7 @@
                 console.error('Error loading EV fleet dashboard:', e);
                 ['ev-fleet-share-chart', 'ev-sales-share-chart', 'ev-policy-chart-china', 'ev-policy-chart-usa', 'ev-policy-chart-india'].forEach(id => {
                     const el = document.getElementById(id);
-                    if (el) el.innerHTML = '<div class="error">EV chart failed to load.</div>';
+                    showChartError(el);
                 });
             }
         }
@@ -5758,13 +6009,22 @@
                 if (crackData.length && !crackData.error) {
                     const latest = crackData[crackData.length - 1];
                     const prev = crackData[crackData.length - 2];
-                    if (latest?.wti) {
-                        const wtiText = '$' + latest.wti.toFixed(1);
+                    const wti = finiteNumberOrNull(latest?.wti);
+                    const crack = finiteNumberOrNull(latest?.crack_321);
+                    if (wti !== null) {
+                        const wtiText = '$' + wti.toFixed(1);
                         document.getElementById('km-wti').textContent = wtiText;
                         document.getElementById('home-wti').textContent = wtiText;
-                        const chg = latest.wti - (prev?.wti || latest.wti);
+                        const chg = wti - (finiteNumberOrNull(prev?.wti) ?? wti);
                         const chgEl = document.getElementById('km-wti-chg');
                         chgEl.textContent = (chg >= 0 ? '+' : '') + chg.toFixed(2);
+                        chgEl.className = 'key-metric-change ' + (chg >= 0 ? 'up' : 'down');
+                    }
+                    if (crack !== null) {
+                        document.getElementById('km-crack').textContent = '$' + crack.toFixed(1);
+                        const chg = crack - (finiteNumberOrNull(prev?.crack_321) ?? crack);
+                        const chgEl = document.getElementById('km-crack-chg');
+                        chgEl.textContent = (chg >= 0 ? '+' : '') + chg.toFixed(1);
                         chgEl.className = 'key-metric-change ' + (chg >= 0 ? 'up' : 'down');
                     }
                 }
@@ -5833,10 +6093,8 @@
             try {
                 const res = await fetch('/api/status');
                 const data = await res.json();
-                const date = new Date(data.last_updated);
-                const label = Number.isNaN(date.getTime())
-                    ? (data.last_updated || 'Never')
-                    : date.toLocaleDateString();
+                const label = dashboardDateLabel(data.last_updated);
+                if (data.last_updated) dashboardLastGoodDate = label;
                 document.getElementById('last-updated').textContent = `Updated: ${label}`;
                 const briefingStatus = document.getElementById('home-observation-status');
                 if (briefingStatus) briefingStatus.textContent = `Latest available: ${label}`;

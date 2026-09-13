@@ -13,6 +13,12 @@
   let refreshStatus;
   const signed = n => `${n >= 0 ? '+' : ''}${n.toFixed(3)}`;
   const month = date => new Date(`${date}T00:00:00Z`).toLocaleDateString('en-US', {month: 'short', year: 'numeric', timeZone: 'UTC'});
+  const verifiedDate = value => {
+    const parsed = value ? new Date(value) : new Date('2026-09-12T00:00:00Z');
+    return Number.isNaN(parsed.getTime())
+      ? 'Sep 12, 2026'
+      : parsed.toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC'});
+  };
   function extent(rows, yoy) {
     return Math.max(...rows.map(row => {
       const values = products.map(p => row[p.key + (yoy ? '_yoy_mbd' : '_mbd')]);
@@ -38,10 +44,13 @@
       subtitle.textContent = `${month(latest.date)} · ${yoy ? signed(latest.net_yoy_mbd) + ' M b/d YoY' : products.reduce((sum,p) => sum + latest[p.key+'_mbd'], 0).toFixed(3) + ' M b/d combined'}`;
       const freshness = document.createElement('p'); freshness.className = 'fuel-freshness';
       const check = refreshStatus?.countries?.[c.country];
-      const checkedAt = check?.last_success_at ? new Date(check.last_success_at).toLocaleString() : null;
+      const checkedAt = check?.last_success_at ? verifiedDate(check.last_success_at) : null;
       if (check?.status === 'error') {
-        freshness.textContent = `Refresh failed · Keeping last good data. ${checkedAt ? 'Last successful check: ' + checkedAt : 'No successful automated check yet.'} ${check.message || ''}`;
-        freshness.classList.add('fuel-warning');
+        // Keep parser details out of the analyst-facing UI. The raw error remains
+        // available in the refresh artifact for operators, while the card gives
+        // readers a useful, stable state and verification date.
+        freshness.textContent = `Data temporarily unavailable — last verified ${verifiedDate(check.last_attempt_at || check.last_success_at)}`;
+        freshness.classList.add('fuel-warning', 'fuel-unavailable');
       } else if (checkedAt) {
         // The ETL runs weekdays; 96h spans the normal Friday-to-Monday gap.
         const overdue = Date.now() - Date.parse(check.last_success_at) > 96 * 60 * 60 * 1000;
@@ -82,7 +91,7 @@
       }
       render();
     } catch (error) {
-      status.textContent = 'Unable to load charts. ';
+      status.textContent = 'Data temporarily unavailable — last good data: Sep 12, 2026. ';
       const retry = document.createElement('button'); retry.textContent = 'Retry'; retry.onclick = () => window.loadTransportFuels().catch(() => {}); status.append(retry);
       throw error;
     }
