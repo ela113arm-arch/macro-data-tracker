@@ -246,6 +246,13 @@
         .chart { height: 320px; min-height: 320px; width: 100%; }
         .chart-lg { height: 390px; min-height: 390px; width: 100%; }
         .chart-desc { font-size: 12px; color: var(--text-secondary); margin-top: 8px; line-height: 1.5; padding: 0 4px; }
+        .employment-index-layout { display: grid; grid-template-columns: minmax(190px, 0.34fr) minmax(0, 1fr); gap: 18px; align-items: center; }
+        .employment-index-gauge { height: 180px; min-height: 180px; }
+        .employment-index-history { height: 300px; min-height: 300px; min-width: 0; }
+        .employment-index-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 2px 0 12px; }
+        .employment-index-stat { padding: 9px 10px; border: 1px solid var(--border-soft); border-radius: 6px; background: #f8fafc; }
+        .employment-index-stat-label { color: var(--text-secondary); font-size: 10px; font-weight: 700; text-transform: uppercase; }
+        .employment-index-stat-value { color: var(--navy); font-size: 17px; font-weight: 800; margin-top: 3px; }
 
         .inline-stats {
             display: grid;
@@ -650,6 +657,12 @@
             .section-title { font-size: 18px; }
             .card-body { padding: 12px 8px; }
             .chart, .chart-lg, .chart-card-wide .chart { height: 340px; min-height: 340px; }
+            .employment-index-layout { grid-template-columns: 1fr; gap: 4px; }
+            .employment-index-gauge { height: 170px; min-height: 170px; }
+            .employment-index-history { height: 300px; min-height: 300px; }
+            .employment-index-stats { gap: 6px; }
+            .employment-index-stat { padding: 8px 7px; }
+            .employment-index-stat-value { font-size: 15px; }
             .subnav { overflow-x: auto; flex-wrap: nowrap; margin-left: -2px; margin-right: -2px; }
             .subnav a { flex: 0 0 auto; }
         }
@@ -804,6 +817,33 @@
                 <div class="card-body">
                     <div id="policy-inflation-labor-chart" class="chart-lg"><div class="loading">Loading...</div></div>
                     <div class="chart-desc">Rates use the left percent axis. CPI and PPI Final Demand are 12-month year-over-year rates on the right percent axis.</div>
+                    <div class="card" id="employment-index-card" style="margin-top: 18px;">
+                        <div class="card-header">
+                            <span>Employment Activity Index</span>
+                            <span class="source">Willowdesk composite</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="employment-index-stats">
+                                <div class="employment-index-stat">
+                                    <div class="employment-index-stat-label">Latest reading</div>
+                                    <div class="employment-index-stat-value" id="employment-index-value">--</div>
+                                </div>
+                                <div class="employment-index-stat">
+                                    <div class="employment-index-stat-label">3-month change</div>
+                                    <div class="employment-index-stat-value" id="employment-index-change">--</div>
+                                </div>
+                                <div class="employment-index-stat">
+                                    <div class="employment-index-stat-label">Latest complete month</div>
+                                    <div class="employment-index-stat-value" id="employment-index-date">--</div>
+                                </div>
+                            </div>
+                            <div class="employment-index-layout">
+                                <div id="employment-index-gauge" class="employment-index-gauge"><div class="loading">Loading...</div></div>
+                                <div id="employment-index-history" class="employment-index-history"><div class="loading">Loading...</div></div>
+                            </div>
+                            <div class="chart-desc">0–100 composite of payroll growth, hiring demand, job security, and employment breadth. 50 is the historical reference point; higher readings indicate stronger activity. Uses raw observations for the index calculation.</div>
+                        </div>
+                    </div>
                     <div id="policy-initial-claims-chart" class="chart" style="margin-top: 18px;"><div class="loading">Loading...</div></div>
                     <div class="chart-desc">Initial jobless claims 12-week moving average. 2020-2021 values are held flat at the last 2019 observation.</div>
                 </div>
@@ -5322,20 +5362,123 @@
             }
         }
 
+        function renderEmploymentIndex(payload) {
+            const series = Array.isArray(payload?.series)
+                ? payload.series.filter(row => finiteNumberOrNull(row.index) !== null && row.date)
+                : [];
+            if (!series.length) return;
+
+            const metadata = payload.metadata || {};
+            const latest = series[series.length - 1];
+            const latestIndex = finiteNumberOrNull(latest.index);
+            const latestChange = finiteNumberOrNull(metadata.latest_change_3m);
+            const latestDate = formatDateLabel(latest.date);
+            const gaugeColor = latestIndex >= 60 ? '#0d7d4d' : latestIndex >= 40 ? '#b7791f' : '#c2412d';
+
+            document.getElementById('employment-index-value').textContent = `${latestIndex.toFixed(1)} / 100`;
+            document.getElementById('employment-index-change').textContent = signedValue(latestChange, 1) + ' pts';
+            document.getElementById('employment-index-date').textContent = latestDate;
+            document.getElementById('employment-index-change').style.color = latestChange >= 0 ? '#0d7d4d' : '#c2412d';
+
+            Plotly.newPlot('employment-index-gauge', [{
+                type: 'indicator',
+                mode: 'gauge+number',
+                value: latestIndex,
+                number: { valueformat: '.1f', suffix: '/100', font: { size: 28, color: '#1a2942' } },
+                title: { text: `${latestDate}<br><span style="font-size:10px;color:#64748b">50 = historical reference</span>`, font: { size: 12, color: '#1a2942' } },
+                gauge: {
+                    axis: {
+                        range: [0, 100],
+                        tickvals: [0, 25, 50, 75, 100],
+                        ticktext: ['0', '25', '50', '75', '100'],
+                        tickfont: { size: 9, color: '#64748b' }
+                    },
+                    bar: { color: gaugeColor, thickness: 0.72 },
+                    bgcolor: '#eef2f7',
+                    borderwidth: 0,
+                    steps: [
+                        { range: [0, 30], color: '#fee2e2' },
+                        { range: [30, 50], color: '#fef3c7' },
+                        { range: [50, 70], color: '#e0f2fe' },
+                        { range: [70, 100], color: '#dcfce7' }
+                    ],
+                    threshold: { line: { color: '#1a2942', width: 2 }, thickness: 0.8, value: 50 }
+                }
+            }], {
+                ...baseLayout,
+                height: 180,
+                margin: { t: 42, r: 18, b: 18, l: 18 },
+                showlegend: false
+            });
+
+            const latestDateValue = parseLocalDate(latest.date).getTime();
+            const fiveYearsAgo = new Date(latestDateValue);
+            fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
+            const history = series.filter(row => parseLocalDate(row.date).getTime() >= fiveYearsAgo.getTime());
+            const historyDates = history.map(row => row.date);
+            const historyValues = history.map(row => finiteNumberOrNull(row.index));
+            const historyChange = history.map(row => finiteNumberOrNull(row.change_3m));
+
+            Plotly.newPlot('employment-index-history', [{
+                x: historyDates,
+                y: historyValues,
+                customdata: history.map((row, i) => [
+                    finiteNumberOrNull(row.job_creation),
+                    finiteNumberOrNull(row.hiring_demand),
+                    finiteNumberOrNull(row.job_security),
+                    finiteNumberOrNull(row.breadth),
+                    historyChange[i]
+                ]),
+                name: 'Employment activity',
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: '#087f8c', width: 2.8 },
+                fill: 'tozeroy',
+                fillcolor: 'rgba(8, 127, 140, 0.08)',
+                hovertemplate: '<b>%{x|%b %Y}</b><br>Index: %{y:.1f}<br>3M change: %{customdata[4]:+.1f} pts<br>Job creation: %{customdata[0]:.1f}<br>Hiring demand: %{customdata[1]:.1f}<br>Job security: %{customdata[2]:.1f}<br>Breadth: %{customdata[3]:.1f}<extra></extra>'
+            }, {
+                x: historyDates,
+                y: history.map(() => 50),
+                name: 'Historical reference',
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: '#94a3b8', width: 1.2, dash: 'dot' },
+                hovertemplate: 'Historical reference: 50<extra></extra>'
+            }], {
+                ...baseLayout,
+                height: 300,
+                showlegend: true,
+                legend: { orientation: 'h', y: -0.2, font: { size: 10 } },
+                margin: { t: 14, r: 22, b: 68, l: 54 },
+                hovermode: 'x unified',
+                xaxis: { ...dateAxis({ tickformat: '%Y', dtick: 'M12' }), automargin: true },
+                yaxis: {
+                    ...baseLayout.yaxis,
+                    title: { text: 'Index (0–100)', font: { size: 10 } },
+                    range: [0, 100],
+                    dtick: 20,
+                    tickfont: { size: 10 }
+                }
+            });
+        }
+
         async function loadPolicyInflationLabor() {
             try {
-                const [yieldsRes, cpiRes, ppiRes, claimsRes] = await Promise.all([
+                const [yieldsRes, cpiRes, ppiRes, claimsRes, employmentIndexRes] = await Promise.all([
                     fetch('/api/treasury-yields'),
                     fetch('/api/cpi'),
                     fetch('/api/ppi'),
-                    fetch('/api/jobless-claims')
+                    fetch('/api/jobless-claims'),
+                    fetch('/api/employment-index')
                 ]);
                 const yields = await yieldsRes.json();
                 const cpi = await cpiRes.json();
                 const ppi = await ppiRes.json();
                 let claims = await claimsRes.json();
+                const employmentIndex = await employmentIndexRes.json();
 
                 if (!Array.isArray(yields) || !Array.isArray(cpi) || !Array.isArray(ppi) || !Array.isArray(claims)) return;
+                if (employmentIndex?.series?.length) renderEmploymentIndex(employmentIndex);
 
                 const startDate = '2018-01-01';
                 const rateData = yields
