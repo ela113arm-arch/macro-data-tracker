@@ -571,6 +571,88 @@
         .deviation-badge.neutral { background: #f1f5f9; color: #475569; }
         .deviation-badge.low-neg { background: #fef3c7; color: #92400e; }
         .deviation-badge.high-neg { background: #fee2e2; color: #991b1b; }
+
+        /* Whole-site information hierarchy and chart guardrails. */
+        :root {
+            --surface-muted: #f4f7fb;
+            --text-muted: #64748b;
+            --line: #cbd5e1;
+            --focus: #0ea5e9;
+        }
+
+        body { background: #f3f6fa; color: #172033; }
+        .header { padding: 22px clamp(16px, 3vw, 44px); }
+        .header-left h1 { letter-spacing: -0.8px; }
+        .header-left p { font-size: 14px; }
+        .nav { padding: 0 clamp(8px, 2.2vw, 44px); position: sticky; top: 0; z-index: 20; box-shadow: 0 2px 9px rgba(15, 23, 42, 0.14); }
+        .nav-item, .nav-spr-link { font-size: 14px; min-height: 48px; }
+        .container { max-width: 1680px; padding: 28px clamp(12px, 3vw, 44px) 42px; }
+        .section { scroll-margin-top: 72px; margin-bottom: 42px; }
+        .section-header { margin-bottom: 18px; border-bottom-color: #9fb2c9; }
+        .section-title { font-size: 20px; letter-spacing: -0.4px; }
+        .section-subtitle { font-size: 14px; }
+        .stats-row { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; }
+        .stat-card { border-color: #d5dee9; border-radius: 9px; padding: 15px 16px; box-shadow: 0 3px 10px rgba(15, 23, 42, 0.05); }
+        .stat-label { font-size: 12px; }
+        .stat-value { font-size: 25px; }
+        .card { border-color: #d5dee9; border-radius: 9px; box-shadow: 0 3px 10px rgba(15, 23, 42, 0.05); }
+        .card-header { min-height: 48px; padding: 13px 16px; font-size: 14px; }
+        .card-header .source { font-size: 11px; color: #52637a; }
+        .card-body { padding: 16px; }
+        .chart, .chart-lg { min-width: 0; }
+        .chart-desc { font-size: 13px; color: #52637a; }
+        .data-table { font-size: 13px; }
+        .data-table th { font-size: 11px; }
+        .data-table-wrap { overflow-x: auto; width: 100%; }
+
+        .home-briefing { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr); gap: 18px; margin-bottom: 28px; }
+        .home-panel { background: var(--bg-card); border: 1px solid #d5dee9; border-radius: 9px; padding: 18px; box-shadow: 0 3px 10px rgba(15, 23, 42, 0.05); }
+        .home-panel h2 { color: var(--navy); font-size: 18px; margin-bottom: 4px; }
+        .home-panel p { color: var(--text-muted); font-size: 14px; }
+        .home-change-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 15px; }
+        .home-change { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 58px; padding: 11px 12px; border: 1px solid #e2e8f0; border-radius: 7px; background: var(--surface-muted); text-decoration: none; color: inherit; }
+        .home-change:hover { border-color: #8aa5c1; background: #edf4fb; }
+        .home-change-label { color: var(--text-muted); font-size: 12px; }
+        .home-change-value { color: var(--navy); font-size: 17px; font-weight: 800; white-space: nowrap; }
+        .home-links { display: grid; gap: 9px; margin-top: 15px; }
+        .home-link { display: flex; justify-content: space-between; align-items: center; padding: 12px 13px; border: 1px solid #e2e8f0; border-radius: 7px; color: var(--navy); text-decoration: none; font-weight: 700; background: #fff; }
+        .home-link span { color: var(--text-muted); font-size: 12px; font-weight: 500; }
+        .home-link:hover { border-color: var(--accent); color: var(--accent); }
+        .subnav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 11px 0 0; margin-bottom: 22px; border-bottom: 1px solid #d9e2ec; }
+        .subnav-label { color: var(--text-muted); font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; margin-right: 4px; }
+        .subnav a { color: #35516e; text-decoration: none; font-size: 13px; font-weight: 700; padding: 8px 10px 10px; border-bottom: 2px solid transparent; }
+        .subnav a:hover, .subnav a.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .section-kicker { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; color: var(--text-muted); font-size: 12px; font-weight: 700; }
+        .status-pill { display: inline-flex; align-items: center; border-radius: 999px; padding: 4px 8px; font-size: 11px; font-weight: 700; background: #e2e8f0; color: #475569; }
+        .status-pill.good { background: #dcfce7; color: #166534; }
+        .status-pill.warn { background: #fef3c7; color: #92400e; }
+        .chart-card-wide { grid-column: 1 / -1; }
+        .chart-card-wide .chart { height: 360px; min-height: 360px; }
+        .section[data-section-group] { position: relative; }
+        .legacy-removed-section { display: none !important; }
+
+        @media (max-width: 1200px) {
+            .stats-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .home-briefing { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 900px) {
+            .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .home-change-list { grid-template-columns: 1fr; }
+            .container { padding-top: 20px; }
+            .section { margin-bottom: 32px; }
+        }
+        @media (max-width: 600px) {
+            .header { padding: 16px 12px; }
+            .nav { position: static; }
+            .container { padding: 16px 10px 28px; }
+            .home-panel { padding: 14px; }
+            .home-panel h2 { font-size: 17px; }
+            .section-title { font-size: 18px; }
+            .card-body { padding: 12px 8px; }
+            .chart, .chart-lg, .chart-card-wide .chart { height: 340px; min-height: 340px; }
+            .subnav { overflow-x: auto; flex-wrap: nowrap; margin-left: -2px; margin-right: -2px; }
+            .subnav a { flex: 0 0 auto; }
+        }
     </style>
 </head>
 <body>
@@ -597,7 +679,7 @@
         <button type="button" class="nav-item active" data-section="overview">Overview</button>
         <button type="button" class="nav-item" data-section="markets">Markets</button>
         <button type="button" class="nav-item" data-section="energy">Energy</button>
-        <button type="button" class="nav-item" data-section="ev">EVs</button>
+        <button type="button" class="nav-item" data-section="ev">EVs &amp; Transport</button>
         <button type="button" class="nav-item" data-section="economy">Economy</button>
         <button type="button" class="nav-item" data-section="labor">Labor & Inflation</button>
         <a class="nav-spr-link" href="/">Brent Model</a>
@@ -644,8 +726,34 @@
     </div>
 
     <div class="container">
+        <!-- Home is a briefing layer. Detail charts remain in their primary section. -->
+        <div class="home-briefing" data-page="overview" aria-labelledby="home-briefing-title">
+            <section class="home-panel">
+                <div class="section-kicker"><span class="status-pill good">Daily briefing</span><span id="home-observation-status">Latest available observations</span></div>
+                <h2 id="home-briefing-title">What changed</h2>
+                <p>Start with the latest market signals, then open the section that explains the move.</p>
+                <div class="home-change-list">
+                    <a class="home-change" href="?section=markets#market-prices-section"><span class="home-change-label">WTI crude</span><strong class="home-change-value" id="home-wti">--</strong></a>
+                    <a class="home-change" href="?section=energy#petroleum-balances-section"><span class="home-change-label">Crude inventory</span><strong class="home-change-value" id="home-crude-balance">Open balance</strong></a>
+                    <a class="home-change" href="?section=labor#claims-section"><span class="home-change-label">Initial claims</span><strong class="home-change-value" id="home-claims">--</strong></a>
+                    <a class="home-change" href="?section=markets#yield-curve-section"><span class="home-change-label">10Y Treasury</span><strong class="home-change-value" id="home-10y">--</strong></a>
+                </div>
+            </section>
+            <section class="home-panel" aria-labelledby="home-links-title">
+                <div class="section-kicker"><span class="status-pill">Explore</span></div>
+                <h2 id="home-links-title">Go to a workspace</h2>
+                <p>Each page has one job and a shorter path to the underlying data.</p>
+                <div class="home-links">
+                    <a class="home-link" href="?section=energy#petroleum-balances-section">Energy balances <span>stocks, flows, refining →</span></a>
+                    <a class="home-link" href="?section=markets#market-prices-section">Markets <span>prices, rates, positioning →</span></a>
+                    <a class="home-link" href="?section=economy#economy-section">Economy <span>growth, trade, housing →</span></a>
+                    <a class="home-link" href="?section=ev#ev-section">EVs & transport <span>registrations, fleet, policy →</span></a>
+                </div>
+            </section>
+        </div>
+
         <!-- Key Metrics -->
-        <div class="stats-row" data-page="overview gdp">
+        <div class="stats-row" data-page="overview economy">
             <div class="stat-card">
                 <div class="stat-label">Real GDP</div>
                 <div class="stat-value" id="gdp-value">--</div>
@@ -678,8 +786,10 @@
             </div>
         </div>
 
+        <nav id="section-subnav" class="subnav" aria-label="Current section subsections" hidden></nav>
+
         <!-- Policy, Inflation & Labor -->
-        <div class="section" data-page="overview labor rates">
+        <div class="section" id="rates-section" data-page="labor rates">
             <div class="section-header">
                 <div>
                     <div class="section-title">Policy & Inflation</div>
@@ -701,7 +811,7 @@
         </div>
 
         <!-- Markets Section -->
-        <div class="section" data-page="markets">
+        <div class="section" id="market-prices-section" data-page="markets">
             <div class="section-header">
                 <div>
                     <div class="section-title">Market Prices</div>
@@ -714,7 +824,7 @@
         </div>
 
         <!-- Oil & Gas Stocks Section -->
-        <div class="section" data-page="markets">
+        <div class="section" id="oil-stocks-section" data-page="markets">
             <div class="section-header">
                 <div>
                     <div class="section-title">WTI vs Oil & Gas Stocks</div>
@@ -734,7 +844,7 @@
         </div>
 
         <!-- GDP Section -->
-        <div class="section" data-page="economy">
+        <div class="section" id="economy-section" data-page="economy">
             <div class="section-header">
                 <div>
                     <div class="section-title">GDP Growth Contributions</div>
@@ -753,7 +863,7 @@
         </div>
 
         <!-- Trade Overview -->
-        <div class="section" data-page="gdp trade">
+        <div class="section" id="trade-section" data-page="economy">
             <div class="section-header">
                 <div>
                     <div class="section-title">Trade Overview</div>
@@ -821,7 +931,7 @@
         {% include 'transport_fuels.html' %}
 
         <!-- Petroleum Inventories & Supply/Demand -->
-        <div class="section" data-page="energy">
+        <div class="section" id="petroleum-balances-section" data-page="energy">
             <div class="section-header">
                 <div>
                     <div class="section-title">U.S. Petroleum Inventories & Supply/Demand</div>
@@ -835,7 +945,7 @@
         </div>
 
         <!-- Upstream Activity -->
-        <div class="section" data-page="energy markets">
+        <div class="section" id="upstream-section" data-page="energy">
             <div class="section-header">
                 <div>
                     <div class="section-title">Upstream Activity Pulse</div>
@@ -849,13 +959,14 @@
                 </div>
                 <div class="card-body">
                     <div id="upstream-activity-chart" class="chart-lg"><div class="loading">Loading...</div></div>
-                    <div class="chart-desc">Activity lines use a 0-100 normalized index on the left axis. WTI is plotted on the right dollar axis. Frac spreads and oil rigs use 4-week moving averages; DUC wells are monthly.</div>
+                    <div id="upstream-price-chart" class="chart" style="margin-top:12px;"><div class="loading">Loading...</div></div>
+                    <div class="chart-desc">The activity panel uses a 0-100 relative index with the latest raw counts in each legend label and hover. The default view shows the latest five years. Frac spreads and oil rigs use 4-week moving averages; DUC wells are monthly. WTI is shown separately so its price scale cannot hide the operating signals.</div>
                 </div>
             </div>
         </div>
 
         <!-- Total Inventory EIA WTI Fair Value -->
-        <div class="section" data-page="energy markets">
+        <div class="section" id="total-inventory-section" data-page="energy markets">
             <div class="section-header">
                 <div>
                     <div class="section-title">Total Inventory EIA WTI Fair Value</div>
@@ -897,7 +1008,7 @@
         </div>
 
         <!-- EV Fleet Dashboard -->
-        <div class="section" data-page="ev energy">
+        <div class="section" id="ev-section" data-page="ev">
             <div class="section-header">
                 <div>
                     <div class="section-title">Global EV Fleet</div>
@@ -946,7 +1057,7 @@
                 </div>
             </div>
 
-            <div class="section-header" style="margin-top: 24px;">
+            <div id="ev-policy-section" class="section-header" style="margin-top: 24px;">
                 <div>
                     <div class="section-title">EV Momentum vs Brent</div>
                     <div class="section-subtitle">Year-over-year fleet-share change, Brent crude, and policy markers for China, USA, and India</div>
@@ -1008,7 +1119,7 @@
         </div>
 
         <!-- Treasury Tax Withholding -->
-        <div class="section" data-page="economy">
+        <div class="section" id="fiscal-section" data-page="economy">
             <div class="section-header">
                 <div>
                     <div class="section-title">Treasury Tax Withholding</div>
@@ -1090,7 +1201,7 @@
         </div>
 
         <!-- Labor & Inflation Section -->
-        <div class="section" data-page="labor">
+        <div class="section" id="transport-section" data-page="ev">
             <div class="section-header">
                 <div>
                     <div class="section-title">Transportation</div>
@@ -1114,7 +1225,7 @@
             </div>
         </div>
 
-        <div class="section" data-page="labor">
+        <div class="section" id="employment-section" data-page="labor">
             <div class="section-header">
                 <div>
                     <div class="section-title">Employment</div>
@@ -1126,7 +1237,7 @@
             </div>
         </div>
 
-        <div class="section" data-page="labor">
+        <div class="section" id="jolts-section" data-page="labor">
             <div class="section-header">
                 <div>
                     <div class="section-title">Job Openings & Labor Turnover (JOLTS)</div>
@@ -1138,7 +1249,7 @@
             </div>
         </div>
 
-        <div class="section" data-page="labor">
+        <div class="section" id="inflation-section" data-page="labor">
             <div class="section-header">
                 <div>
                     <div class="section-title">Consumer Price Index (CPI)</div>
@@ -1163,7 +1274,7 @@
         </div>
 
         <!-- Treasury Yields Section -->
-        <div class="section" data-page="overview rates">
+        <div class="section" id="yield-curve-section" data-page="markets">
             <div class="section-header">
                 <div>
                     <div class="section-title">Treasury Yields & Yield Curve</div>
@@ -1195,7 +1306,7 @@
         </div>
 
         <!-- Jobless Claims Section -->
-        <div class="section" data-page="overview labor rates">
+        <div class="section" id="claims-section" data-page="labor">
             <div class="section-header">
                 <div>
                     <div class="section-title">Initial Jobless Claims</div>
@@ -1227,7 +1338,7 @@
         </div>
 
         <!-- ISM PMI Section -->
-        <div class="section" data-page="overview consumer">
+        <div class="section" data-page="economy">
             <div class="section-header">
                 <div>
                     <div class="section-title">Manufacturing Health</div>
@@ -1259,7 +1370,7 @@
         </div>
 
         <!-- Housing Section -->
-        <div class="section" data-page="economy">
+        <div class="section" id="housing-section" data-page="economy">
             <div class="section-header">
                 <div>
                     <div class="section-title">Housing Market</div>
@@ -1343,7 +1454,7 @@
         </div>
 
         <!-- Consumer Sentiment Section -->
-        <div class="section" data-page="overview consumer">
+        <div class="section" id="consumer-section" data-page="economy">
             <div class="section-header">
                 <div>
                     <div class="section-title">Consumer Sentiment</div>
@@ -1375,7 +1486,7 @@
         </div>
 
         <!-- Credit Spreads Section -->
-        <div class="section" data-page="markets rates">
+        <div class="section" id="credit-section" data-page="markets">
             <div class="section-header">
                 <div>
                     <div class="section-title">Credit Spreads</div>
@@ -1407,7 +1518,7 @@
         </div>
 
         <!-- Dollar Index Section -->
-        <div class="section" data-page="markets">
+        <div class="section" id="dxy-section" data-page="markets">
             <div class="section-header">
                 <div>
                     <div class="section-title">US Dollar Index (DXY)</div>
@@ -1426,40 +1537,8 @@
             </div>
         </div>
 
-        <!-- Natural Gas Inventories Section -->
-        <div class="section" data-page="energy">
-            <div class="section-header">
-                <div>
-                    <div class="section-title">Natural Gas Inventories</div>
-                    <div class="section-subtitle">Weekly US natural gas storage - seasonal range chart</div>
-                </div>
-            </div>
-            <div class="grid-2">
-                <div class="card">
-                    <div class="card-header">
-                        <span>Natural Gas Storage (BCF)</span>
-                        <span class="source">EIA</span>
-                    </div>
-                    <div class="card-body">
-                        <div id="natgas-storage-chart" class="chart"><div class="loading">Loading...</div></div>
-                        <div class="chart-desc">US working natural gas in storage (billion cubic feet)</div>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-header">
-                        <span>Weekly Storage Change</span>
-                        <span class="source">EIA</span>
-                    </div>
-                    <div class="card-body">
-                        <div id="natgas-change-chart" class="chart"><div class="loading">Loading...</div></div>
-                        <div class="chart-desc">Week-over-week change in storage (BCF)</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Crude Oil Production & Supply Adjustment Section -->
-        <div class="section" data-page="energy">
+        <div class="section" id="production-section" data-page="energy">
             <div class="section-header">
                 <div>
                     <div class="section-title">U.S. Crude Oil Production & Supply Adjustment</div>
@@ -1479,7 +1558,7 @@
         </div>
 
         <!-- Crack Spreads Section -->
-        <div class="section" data-page="energy">
+        <div class="section" id="crack-spreads-section" data-page="energy">
             <div class="section-header">
                 <div>
                     <div class="section-title">Crack Spreads & Brent-WTI</div>
@@ -1511,7 +1590,7 @@
         </div>
 
         <!-- Days of Supply Section -->
-        <div class="section" data-page="overview energy">
+        <div class="section" id="days-of-supply-section" data-page="energy">
             <div class="section-header">
                 <div>
                     <div class="section-title">Days of Supply</div>
@@ -1553,7 +1632,7 @@
         </div>
 
         <!-- Energy ETF Positioning Section -->
-        <div class="section" data-page="energy">
+        <div class="section" id="positioning-section" data-page="energy">
             <div class="section-header">
                 <div>
                     <div class="section-title">Energy ETF Positioning Proxy</div>
@@ -1644,7 +1723,7 @@
         </div>
 
         <!-- Baltic Dry Index Section -->
-        <div class="section" data-page="markets">
+        <div class="section" id="baltic-section" data-page="markets">
             <div class="section-header">
                 <div>
                     <div class="section-title">Baltic Dry Index / Shipping</div>
@@ -1669,8 +1748,58 @@
     </div>
 
     <script>
-        // Navigation handling
+        // Navigation handling. Subsections are links into the same workspace so
+        // the page stays shallow while the data remains easy to find.
+        const sectionSubnav = {
+            markets: [
+                ['Prices', 'market-prices-section'],
+                ['Oil equities', 'oil-stocks-section'],
+                ['Rates & curve', 'yield-curve-section'],
+                ['Credit & positioning', 'credit-section'],
+                ['Shipping', 'baltic-section']
+            ],
+            energy: [
+                ['U.S. balances', 'petroleum-balances-section'],
+                ['Upstream', 'upstream-section'],
+                ['Refining', 'refinery-section'],
+                ['Production', 'production-section'],
+                ['Cracks & spreads', 'crack-spreads-section'],
+                ['Days of supply', 'days-of-supply-section'],
+                ['Positioning', 'positioning-section']
+            ],
+            economy: [
+                ['GDP & growth', 'economy-section'],
+                ['Trade', 'trade-section'],
+                ['Housing', 'housing-section'],
+                ['Consumer', 'consumer-section'],
+                ['Fiscal activity', 'fiscal-section']
+            ],
+            labor: [
+                ['Rates & inflation', 'rates-section'],
+                ['Claims', 'claims-section'],
+                ['Employment', 'employment-section'],
+                ['JOLTS', 'jolts-section'],
+                ['CPI & PPI', 'inflation-section']
+            ],
+            ev: [
+                ['Fleet & registrations', 'ev-section'],
+                ['Transport', 'transport-section'],
+                ['Policy timeline', 'ev-policy-section']
+            ]
+        };
+
+        function renderSubnav(section) {
+            const nav = document.getElementById('section-subnav');
+            const links = sectionSubnav[section] || [];
+            nav.innerHTML = links.length
+                ? `<span class="subnav-label">In this section</span>${links.map(([label, id]) => `<a href="#${id}">${label}</a>`).join('')}`
+                : '';
+            nav.hidden = !links.length;
+        }
+
         function showSection(section) {
+            const supportedSections = ['overview', 'markets', 'energy', 'ev', 'economy', 'labor'];
+            if (!supportedSections.includes(section)) section = 'overview';
             // Update nav active state
             document.querySelectorAll('.nav-item').forEach(item => {
                 const active = item.dataset.section === section;
@@ -1683,6 +1812,8 @@
                 const pages = el.dataset.page.split(' ');
                 el.style.display = pages.includes(section) ? '' : 'none';
             });
+
+            renderSubnav(section);
 
             loadSectionData(section);
             resizeVisibleCharts();
@@ -1703,6 +1834,11 @@
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => {
                 showSection(item.dataset.section);
+                const url = new URL(window.location.href);
+                url.searchParams.set('section', item.dataset.section);
+                url.hash = '';
+                window.history.replaceState({}, '', url);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
                 if (document.getElementById('main-nav').classList.contains('mobile-open')) {
                     toggleMobileNav();
                     document.querySelector('.hamburger').focus();
@@ -1714,17 +1850,11 @@
             overview: [
                 'loadGDP',
                 'loadTrade',
-                'loadPolicyInflationLabor',
-                'loadTreasuryYields',
-                'loadJoblessClaims',
-                'loadISMPMI',
-                'loadConsumerSentiment',
-                'loadDaysOfSupply'
+                'loadKeyMetrics'
             ],
             markets: [
                 'loadMarketPrices',
                 'loadOilStocks',
-                'loadUpstreamActivity',
                 'loadTotalInvEIA',
                 'loadCreditSpreads',
                 'loadDXY',
@@ -1736,8 +1866,6 @@
                 'loadRefinery',
                 'loadUpstreamActivity',
                 'loadTotalInvEIA',
-                'loadEVFleet',
-                'loadNatGasInventories',
                 'loadCrudeProduction',
                 'loadCrackSpreads',
                 'loadDaysOfSupply',
@@ -1745,7 +1873,8 @@
                 'loadCOTBrentPositioning'
             ],
             ev: [
-                'loadEVFleet'
+                'loadEVFleet',
+                'loadTransportation'
             ],
             economy: [
                 'loadGDP',
@@ -1755,11 +1884,12 @@
                 'loadDetailedTrade',
                 'loadTreasuryWithholding',
                 'loadHousing',
-                'loadRetailSales'
+                'loadRetailSales',
+                'loadISMPMI',
+                'loadConsumerSentiment'
             ],
             labor: [
                 'loadPolicyInflationLabor',
-                'loadTransportation',
                 'loadEmployment',
                 'loadJOLTS',
                 'loadCPI',
@@ -2006,6 +2136,19 @@
                 });
 
         const fmt = (n, d=1) => n?.toLocaleString(undefined, {minimumFractionDigits: d, maximumFractionDigits: d}) ?? '--';
+        const formatDateLabel = value => {
+            if (!value) return 'date unavailable';
+            const parsed = parseLocalDate(value);
+            return Number.isNaN(parsed.getTime()) ? String(value) : parsed.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        };
+        const latestDateFor = (rows, field, dateField = 'date') => {
+            for (let i = rows.length - 1; i >= 0; i--) {
+                const numeric = Number(rows[i][field]);
+                if (Number.isFinite(numeric) && rows[i][dateField]) return rows[i][dateField];
+            }
+            return null;
+        };
+        const signedValue = (value, digits = 1) => Number.isFinite(value) ? `${value >= 0 ? '+' : ''}${value.toFixed(digits)}` : '--';
 
         /**
          * Build a Range Chart - shows 5-year historical range vs current year
@@ -2768,13 +2911,13 @@
             { key: 'crude_PADD5', name: 'PADD 5 (West Coast)', color: '#c41e3a' },
         ];
 
-        // Muted palette for weekly supply/demand stacks: blue-slate = supply, clay = demand.
-        // Saturation stays low so the net stock-change diamonds carry the signal.
+        // Supply and demand are separated by hue; the net stock-change marker
+        // remains the strongest visual signal.
         const sdPalette = {
-            supply: ['#5878a3', '#92abc8', '#c5d3e3'],
-            demand: ['#a3655c', '#c4938b', '#e2c6c1'],
-            draw: '#b35543',
-            build: '#2f7d5f'
+            supply: ['#2f6f9f', '#70a6c9', '#b8d3e5'],
+            demand: ['#b44f3f', '#d28772', '#ecc2b5'],
+            draw: '#a83226',
+            build: '#087f5b'
         };
 
         // Month labels for week axis
@@ -2859,6 +3002,7 @@
                     .map(r => ({ date: r.date, value: Number(r[product.key]) }))
                     .filter(r => r.date && Number.isFinite(r.value))
                     .sort((a, b) => new Date(a.date) - new Date(b.date));
+                const latestInventoryDate = inventoryRows[inventoryRows.length - 1]?.date;
                 const actualStockChangeByDate = new Map();
                 for (let i = 1; i < inventoryRows.length; i++) {
                     actualStockChangeByDate.set(
@@ -2886,7 +3030,7 @@
                 invCard.innerHTML = `
                     <div class="card-header">
                         <span>${product.name} - Inventory</span>
-                        <span class="source">EIA Weekly Stocks</span>
+                        <span class="source">EIA Weekly Stocks<br><small>Latest: ${formatDateLabel(latestInventoryDate)}</small></span>
                     </div>
                     <div class="card-body">
                         <div id="inv-chart-${product.key}" class="chart"></div>
@@ -2902,10 +3046,11 @@
                     sdCard.innerHTML = `
                         <div class="card-header">
                             <span>${product.name} - Weekly Supply/Demand</span>
-                            <span class="source">EIA WPSR (Last 4 weeks)</span>
+                            <span class="source">EIA WPSR (Last 4 weeks)<br><small>Latest: ${formatDateLabel(last4ProductWeeks[last4ProductWeeks.length - 1]?.period)}</small></span>
                         </div>
                         <div class="card-body">
                             <div id="sd-chart-${product.key}" class="chart"></div>
+                            <div class="chart-desc">Blue bars are supply and red bars are demand. Diamonds show the actual weekly stock change; green is a build and red is a draw.</div>
                         </div>
                     `;
                     row.appendChild(sdCard);
@@ -3025,8 +3170,8 @@
                                 type: 'scatter',
                                 mode: 'markers+text',
                                 customdata: actualStockChanges,
-                                marker: { color: actualStockChangeColors, size: 11, symbol: 'diamond', line: { color: '#ffffff', width: 1.5 } },
-                                textfont: { size: 10, color: '#334155' },
+                                marker: { color: actualStockChangeColors, size: 14, symbol: 'diamond', line: { color: '#ffffff', width: 2 } },
+                                textfont: { size: 11, color: '#1e293b' },
                                 hovertemplate: 'Actual stock change<br>%{customdata:.2f} MMbbl/week<br>%{y:.2f} MMbpd equivalent<extra></extra>',
                             });
                         } else {
@@ -3071,8 +3216,8 @@
                                 type: 'scatter',
                                 mode: 'markers+text',
                                 customdata: actualStockChanges,
-                                marker: { color: actualStockChangeColors, size: 11, symbol: 'diamond', line: { color: '#ffffff', width: 1.5 } },
-                                textfont: { size: 10, color: '#334155' },
+                                marker: { color: actualStockChangeColors, size: 14, symbol: 'diamond', line: { color: '#ffffff', width: 2 } },
+                                textfont: { size: 11, color: '#1e293b' },
                                 hovertemplate: 'Actual stock change<br>%{customdata:.2f} MMbbl/week<br>%{y:.2f} MMbpd equivalent<extra></extra>',
                             });
                         }
@@ -3091,65 +3236,98 @@
                 }, 200);
             }
 
-            // Add consolidated PADD crude oil chart
+            // Regional inventory is easier to read as deviations from normal.
+            // The table answers the comparison question; the chart expands one PADD.
             const paddContainer = document.createElement('div');
             paddContainer.className = 'card';
             paddContainer.style.marginTop = '16px';
             paddContainer.innerHTML = `
                 <div class="card-header">
-                    <span>Crude Oil by PADD Region (Current Year vs 5yr Range)</span>
+                    <span>Regional crude inventory: where is tight or loose?</span>
                     <span class="source">EIA WPSR</span>
                 </div>
                 <div class="card-body">
+                    <div class="data-table-wrap"><table class="data-table" id="padd-summary-table"><thead><tr><th>Region</th><th>Latest</th><th>Weekly change</th><th>Vs 5yr avg</th></tr></thead><tbody></tbody></table></div>
+                    <label style="display:inline-flex;align-items:center;gap:8px;margin-top:16px;font-size:14px;font-weight:700;color:#35516e;">Inspect region <select id="padd-region-select" aria-label="Inspect PADD region"></select></label>
                     <div id="padd-consolidated-chart" class="chart-lg"><div class="loading">Loading...</div></div>
-                    <div class="chart-desc">Regional crude stocks - PADD 2 includes Cushing (WTI hub), PADD 3 is Gulf Coast refining hub</div>
+                    <div class="chart-desc">Selected PADD shown as current year versus its five-year range, excluding 2020. The table compares each region against its own normal level. PADD 2 includes Cushing; PADD 3 is the Gulf Coast.</div>
                 </div>
             `;
             container.appendChild(paddContainer);
 
-            // Render consolidated PADD chart
+            const paddLatest = paddRegions.map(padd => {
+                const rows = invData.filter(row => Number.isFinite(Number(row[padd.key]))).sort((a, b) => new Date(a.date) - new Date(b.date));
+                const latest = rows[rows.length - 1];
+                const prior = rows[rows.length - 2];
+                const latestWeek = Number(latest?.week);
+                const priorYears = [...new Set(rows.map(row => Number(row.year)).filter(year => year < Number(latest?.year) && year !== 2020))]
+                    .sort((a, b) => b - a)
+                    .slice(0, 5);
+                const historical = rows.filter(row => priorYears.includes(Number(row.year)) && Number(row.week) === latestWeek).map(row => Number(row[padd.key])).filter(Number.isFinite);
+                const avg = historical.length ? historical.reduce((sum, value) => sum + value, 0) / historical.length : null;
+                return { padd, rows, latest, prior, avg, latestWeek };
+            });
+            const paddSelect = document.getElementById('padd-region-select');
+            paddSelect.innerHTML = paddLatest.map(({ padd }) => `<option value="${padd.key}">${padd.name}</option>`).join('');
+
+            const renderPaddChart = (selectedKey) => {
+                const selected = paddLatest.find(item => item.padd.key === selectedKey) || paddLatest[0];
+                if (!selected) return;
+                const { padd, rows, latest } = selected;
+                const year = Number(latest?.year) || currentYear;
+                const prior = year - 1;
+                const historyYears = [...new Set(rows.map(row => Number(row.year)).filter(item => item < prior && item !== 2020))].sort((a, b) => b - a).slice(0, 5);
+                const byWeek = new Map();
+                rows.forEach(row => {
+                    const week = Number(row.week);
+                    const value = Number(row[padd.key]);
+                    if (!Number.isFinite(week) || week > 52 || !Number.isFinite(value)) return;
+                    const item = byWeek.get(week) || { history: [], prior: null, current: null };
+                    if (historyYears.includes(Number(row.year))) item.history.push(value);
+                    if (Number(row.year) === prior) item.prior = value;
+                    if (Number(row.year) === year) item.current = value;
+                    byWeek.set(week, item);
+                });
+                const weeks = [...byWeek.keys()].sort((a, b) => a - b);
+                const min = weeks.map(week => {
+                    const values = byWeek.get(week).history || [];
+                    return values.length ? Math.min(...values) : null;
+                });
+                const max = weeks.map(week => {
+                    const values = byWeek.get(week).history || [];
+                    return values.length ? Math.max(...values) : null;
+                });
+                const avg = weeks.map(week => {
+                    const values = byWeek.get(week).history || [];
+                    return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+                });
+                const priorValues = weeks.map(week => byWeek.get(week).prior);
+                const currentValues = weeks.map(week => byWeek.get(week).current);
+                const traces = [
+                    { x: weeks, y: max, name: '5yr max', mode: 'lines', line: { width: 0 }, showlegend: false, hoverinfo: 'skip' },
+                    { x: weeks, y: min, name: '5yr range', mode: 'lines', line: { width: 0 }, fill: 'tonexty', fillcolor: 'rgba(100,116,139,.22)' },
+                    { x: weeks, y: avg, name: '5yr avg', mode: 'lines', line: { color: '#475569', width: 2, dash: 'dash' } },
+                    { x: weeks, y: priorValues, name: String(prior), mode: 'lines', line: { color: '#2563eb', width: 2.5 } },
+                    { x: weeks, y: currentValues, name: String(year), mode: 'lines+markers', line: { color: padd.color, width: 3 }, marker: { size: 5, color: padd.color } }
+                ];
+                Plotly.newPlot('padd-consolidated-chart', traces, {
+                    ...baseLayout,
+                    xaxis: { ...seasonalAxis(52), title: { text: 'Week of year', font: { size: 11 } } },
+                    yaxis: { ...baseLayout.yaxis, title: { text: 'Million barrels', font: { size: 11 } } },
+                    hovermode: 'x unified'
+                });
+            };
+
+            const paddBody = document.querySelector('#padd-summary-table tbody');
+            paddBody.innerHTML = paddLatest.map(({ padd, latest, prior, avg }) => {
+                const value = Number(latest?.[padd.key]);
+                const weekly = Number.isFinite(value) && Number.isFinite(Number(prior?.[padd.key])) ? value - Number(prior[padd.key]) : null;
+                const deviation = Number.isFinite(value) && Number.isFinite(avg) ? value - avg : null;
+                return `<tr><td>${padd.name}</td><td>${Number.isFinite(value) ? fmt(value, 1) : '--'}</td><td>${Number.isFinite(weekly) ? signedValue(weekly, 1) : '--'}</td><td>${Number.isFinite(deviation) ? signedValue(deviation, 1) : '--'}</td></tr>`;
+            }).join('');
+            paddSelect.addEventListener('change', event => renderPaddChart(event.target.value));
             setTimeout(() => {
-                const paddTraces = [];
-                for (const padd of paddRegions) {
-                    const allVals = invData.map(r => r[padd.key]).filter(v => v !== null && v !== undefined && v > 0);
-                    allVals.sort((a, b) => a - b);
-                    const median = allVals[Math.floor(allVals.length / 2)];
-                    const minV = median * 0.4, maxV = median * 1.6;
-
-                    const weekData = {};
-                    for (const row of invData) {
-                        const week = row.week, year = row.year, value = row[padd.key];
-                        if (!week || week > 52 || value === undefined || value === null) continue;
-                        if (value < minV || value > maxV) continue;
-                        if (!weekData[week]) weekData[week] = { current: null };
-                        if (year === currentYear) weekData[week].current = value;
-                    }
-                    const weeks = Object.keys(weekData).map(Number).filter(w => w <= 52).sort((a, b) => a - b);
-                    const currentVals = weeks.map(w => weekData[w].current);
-                    const validWeeks = weeks.filter((_, i) => currentVals[i] !== null);
-                    const validVals = currentVals.filter(v => v !== null);
-
-                    if (validVals.length > 0) {
-                        paddTraces.push({
-                            x: validWeeks,
-                            y: validVals,
-                            name: padd.name,
-                            line: { color: padd.color, width: 2 },
-                            mode: 'lines'
-                        });
-                    }
-                }
-
-                if (paddTraces.length > 0) {
-                    Plotly.newPlot('padd-consolidated-chart', paddTraces, {
-                        ...baseLayout,
-                        showlegend: true,
-                        legend: { orientation: 'h', y: -0.22, font: { size: 9 } },
-                        xaxis: { ...seasonalAxis(52), title: { text: 'Week of Year', font: { size: 10 } } },
-                        yaxis: { ...baseLayout.yaxis, title: { text: 'Million Barrels', font: { size: 10 } } },
-                        hovermode: 'x unified'
-                    });
-                }
+                renderPaddChart(paddSelect.value);
             }, 200);
 
             } catch (e) {
@@ -3462,7 +3640,7 @@
                     <div class="card">
                         <div class="card-header">
                             <span>${m.name}</span>
-                            <span class="source">${source}</span>
+                            <span class="source">${source}<br><small>Latest: ${formatDateLabel(latestDateFor(data, m.key))}</small></span>
                         </div>
                         <div class="card-body">
                             <div id="${chartPrefix}-${m.key}" class="chart"><div class="loading">Loading...</div></div>
@@ -3521,7 +3699,7 @@
                     <div class="card">
                         <div class="card-header">
                             <span>${m.name}</span>
-                            <span class="source">${source}</span>
+                            <span class="source">${source}<br><small>Latest: ${formatDateLabel(latestDateFor(data, m.key))}</small></span>
                         </div>
                         <div class="card-body">
                             <div id="${chartPrefix}-${m.key}" class="chart"><div class="loading">Loading...</div></div>
@@ -4804,7 +4982,7 @@
                     return Number.isFinite(parsed) ? parsed : null;
                 };
 
-                const rows = data
+                const allRows = data
                     .map(row => ({
                         ...row,
                         wti: parseNumber(row.wti),
@@ -4819,6 +4997,10 @@
                     }))
                     .filter(row => row.date)
                     .sort((a, b) => new Date(a.date) - new Date(b.date));
+                const latestDate = allRows.length ? parseLocalDate(allRows[allRows.length - 1].date) : new Date();
+                const cutoffDate = new Date(latestDate);
+                cutoffDate.setFullYear(cutoffDate.getFullYear() - 5);
+                const rows = allRows.filter(row => parseLocalDate(row.date) >= cutoffDate);
 
                 const latestFinite = (field) => {
                     for (let i = rows.length - 1; i >= 0; i--) {
@@ -4861,39 +5043,36 @@
                     }
                 ].filter(series => hasFinite(series.indexField));
 
-                const traces = activitySeries.map(series => ({
+                const activityTraces = activitySeries.map(series => ({
                     x: rows.map(row => row.date),
                     y: rows.map(row => Number.isFinite(row[series.indexField]) ? row[series.indexField] : null),
                     customdata: rows.map(row => Number.isFinite(row[series.rawField]) ? row[series.rawField] : null),
                     name: series.name,
                     type: 'scatter',
                     mode: 'lines',
-                    connectgaps: true,
+                    connectgaps: false,
                     line: { color: series.color, width: 2.4 },
                     hovertemplate: `${series.hover}<br>%{x}<br>Index: %{y:.1f}<br>Raw: %{customdata:,.0f}<extra></extra>`
                 }));
 
-                if (hasFinite('wti')) {
-                    traces.push({
+                const wtiTrace = hasFinite('wti') ? {
                         x: rows.map(row => row.date),
                         y: rows.map(row => Number.isFinite(row.wti) ? row.wti : null),
                         name: `WTI (${wtiLabel})`,
                         type: 'scatter',
                         mode: 'lines',
-                        connectgaps: true,
-                        yaxis: 'y2',
+                        connectgaps: false,
                         line: { color: '#ea580c', width: 2.8 },
                         hovertemplate: 'WTI<br>%{x}<br>$%{y:.2f}/bbl<extra></extra>'
-                    });
-                }
-                if (!traces.length) {
+                    } : null;
+                if (!activityTraces.length && !wtiTrace) {
                     el.innerHTML = '<div class="loading">Upstream activity data is not available. Run the data refresh to build upstream_activity.csv.</div>';
                     return;
                 }
 
-                Plotly.newPlot('upstream-activity-chart', traces, {
+                Plotly.newPlot('upstream-activity-chart', activityTraces, {
                     ...baseLayout,
-                    margin: { ...baseLayout.margin, l: 66, r: 72, b: 86, t: 18 },
+                    margin: { ...baseLayout.margin, l: 66, r: 20, b: 74, t: 18 },
                     showlegend: true,
                     legend: { orientation: 'h', y: -0.24, font: { size: 9 } },
                     xaxis: dateAxis({ tickformat: '%Y', dtick: 'M12' }),
@@ -4905,17 +5084,17 @@
                         zeroline: true,
                         zerolinecolor: '#cbd5e1'
                     },
-                    yaxis2: {
-                        title: { text: 'WTI ($/bbl)', font: { size: 11, color: '#ea580c' } },
-                        overlaying: 'y',
-                        side: 'right',
-                        showgrid: false,
-                        tickprefix: '$',
-                        tickfont: { size: 11, color: '#9a3412' },
-                        zeroline: false
-                    },
                     hovermode: 'x unified'
                 });
+                if (wtiTrace) {
+                    Plotly.newPlot('upstream-price-chart', [wtiTrace], {
+                        ...baseLayout,
+                        showlegend: false,
+                        xaxis: dateAxis({ tickformat: '%Y', dtick: 'M12' }),
+                        yaxis: { ...baseLayout.yaxis, title: { text: 'WTI ($/bbl)', font: { size: 11 } }, tickprefix: '$' },
+                        margin: { ...baseLayout.margin, l: 66, r: 20, b: 58, t: 18 }
+                    });
+                }
             } catch (e) {
                 console.error('Error loading upstream activity chart:', e);
                 const el = document.getElementById('upstream-activity-chart');
@@ -5422,7 +5601,9 @@
                     const latest = crackData[crackData.length - 1];
                     const prev = crackData[crackData.length - 2];
                     if (latest?.wti) {
-                        document.getElementById('km-wti').textContent = '$' + latest.wti.toFixed(1);
+                        const wtiText = '$' + latest.wti.toFixed(1);
+                        document.getElementById('km-wti').textContent = wtiText;
+                        document.getElementById('home-wti').textContent = wtiText;
                         const chg = latest.wti - (prev?.wti || latest.wti);
                         const chgEl = document.getElementById('km-wti-chg');
                         chgEl.textContent = (chg >= 0 ? '+' : '') + chg.toFixed(2);
@@ -5452,7 +5633,9 @@
                     const latest = yieldsData[yieldsData.length - 1];
                     const prev = yieldsData[yieldsData.length - 2];
                     if (latest?.yield_10y) {
-                        document.getElementById('km-10y').textContent = latest.yield_10y.toFixed(2) + '%';
+                        const tenYearText = latest.yield_10y.toFixed(2) + '%';
+                        document.getElementById('km-10y').textContent = tenYearText;
+                        document.getElementById('home-10y').textContent = tenYearText;
                         const chg = latest.yield_10y - (prev?.yield_10y || latest.yield_10y);
                         const chgEl = document.getElementById('km-10y-chg');
                         chgEl.textContent = (chg >= 0 ? '+' : '') + (chg * 100).toFixed(0) + 'bp';
@@ -5467,7 +5650,9 @@
                     const latest = claimsData[claimsData.length - 1];
                     const prev = claimsData[claimsData.length - 2];
                     if (latest?.initial_claims) {
-                        document.getElementById('km-claims').textContent = (latest.initial_claims / 1000).toFixed(0) + 'K';
+                        const claimsText = (latest.initial_claims / 1000).toFixed(0) + 'K';
+                        document.getElementById('km-claims').textContent = claimsText;
+                        document.getElementById('home-claims').textContent = claimsText;
                         const chg = latest.initial_claims - (prev?.initial_claims || latest.initial_claims);
                         const chgEl = document.getElementById('km-claims-chg');
                         chgEl.textContent = (chg >= 0 ? '+' : '') + (chg / 1000).toFixed(0) + 'K';
@@ -5495,8 +5680,12 @@
                     ? (data.last_updated || 'Never')
                     : date.toLocaleDateString();
                 document.getElementById('last-updated').textContent = `Updated: ${label}`;
+                const briefingStatus = document.getElementById('home-observation-status');
+                if (briefingStatus) briefingStatus.textContent = `Latest available: ${label}`;
             } catch (e) {
                 document.getElementById('last-updated').textContent = 'Updated: unavailable';
+                const briefingStatus = document.getElementById('home-observation-status');
+                if (briefingStatus) briefingStatus.textContent = 'Latest available: unavailable';
             }
         }
 
@@ -5533,7 +5722,6 @@
         // Initialize
         loadStatus();
         loadBrentSignal();
-        loadKeyMetrics();
 
         // Show overview section by default, or a requested section for direct links/screenshots.
         const initialSection = new URLSearchParams(window.location.search).get('section') || 'overview';
