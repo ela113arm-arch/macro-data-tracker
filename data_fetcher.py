@@ -1276,6 +1276,7 @@ def fetch_cpi():
         'cpi_medical': 'CPIMEDSL',      # CPI Medical Care
         'cpi_transportation': 'CPITRNSL',  # CPI Transportation
         'cpi_apparel': 'CPIAPPSL',      # CPI Apparel
+        'core_pce': 'PCEPILFE',         # Core PCE price index (less food and energy)
     }
 
     all_data = {}
@@ -1293,7 +1294,7 @@ def fetch_cpi():
     # Calculate YoY % change for each series
     for col in series.keys():
         if col in df.columns:
-            df[f'{col}_yoy'] = df[col].pct_change(12) * 100
+            df[f'{col}_yoy'] = df[col].pct_change(12, fill_method=None) * 100
 
     df['year'] = df['date'].dt.year
     df['month'] = df['date'].dt.month
