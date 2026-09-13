@@ -816,7 +816,7 @@
                 </div>
                 <div class="card-body">
                     <div id="policy-inflation-labor-chart" class="chart-lg"><div class="loading">Loading...</div></div>
-                    <div class="chart-desc">Rates use the left percent axis. CPI and PPI Final Demand are 12-month year-over-year rates on the right percent axis.</div>
+                    <div class="chart-desc">Rates use the left percent axis. CPI, Core PCE, and PPI Final Demand are 12-month year-over-year rates on the right percent axis.</div>
                     <div class="card" id="employment-index-card" style="margin-top: 18px;">
                         <div class="card-header">
                             <span>Employment Activity Index</span>
@@ -5509,12 +5509,18 @@
                     if (!Number.isFinite(current) || !Number.isFinite(prior) || prior <= 0) return null;
                     return ((current / prior) - 1) * 100;
                 });
-
                 const numericOrNull = (value) => {
                     if (value === null || value === undefined || value === '') return null;
                     const numeric = Number(value);
                     return Number.isFinite(numeric) ? numeric : null;
                 };
+
+                const corePCE12mYoY = cpiData.map((row, i) => {
+                    const current = numericOrNull(row.core_pce);
+                    const prior = i >= 12 ? numericOrNull(cpiData[i - 12].core_pce) : null;
+                    if (current === null || prior === null || prior <= 0) return null;
+                    return ((current / prior) - 1) * 100;
+                });
 
                 const forwardFill = (values) => {
                     let lastValue = null;
@@ -5535,24 +5541,17 @@
                     },
                     {
                         x: rateData.map(d => d.date),
-                        y: rateData.map(d => d.yield_3mo),
-                        name: '3M Treasury',
-                        unit: '%',
-                        line: { color: '#0d7d4d', width: 1.8 }
-                    },
-                    {
-                        x: rateData.map(d => d.date),
-                        y: rateData.map(d => d.yield_2yr),
-                        name: '2Y Treasury',
-                        unit: '%',
-                        line: { color: '#2563eb', width: 1.8 }
-                    },
-                    {
-                        x: rateData.map(d => d.date),
                         y: rateData.map(d => d.yield_10yr),
                         name: '10Y Treasury',
                         unit: '%',
                         line: { color: '#7c3aed', width: 1.8 }
+                    },
+                    {
+                        x: rateData.map(d => d.date),
+                        y: rateData.map(d => d.yield_30yr),
+                        name: '30Y Treasury',
+                        unit: '%',
+                        line: { color: '#0891b2', width: 2.2 }
                     },
                     {
                         x: cpiData.map(d => d.date),
@@ -5561,6 +5560,14 @@
                         unit: '%',
                         yaxis: 'y2',
                         line: { color: '#dc2626', width: 2.8, shape: 'spline', smoothing: 0.35 }
+                    },
+                    {
+                        x: cpiData.map(d => d.date),
+                        y: corePCE12mYoY,
+                        name: '12M Core PCE',
+                        unit: '%',
+                        yaxis: 'y2',
+                        line: { color: '#be123c', width: 2.8, dash: 'dash', shape: 'spline', smoothing: 0.35 }
                     },
                     {
                         x: ppiData.map(d => d.date),
