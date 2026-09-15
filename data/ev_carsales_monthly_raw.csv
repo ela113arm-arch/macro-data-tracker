@@ -32684,6 +32684,10 @@ YYYYMM,Country,Fuel,Value,source_url
 202607,Nepal,NonPluginHybrid,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202607,Nepal,PluginHybrid,4.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202607,Nepal,BatteryElectric,776.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Nepal,ICE,230.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Nepal,NonPluginHybrid,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Nepal,PluginHybrid,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Nepal,BatteryElectric,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201701,Nepal Comtrade,ICE,2109.906,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201701,Nepal Comtrade,NonPluginHybrid,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201701,Nepal Comtrade,PluginHybrid,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
@@ -39236,6 +39240,14 @@ YYYYMM,Country,Fuel,Value,source_url
 202606,Peru,NonPluginHybrid,1344.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202606,Peru,PluginHybrid,248.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202606,Peru,BatteryElectric,83.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202607,Peru,ICE,20343.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202607,Peru,NonPluginHybrid,1163.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202607,Peru,PluginHybrid,195.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202607,Peru,BatteryElectric,66.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Peru,ICE,24589.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Peru,NonPluginHybrid,1353.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Peru,PluginHybrid,229.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Peru,BatteryElectric,67.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201801,Poland,Diesel,11433.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201801,Poland,Petrol,36442.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201801,Poland,LPG,1143.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
@@ -43396,6 +43408,12 @@ YYYYMM,Country,Fuel,Value,source_url
 202607,Singapore,PluginHybrid,154.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202607,Singapore,BatteryElectric,3200.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202607,Singapore,Others,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Singapore,Diesel,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Singapore,Petrol,247.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Singapore,NonPluginHybrid,1134.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Singapore,PluginHybrid,288.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Singapore,BatteryElectric,2880.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202608,Singapore,Others,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202201,Slovakia,Diesel,1064.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202201,Slovakia,Petrol,3030.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202201,Slovakia,NonPluginHybrid,1290.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
