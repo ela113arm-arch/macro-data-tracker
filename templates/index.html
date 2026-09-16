@@ -1968,6 +1968,7 @@
             ],
             markets: [
                 'loadMarketPrices',
+                'loadTreasuryYields',
                 'loadOilStocks',
                 'loadTotalInvEIA',
                 'loadCreditSpreads',
@@ -2228,10 +2229,20 @@
             element.innerHTML = `
                 <div class="chart-error" role="status" aria-live="polite">
                     <strong>Data temporarily unavailable</strong>
-                    <span>Last good data: ${dashboardLastGoodDate}</span>
+                    <span>This chart could not finish loading.</span>
                     <button type="button">Retry</button>
                 </div>`;
-            element.querySelector('button')?.addEventListener('click', () => window.location.reload());
+            element.querySelector('button')?.addEventListener('click', () => {
+                const section = document.querySelector('.nav-item[aria-pressed="true"]')?.dataset.section || 'overview';
+                document.querySelectorAll('[data-dashboard-error="true"]').forEach(host => {
+                    if (!chartHostIsVisible(host)) return;
+                    delete host.dataset.dashboardError;
+                    delete host.dataset.loadingStartedAt;
+                    host.innerHTML = '<div class="loading">Loading...</div>';
+                });
+                (sectionLoaders[section] || []).forEach(name => loadedDashboardLoaders.delete(name));
+                loadSectionData(section);
+            });
         }
 
         function chartHostIsVisible(element) {
@@ -2245,6 +2256,13 @@
                 document.querySelectorAll('.loading').forEach(loading => {
                     const host = loading.closest('.chart, .chart-lg, .employment-index-gauge, .employment-index-history, [id]');
                     if (!host || host.dataset.dashboardError === 'true') return;
+                    // Plotly preserves existing children, including old loading placeholders.
+                    // A rendered plot must never be replaced by the loading watchdog.
+                    if (host.querySelector('.plot-container')) {
+                        loading.remove();
+                        delete host.dataset.loadingStartedAt;
+                        return;
+                    }
                     if (!chartHostIsVisible(host)) {
                         delete host.dataset.loadingStartedAt;
                         return;
@@ -2362,9 +2380,9 @@
             return originalNewPlot(element, data, compactLayout, { ...plotlyConfig, ...config })
                 .then(chart => {
                     if (chartElement) {
+                        chartElement.querySelectorAll('.loading, .chart-error').forEach(node => node.remove());
                         delete chartElement.dataset.dashboardError;
                         delete chartElement.dataset.loadingStartedAt;
-                        chartElement.dataset.lastGoodDate = dashboardLastGoodDate;
                     }
                     resizeVisibleCharts();
                     return chart;
@@ -6048,13 +6066,14 @@
                 const yieldsRes = await fetch('/api/treasury-yields');
                 const yieldsData = await yieldsRes.json();
                 if (yieldsData.length && !yieldsData.error) {
-                    const latest = yieldsData[yieldsData.length - 1];
-                    const prev = yieldsData[yieldsData.length - 2];
-                    if (latest?.yield_10y) {
-                        const tenYearText = latest.yield_10y.toFixed(2) + '%';
+                    const observations = yieldsData.filter(row => finiteNumberOrNull(row.yield_10yr) !== null);
+                    const latest = observations.at(-1);
+                    const prev = observations.at(-2);
+                    if (latest) {
+                        const tenYearText = latest.yield_10yr.toFixed(2) + '%';
                         document.getElementById('km-10y').textContent = tenYearText;
                         document.getElementById('home-10y').textContent = tenYearText;
-                        const chg = latest.yield_10y - (prev?.yield_10y || latest.yield_10y);
+                        const chg = latest.yield_10yr - (prev?.yield_10yr || latest.yield_10yr);
                         const chgEl = document.getElementById('km-10y-chg');
                         chgEl.textContent = (chg >= 0 ? '+' : '') + (chg * 100).toFixed(0) + 'bp';
                         chgEl.className = 'key-metric-change ' + (chg >= 0 ? 'up' : 'down');
