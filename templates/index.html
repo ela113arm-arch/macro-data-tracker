@@ -5731,6 +5731,19 @@
             });
         }
 
+        // Match calendar months rather than assuming every monthly row is present.
+        // Missing/zero price indexes cannot produce a meaningful inflation rate.
+        function monthlyInflationYoY(rows, field) {
+            const levels = new Map(rows.map(row => [row.date.slice(0, 7), finiteNumberOrNull(row[field])]));
+            return rows.map(row => {
+                const month = row.date.slice(0, 7);
+                const priorMonth = `${Number(month.slice(0, 4)) - 1}${month.slice(4)}`;
+                const current = levels.get(month);
+                const prior = levels.get(priorMonth);
+                return current > 0 && prior > 0 ? (current / prior - 1) * 100 : null;
+            });
+        }
+
         async function loadPolicyInflationLabor() {
             try {
                 const [yieldsRes, cpiRes, ppiRes, claimsRes, employmentIndexRes] = await Promise.all([
@@ -5763,33 +5776,16 @@
                 const cpiLevelField = cpiData.some(d => d.cpi_all !== null && d.cpi_all !== undefined)
                     ? 'cpi_all'
                     : 'cpi_core';
-                const cpi12mYoY = cpiData.map((row, i) => {
-                    const current = Number(row[cpiLevelField]);
-                    const prior = i >= 12 ? Number(cpiData[i - 12][cpiLevelField]) : NaN;
-                    if (!Number.isFinite(current) || !Number.isFinite(prior) || prior <= 0) return null;
-                    return ((current / prior) - 1) * 100;
-                });
+                const cpi12mYoY = monthlyInflationYoY(cpi, cpiLevelField);
+                const cpiYoYByMonth = new Map(cpi.map((row, i) => [row.date.slice(0, 7), cpi12mYoY[i]]));
                 const ppiLevelField = ppiData.some(d => d.ppi_final_demand !== null && d.ppi_final_demand !== undefined)
                     ? 'ppi_final_demand'
                     : 'ppi_all';
-                const ppi12mYoY = ppiData.map((row, i) => {
-                    const current = Number(row[ppiLevelField]);
-                    const prior = i >= 12 ? Number(ppiData[i - 12][ppiLevelField]) : NaN;
-                    if (!Number.isFinite(current) || !Number.isFinite(prior) || prior <= 0) return null;
-                    return ((current / prior) - 1) * 100;
-                });
-                const numericOrNull = (value) => {
-                    if (value === null || value === undefined || value === '') return null;
-                    const numeric = Number(value);
-                    return Number.isFinite(numeric) ? numeric : null;
-                };
-
-                const corePCE12mYoY = cpiData.map((row, i) => {
-                    const current = numericOrNull(row.core_pce);
-                    const prior = i >= 12 ? numericOrNull(cpiData[i - 12].core_pce) : null;
-                    if (current === null || prior === null || prior <= 0) return null;
-                    return ((current / prior) - 1) * 100;
-                });
+                const ppi12mYoY = monthlyInflationYoY(ppi, ppiLevelField);
+                const ppiYoYByMonth = new Map(ppi.map((row, i) => [row.date.slice(0, 7), ppi12mYoY[i]]));
+                const corePCE12mYoY = monthlyInflationYoY(cpi, 'core_pce');
+                const corePCEYoYByMonth = new Map(cpi.map((row, i) => [row.date.slice(0, 7), corePCE12mYoY[i]]));
+                const numericOrNull = finiteNumberOrNull;
 
                 const forwardFill = (values) => {
                     let lastValue = null;
@@ -5824,7 +5820,7 @@
                     },
                     {
                         x: cpiData.map(d => d.date),
-                        y: cpi12mYoY,
+                        y: cpiData.map(row => cpiYoYByMonth.get(row.date.slice(0, 7))),
                         name: `12M ${cpiLevelField === 'cpi_all' ? 'CPI' : 'Core CPI'}`,
                         unit: '%',
                         yaxis: 'y2',
@@ -5832,7 +5828,7 @@
                     },
                     {
                         x: cpiData.map(d => d.date),
-                        y: corePCE12mYoY,
+                        y: cpiData.map(row => corePCEYoYByMonth.get(row.date.slice(0, 7))),
                         name: '12M Core PCE',
                         unit: '%',
                         yaxis: 'y2',
@@ -5840,7 +5836,7 @@
                     },
                     {
                         x: ppiData.map(d => d.date),
-                        y: ppi12mYoY,
+                        y: ppiData.map(row => ppiYoYByMonth.get(row.date.slice(0, 7))),
                         name: `12M ${ppiLevelField === 'ppi_final_demand' ? 'PPI Final Demand' : 'PPI All Commodities'}`,
                         unit: '%',
                         yaxis: 'y2',
@@ -5857,7 +5853,7 @@
                         name: item.name,
                         type: 'scatter',
                         mode: 'lines',
-                        connectgaps: true,
+                        connectgaps: false,
                         yaxis: item.yaxis || 'y',
                         line: item.line,
                         hovertemplate: `${item.name}<br>%{x}<br>%{y:.1f}${item.unit}<extra></extra>`
@@ -5929,7 +5925,9 @@
                         ...axisTickStyle,
                         title: { text: 'Inflation YoY (%)', font: { size: 11, color: '#64748b' }, standoff: 12 },
                         range: cleanPercentRange(inflationAxisValues, 2),
-                        dtick: 2,
+                        tickmode: 'auto',
+                        nticks: 8,
+                        automargin: true,
                         tickformat: '.0f',
                         overlaying: 'y',
                         side: 'right',
