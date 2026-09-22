@@ -4960,7 +4960,7 @@
     "measure": "National petroleum-product consumption",
     "source": "Korea National Oil Corporation (KNOC) Petronet",
     "source_url": "https://www.petronet.co.kr/v4/excel/KDCQ0200_x.jsp?term=m&by=2020&bq=3&bm=07&ay=2026&aq=3&am=08&ProdCDList=B000%2CC000%2CD000%2CE000%2CF000%2CG000%2CH000%2CJ000%2CL000%2CN000%2CI000%2CM000%2CK000%2CO000%2CS000",
-    "vintage": "KNOC Petronet KDCQ0200 retrieved 2026-09-22; data through 2026-07.",
+    "vintage": "KNOC Petronet KDCQ0200 retrieved 2026-09-22; data through 2026-08.",
     "product_mapping": "Gasoline; aviation fuel; diesel (official KNOC product categories).",
     "conversion_note": "thousand bbl ÷ days in month ÷ 1,000.",
     "caveat": "Live statistical system values may be revised.",
@@ -5574,6 +5574,16 @@
         "jet_fuel_yoy_mbd": -0.08970967741935484,
         "diesel_yoy_mbd": -0.005290322580645157,
         "net_yoy_mbd": -0.09487096774193551
+      },
+      {
+        "date": "2026-08-01",
+        "gasoline_mbd": 0.27045161290322584,
+        "jet_fuel_mbd": 0.021870967741935483,
+        "diesel_mbd": 0.2896451612903226,
+        "gasoline_yoy_mbd": -0.013193548387096743,
+        "jet_fuel_yoy_mbd": -0.0923225806451613,
+        "diesel_yoy_mbd": -0.09229032258064518,
+        "net_yoy_mbd": -0.19780645161290322
       }
     ]
   },
