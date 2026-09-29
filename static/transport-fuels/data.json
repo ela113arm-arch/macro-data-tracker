@@ -3113,8 +3113,8 @@
     "country": "United Kingdom",
     "measure": "Deliveries for inland consumption",
     "source": "Department for Energy Security and Net Zero (DESNZ)",
-    "source_url": "https://assets.publishing.service.gov.uk/media/6a8ecd5c01bbff0bf8f97a07/ET_3.13_AUG_26.xlsx",
-    "vintage": "DESNZ ET 3.13 workbook release date not supplied retrieved 2026-09-01; data through 2026-06.",
+    "source_url": "https://assets.publishing.service.gov.uk/media/6aba696b997a4b2950ccefe3/ET_3.13_SEP_26.xlsx",
+    "vintage": "DESNZ ET 3.13 workbook release date not supplied retrieved 2026-09-01; data through 2026-07.",
     "product_mapping": "Petrol; Jet fuel; White diesel + Red diesel.",
     "conversion_note": "kt × 1,000 × product-specific bbl/t ÷ days in month ÷ 1,000,000.",
     "caveat": "June 2026 is provisional; the combined diesel series is affected by red-diesel policy changes.",
@@ -3663,61 +3663,71 @@
         "date": "2026-01-01",
         "gasoline_mbd": 0.2736177419354839,
         "jet_fuel_mbd": 0.20719331612903227,
-        "diesel_mbd": 0.3831340258064516,
+        "diesel_mbd": 0.38325063870967746,
         "gasoline_yoy_mbd": 0.015615322580645186,
         "jet_fuel_yoy_mbd": -0.007351422580645139,
-        "diesel_yoy_mbd": -0.08564051612903223,
-        "net_yoy_mbd": -0.07737661612903218
+        "diesel_yoy_mbd": -0.08552390322580639,
+        "net_yoy_mbd": -0.07726000322580634
       },
       {
         "date": "2026-02-01",
         "gasoline_mbd": 0.3048221428571428,
         "jet_fuel_mbd": 0.24839025,
-        "diesel_mbd": 0.5589951964285714,
+        "diesel_mbd": 0.5576344071428572,
         "gasoline_yoy_mbd": -0.008761071428571465,
         "jet_fuel_yoy_mbd": 0.022036274999999966,
-        "diesel_yoy_mbd": 0.011061899999999958,
-        "net_yoy_mbd": 0.02433710357142846
+        "diesel_yoy_mbd": 0.009701110714285699,
+        "net_yoy_mbd": 0.0229763142857142
       },
       {
         "date": "2026-03-01",
         "gasoline_mbd": 0.2628666129032258,
         "jet_fuel_mbd": 0.23374666451612905,
-        "diesel_mbd": 0.48745826129032266,
+        "diesel_mbd": 0.47874494516129035,
         "gasoline_yoy_mbd": 0.005034193548387134,
         "jet_fuel_yoy_mbd": 0.0011905645161290335,
-        "diesel_yoy_mbd": 0.05172948387096782,
-        "net_yoy_mbd": 0.057954241935483986
+        "diesel_yoy_mbd": 0.04301616774193551,
+        "net_yoy_mbd": 0.049240925806451674
       },
       {
         "date": "2026-04-01",
         "gasoline_mbd": 0.2961173333333333,
         "jet_fuel_mbd": 0.25446491,
-        "diesel_mbd": 0.44868416000000005,
+        "diesel_mbd": 0.47370237000000004,
         "gasoline_yoy_mbd": 0.002892833333333289,
         "jet_fuel_yoy_mbd": -0.010567199999999999,
-        "diesel_yoy_mbd": -0.05374540999999994,
-        "net_yoy_mbd": -0.06141977666666665
+        "diesel_yoy_mbd": -0.028727199999999953,
+        "net_yoy_mbd": -0.03640156666666666
       },
       {
         "date": "2026-05-01",
         "gasoline_mbd": 0.2872479032258064,
         "jet_fuel_mbd": 0.2697769064516129,
-        "diesel_mbd": 0.4893170709677419,
+        "diesel_mbd": 0.47788434193548385,
         "gasoline_yoy_mbd": -0.001222903225806482,
         "jet_fuel_yoy_mbd": 0.0012682645161290473,
-        "diesel_yoy_mbd": -0.026443141935483916,
-        "net_yoy_mbd": -0.02639778064516135
+        "diesel_yoy_mbd": -0.037875870967741976,
+        "net_yoy_mbd": -0.03783050967741941
       },
       {
         "date": "2026-06-01",
-        "gasoline_mbd": 0.30992416666666667,
+        "gasoline_mbd": 0.3042575,
         "jet_fuel_mbd": 0.27456331,
-        "diesel_mbd": 0.48252297,
-        "gasoline_yoy_mbd": -0.002402666666666664,
+        "diesel_mbd": 0.46983191,
+        "gasoline_yoy_mbd": -0.008069333333333317,
         "jet_fuel_yoy_mbd": 0.008961400000000008,
-        "diesel_yoy_mbd": 0.004265700000000039,
-        "net_yoy_mbd": 0.010824433333333383
+        "diesel_yoy_mbd": -0.008425359999999937,
+        "net_yoy_mbd": -0.007533293333333246
+      },
+      {
+        "date": "2026-07-01",
+        "gasoline_mbd": 0.27914548387096777,
+        "jet_fuel_mbd": 0.26962902580645165,
+        "diesel_mbd": 0.47451422903225804,
+        "gasoline_yoy_mbd": 0.005346774193548454,
+        "jet_fuel_yoy_mbd": -0.013690238709677338,
+        "diesel_yoy_mbd": -0.01739398064516129,
+        "net_yoy_mbd": -0.025737445161290173
       }
     ]
   },
@@ -5592,7 +5602,7 @@
     "measure": "Products supplied, disposition",
     "source": "Statistics Canada",
     "source_url": "https://www150.statcan.gc.ca/n1/tbl/csv/25100081-eng.zip",
-    "vintage": "Statistics Canada table 25-10-0081-01 retrieved 2026-09-29; data through 2026-06.",
+    "vintage": "Statistics Canada table 25-10-0081-01 retrieved 2026-09-29; data through 2026-07.",
     "product_mapping": "Finished motor gasoline; Kerosene-type jet fuel; Distillate fuel oil.",
     "conversion_note": "m³ × 6.28981077 bbl/m³ ÷ days in month ÷ 1,000,000.",
     "caveat": "Products supplied is a supply/demand proxy; distillate fuel oil is broader than narrowly defined diesel.",
@@ -6196,6 +6206,16 @@
         "jet_fuel_yoy_mbd": -0.02384676923266002,
         "diesel_yoy_mbd": 0.01606354772550289,
         "net_yoy_mbd": -0.04857557959563305
+      },
+      {
+        "date": "2026-07-01",
+        "gasoline_mbd": 0.7878767114371994,
+        "jet_fuel_mbd": 0.18059487290233453,
+        "diesel_mbd": 0.5467779168698971,
+        "gasoline_yoy_mbd": -0.012043364447577143,
+        "jet_fuel_yoy_mbd": -0.02132144402469191,
+        "diesel_yoy_mbd": -0.061092932009010115,
+        "net_yoy_mbd": -0.09445774048127917
       }
     ]
   }
