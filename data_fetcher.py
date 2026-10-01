@@ -1649,12 +1649,14 @@ def fetch_treasury_yields():
         'yield_3mo': 'DGS3MO',         # 3-Month Treasury
         'yield_1yr': 'DGS1',           # 1-Year Treasury
         'yield_5yr': 'DGS5',           # 5-Year Treasury
-        'fed_funds': 'FEDFUNDS',       # Fed Funds Rate
+        'fed_funds': 'DFF',            # Daily effective Fed Funds Rate
     }
 
     all_data = {}
     for name, series_id in series.items():
         data = fetch_fred_series(series_id, '2015-01-01')
+        if name == 'fed_funds' and not data:
+            raise ValueError('Daily fed funds fetch returned no observations; keeping existing Treasury data')
         for date, value in data:
             if date not in all_data:
                 all_data[date] = {'date': date}

@@ -883,6 +883,7 @@
                     <span class="source">FRED / BLS</span>
                 </div>
                 <div class="card-body">
+                    <div class="chart-desc" id="fed-funds-latest" aria-live="polite">Daily effective fed funds: loading…</div>
                     <div id="policy-inflation-labor-chart" class="chart-lg"><div class="loading">Loading...</div></div>
                     <div class="chart-desc">Rates use the left percent axis. CPI, Core PCE, and PPI Final Demand are 12-month year-over-year rates on the right percent axis.</div>
                     <div class="card" id="employment-index-card" style="margin-top: 18px;">
@@ -4312,7 +4313,7 @@
         async function loadTreasuryYields() {
             try {
                 const res = await fetch('/api/treasury-yields');
-                const data = await res.json();
+                const data = (await res.json()).filter(row => finiteNumberOrNull(row.yield_10yr) !== null);
                 if (!data.length) return;
 
                 const dates = data.map(d => d.date);
@@ -5787,33 +5788,33 @@
                 const corePCEYoYByMonth = new Map(cpi.map((row, i) => [row.date.slice(0, 7), corePCE12mYoY[i]]));
                 const numericOrNull = finiteNumberOrNull;
 
-                const forwardFill = (values) => {
-                    let lastValue = null;
-                    return values.map(value => {
-                        const numeric = numericOrNull(value);
-                        if (numeric !== null) lastValue = numeric;
-                        return lastValue;
-                    });
-                };
+                const fedFundsPoints = trimTrailingSeries(rateData, 'fed_funds');
+                const tenYearPoints = rateData.filter(d => numericOrNull(d.yield_10yr) !== null);
+                const thirtyYearPoints = rateData.filter(d => numericOrNull(d.yield_30yr) !== null);
+                const latestFedFundsDate = latestDateFor(rateData, 'fed_funds');
+                const latestFedFunds = fedFundsPoints.at(-1)?.value;
+                document.getElementById('fed-funds-latest').textContent = latestFedFundsDate
+                    ? `Daily effective fed funds: ${latestFedFunds.toFixed(2)}% • Last observation: ${formatDateLabel(latestFedFundsDate)} • Source: FRED DFF`
+                    : 'Daily effective fed funds: data unavailable';
 
                 const series = [
                     {
-                        x: rateData.map(d => d.date),
-                        y: forwardFill(rateData.map(d => d.fed_funds)),
+                        x: fedFundsPoints.map(d => d.date),
+                        y: fedFundsPoints.map(d => d.value),
                         name: 'Fed Funds',
                         unit: '%',
                         line: { color: '#111827', width: 3 }
                     },
                     {
-                        x: rateData.map(d => d.date),
-                        y: rateData.map(d => d.yield_10yr),
+                        x: tenYearPoints.map(d => d.date),
+                        y: tenYearPoints.map(d => d.yield_10yr),
                         name: '10Y Treasury',
                         unit: '%',
                         line: { color: '#7c3aed', width: 1.8 }
                     },
                     {
-                        x: rateData.map(d => d.date),
-                        y: rateData.map(d => d.yield_30yr),
+                        x: thirtyYearPoints.map(d => d.date),
+                        y: thirtyYearPoints.map(d => d.yield_30yr),
                         name: '30Y Treasury',
                         unit: '%',
                         line: { color: '#0891b2', width: 2.2 }
@@ -5856,7 +5857,7 @@
                         connectgaps: false,
                         yaxis: item.yaxis || 'y',
                         line: item.line,
-                        hovertemplate: `${item.name}<br>%{x}<br>%{y:.1f}${item.unit}<extra></extra>`
+                        hovertemplate: `${item.name}<br>%{x}<br>%{y:${item.name === 'Fed Funds' ? '.2f' : '.1f'}}${item.unit}<extra></extra>`
                     };
                 });
 
