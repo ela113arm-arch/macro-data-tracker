@@ -1,17 +1,17 @@
 {
   "schedule": "Existing GitHub Actions weekday refresh (14:00, 16:00, and 23:30 UTC)",
-  "last_run_at": "2026-10-01T21:08:23.759810+00:00",
+  "last_run_at": "2026-10-02T02:35:11.455635+00:00",
   "countries": {
     "United States": {
       "status": "ok",
       "latest_month": "2026-07-01",
-      "last_attempt_at": "2026-10-01T21:08:23.759810+00:00",
-      "last_success_at": "2026-10-01T21:08:23.759810+00:00",
+      "last_attempt_at": "2026-10-02T02:35:11.455635+00:00",
+      "last_success_at": "2026-10-02T02:35:11.455635+00:00",
       "message": "Validated official source; new months and revisions checked.",
       "source_urls": [
         "https://www.eia.gov/dnav/pet/xls/PET_CONS_PSUP_DC_NUS_MBBLPD_M.xls"
       ],
-      "vintage": "EIA Product Supplied workbook retrieved 2026-10-01; data through 2026-07.",
+      "vintage": "EIA Product Supplied workbook retrieved 2026-10-02; data through 2026-07.",
       "validation_note": "Data 1 source keys MGFUPUS2, MKJUPUS2 and MDIUPUS2; final row 2026-07 checked after workbook parsing.",
       "source_extract_sha256": "681dcdabfb99beaa5f7783f08ff9110e49ebebe5640170e4455556607369418b",
       "last_data_change_at": "2026-09-30T18:48:04.302326+00:00"
@@ -19,14 +19,14 @@
     "India": {
       "status": "ok",
       "latest_month": "2026-08-01",
-      "last_attempt_at": "2026-10-01T21:08:23.759810+00:00",
-      "last_success_at": "2026-10-01T21:08:23.759810+00:00",
+      "last_attempt_at": "2026-10-02T02:35:11.455635+00:00",
+      "last_success_at": "2026-10-02T02:35:11.455635+00:00",
       "message": "Validated official source; new months and revisions checked.",
       "source_urls": [
         "https://ppac.gov.in/consumption/products-wise",
         "https://ppac.gov.in/AjaxController/getConsumptionPetroleumProductsData"
       ],
-      "vintage": "PPAC domestic consumption retrieved 2026-10-01; source modified 02-11-2023, 09-09-2026, 10-03-2026, 10-04-2023, 13-07-2026, 26-10-2023, 30-12-2024; data through 2026-08.",
+      "vintage": "PPAC domestic consumption retrieved 2026-10-02; source modified 02-11-2023, 09-09-2026, 10-03-2026, 10-04-2023, 13-07-2026, 26-10-2023, 30-12-2024; data through 2026-08.",
       "validation_note": "PPAC reportBy=1 pageId=43; exact titles MS, ATF, HSD and April-March fiscal columns mapped to calendar months. Final native row 2026-08: 3836.0, 726.0, 7023.0 TMT.",
       "source_extract_sha256": "5e0ff82df4aa84a4d7422cd68a254158b5e6875bcbc25e437e70e7a4dd65ed0f",
       "last_data_change_at": "2026-09-12T20:38:28.322062+00:00"
@@ -34,14 +34,14 @@
     "Brazil": {
       "status": "ok",
       "latest_month": "2026-08-01",
-      "last_attempt_at": "2026-10-01T21:08:23.759810+00:00",
-      "last_success_at": "2026-10-01T21:08:23.759810+00:00",
+      "last_attempt_at": "2026-10-02T02:35:11.455635+00:00",
+      "last_success_at": "2026-10-02T02:35:11.455635+00:00",
       "message": "Validated official source; new months and revisions checked.",
       "source_urls": [
         "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/vdpb/vendas-derivados-petroleo-e-etanol/vendas-combustiveis-m3-1990-2025.csv",
         "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos"
       ],
-      "vintage": "ANP fuel-sales CSV retrieved 2026-10-01; data through 2026-08.",
+      "vintage": "ANP fuel-sales CSV retrieved 2026-10-02; data through 2026-08.",
       "validation_note": "ANP state-level CSV aggregated once across 27 federative units for GASOLINA C, QUEROSENE DE AVIAÇÃO and ÓLEO DIESEL. Final native row 2026-08: 3886362.876, 659186.131, 6161373.332 m3.",
       "source_extract_sha256": "bba32a7040439015252e2e3dd0e44c61b5c05eda4a9073c0f77aac94b71c644b",
       "last_data_change_at": "2026-09-30T18:48:04.302326+00:00"
@@ -49,22 +49,22 @@
     "Japan": {
       "status": "error",
       "latest_month": "2026-07-01",
-      "last_attempt_at": "2026-10-01T21:08:23.759810+00:00",
+      "last_attempt_at": "2026-10-02T02:35:11.455635+00:00",
       "last_success_at": null,
       "message": "ValueError: METI workbooks yielded no validated rows: METI workbook has no validated Domestic Sales gasoline/jet fuel/gas oil rows"
     },
     "Mexico": {
       "status": "error",
       "latest_month": "2026-07-01",
-      "last_attempt_at": "2026-10-01T21:08:23.759810+00:00",
+      "last_attempt_at": "2026-10-02T02:35:11.455635+00:00",
       "last_success_at": null,
       "message": "RuntimeError: PEMEX RVOLVIN official export parser still requires live historical endpoint verification"
     },
     "United Kingdom": {
       "status": "ok",
       "latest_month": "2026-07-01",
-      "last_attempt_at": "2026-10-01T21:08:23.759810+00:00",
-      "last_success_at": "2026-10-01T21:08:23.759810+00:00",
+      "last_attempt_at": "2026-10-02T02:35:11.455635+00:00",
+      "last_success_at": "2026-10-02T02:35:11.455635+00:00",
       "message": "Validated official source; new months and revisions checked.",
       "source_urls": [
         "https://assets.publishing.service.gov.uk/media/6aba696b997a4b2950ccefe3/ET_3.13_SEP_26.xlsx"
@@ -77,8 +77,8 @@
     "Spain": {
       "status": "ok",
       "latest_month": "2026-07-01",
-      "last_attempt_at": "2026-10-01T21:08:23.759810+00:00",
-      "last_success_at": "2026-10-01T21:08:23.759810+00:00",
+      "last_attempt_at": "2026-10-02T02:35:11.455635+00:00",
+      "last_success_at": "2026-10-02T02:35:11.455635+00:00",
       "message": "Validated official source; new months and revisions checked.",
       "source_urls": [
         "https://www.cores.es/sites/default/files/archivos/estadisticas/est-oil-products-consumption-2020.xls",
@@ -97,20 +97,20 @@
     "Australia": {
       "status": "error",
       "latest_month": "2026-06-01",
-      "last_attempt_at": "2026-10-01T21:08:23.759810+00:00",
+      "last_attempt_at": "2026-10-02T02:35:11.455635+00:00",
       "last_success_at": null,
       "message": "RuntimeError: Australian Petroleum Statistics official workbook parser still requires live attachment verification"
     },
     "South Korea": {
       "status": "ok",
       "latest_month": "2026-08-01",
-      "last_attempt_at": "2026-10-01T21:08:23.759810+00:00",
-      "last_success_at": "2026-10-01T21:08:23.759810+00:00",
+      "last_attempt_at": "2026-10-02T02:35:11.455635+00:00",
+      "last_success_at": "2026-10-02T02:35:11.455635+00:00",
       "message": "Validated official source; new months and revisions checked.",
       "source_urls": [
         "https://www.petronet.co.kr/v4/excel/KDCQ0200_x.jsp?term=m&by=2020&bq=3&bm=07&ay=2026&aq=3&am=09&ProdCDList=B000%2CC000%2CD000%2CE000%2CF000%2CG000%2CH000%2CJ000%2CL000%2CN000%2CI000%2CM000%2CK000%2CO000%2CS000"
       ],
-      "vintage": "KNOC Petronet KDCQ0200 retrieved 2026-10-01; data through 2026-08.",
+      "vintage": "KNOC Petronet KDCQ0200 retrieved 2026-10-02; data through 2026-08.",
       "validation_note": "KDCQ0200 monthly national product extract; returned headers confirm gasoline 휘발유, aviation fuel 항공유 and diesel 경유 positions for requested product codes. Final native row 2026-08: 8384.0, 678.0, 8979.0 thousand barrels.",
       "source_extract_sha256": "85bb08fa0427870820cc51bcfdc6608adedb5e686b9cfd12eca9e06a7bce386d",
       "last_data_change_at": "2026-09-22T17:57:05.230066+00:00"
@@ -118,13 +118,13 @@
     "Canada": {
       "status": "ok",
       "latest_month": "2026-07-01",
-      "last_attempt_at": "2026-10-01T21:08:23.759810+00:00",
-      "last_success_at": "2026-10-01T21:08:23.759810+00:00",
+      "last_attempt_at": "2026-10-02T02:35:11.455635+00:00",
+      "last_success_at": "2026-10-02T02:35:11.455635+00:00",
       "message": "Validated official source; new months and revisions checked.",
       "source_urls": [
         "https://www150.statcan.gc.ca/n1/tbl/csv/25100081-eng.zip"
       ],
-      "vintage": "Statistics Canada table 25-10-0081-01 retrieved 2026-10-01; data through 2026-07.",
+      "vintage": "Statistics Canada table 25-10-0081-01 retrieved 2026-10-02; data through 2026-07.",
       "validation_note": "Canada / Products supplied, disposition / three mapped products; final row 2026-07 checked after CSV pivot.",
       "source_extract_sha256": "5c644bb777bd11c921a756a2a6607f9a3a3700809221f9843acbd60883cf0824",
       "last_data_change_at": "2026-09-29T19:10:24.430773+00:00"
