@@ -1,4 +1,16 @@
 record_date,account_type,transaction_type,transaction_catg,transaction_catg_desc,transaction_today_amt,transaction_mtd_amt,transaction_fytd_amt,table_nbr,table_nm,src_line_nbr,record_fiscal_year,record_fiscal_quarter,record_calendar_year,record_calendar_quarter,record_calendar_month,record_calendar_day
+2026-10-19,Treasury General Account (TGA),Deposits,"DHS - Customs Duties, Taxes, and Fees",null,383,3870,3870,II,Deposits and Withdrawals of Operating Cash,14,2027,1,2026,4,10,19
+2026-10-19,Treasury General Account (TGA),Deposits,Taxes - Corporate Income,null,107,20219,20219,II,Deposits and Withdrawals of Operating Cash,36,2027,1,2026,4,10,19
+2026-10-19,Treasury General Account (TGA),Deposits,Taxes - Estate and Gift,null,11,877,877,II,Deposits and Withdrawals of Operating Cash,37,2027,1,2026,4,10,19
+2026-10-19,Treasury General Account (TGA),Deposits,Taxes - Federal Unemployment (FUTA),null,4,47,47,II,Deposits and Withdrawals of Operating Cash,38,2027,1,2026,4,10,19
+2026-10-19,Treasury General Account (TGA),Deposits,"Taxes - IRS Collected Estate, Gift, misc",null,24,744,744,II,Deposits and Withdrawals of Operating Cash,39,2027,1,2026,4,10,19
+2026-10-19,Treasury General Account (TGA),Deposits,Taxes - Miscellaneous Excise,null,21,1835,1835,II,Deposits and Withdrawals of Operating Cash,40,2027,1,2026,4,10,19
+2026-10-19,Treasury General Account (TGA),Deposits,Taxes - Non Withheld Ind/SECA Electronic,null,4664,31915,31915,II,Deposits and Withdrawals of Operating Cash,41,2027,1,2026,4,10,19
+2026-10-19,Treasury General Account (TGA),Deposits,Taxes - Non Withheld Ind/SECA Other,null,209,5696,5696,II,Deposits and Withdrawals of Operating Cash,42,2027,1,2026,4,10,19
+2026-10-19,Treasury General Account (TGA),Deposits,Taxes - Railroad Retirement,null,36,378,378,II,Deposits and Withdrawals of Operating Cash,43,2027,1,2026,4,10,19
+2026-10-19,Treasury General Account (TGA),Deposits,Taxes - Withheld Individual/FICA,null,23660,185909,185909,II,Deposits and Withdrawals of Operating Cash,44,2027,1,2026,4,10,19
+2026-10-19,Treasury General Account (TGA),Withdrawals,Taxes - Business Tax Refunds (EFT),null,-1,827,827,II,Deposits and Withdrawals of Operating Cash,139,2027,1,2026,4,10,19
+2026-10-19,Treasury General Account (TGA),Withdrawals,Taxes - Individual Tax Refunds (EFT),null,197,4394,4394,II,Deposits and Withdrawals of Operating Cash,140,2027,1,2026,4,10,19
 2026-10-16,Treasury General Account (TGA),Deposits,"DHS - Customs Duties, Taxes, and Fees",null,297,3487,3487,II,Deposits and Withdrawals of Operating Cash,14,2027,1,2026,4,10,16
 2026-10-16,Treasury General Account (TGA),Deposits,Taxes - Corporate Income,null,631,20112,20112,II,Deposits and Withdrawals of Operating Cash,36,2027,1,2026,4,10,16
 2026-10-16,Treasury General Account (TGA),Deposits,Taxes - Estate and Gift,null,83,866,866,II,Deposits and Withdrawals of Operating Cash,37,2027,1,2026,4,10,16
