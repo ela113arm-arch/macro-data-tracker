@@ -5642,7 +5642,7 @@
     "measure": "Products supplied, disposition",
     "source": "Statistics Canada",
     "source_url": "https://www150.statcan.gc.ca/n1/tbl/csv/25100081-eng.zip",
-    "vintage": "Statistics Canada table 25-10-0081-01 retrieved 2026-10-21; data through 2026-07.",
+    "vintage": "Statistics Canada table 25-10-0081-01 retrieved 2026-10-22; data through 2026-07.",
     "product_mapping": "Finished motor gasoline; Kerosene-type jet fuel; Distillate fuel oil.",
     "conversion_note": "m³ × 6.28981077 bbl/m³ ÷ days in month ÷ 1,000,000.",
     "caveat": "Products supplied is a supply/demand proxy; distillate fuel oil is broader than narrowly defined diesel.",
