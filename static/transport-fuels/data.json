@@ -1268,7 +1268,7 @@
     "measure": "National fuel sales",
     "source": "Agência Nacional do Petróleo, Gás Natural e Biocombustíveis (ANP)",
     "source_url": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/vdpb/vendas-derivados-petroleo-e-etanol/vendas-combustiveis-m3-1990-2025.csv",
-    "vintage": "ANP fuel-sales CSV retrieved 2026-10-29; data through 2026-08.",
+    "vintage": "ANP fuel-sales CSV retrieved 2026-10-29; data through 2026-09.",
     "product_mapping": "Gasolina C; Querosene de Aviação; Óleo Diesel.",
     "conversion_note": "m³ × 6.28981077 bbl/m³ ÷ days in month ÷ 1,000,000.",
     "caveat": "Sales are not direct final consumption; gasoline and diesel blend composition can change.",
@@ -1288,10 +1288,10 @@
         "gasoline_mbd": 0.695256399376259,
         "jet_fuel_mbd": 0.07680564707517817,
         "diesel_mbd": 1.1620577708386253,
-        "gasoline_yoy_mbd": 0.10014442271682367,
-        "jet_fuel_yoy_mbd": 0.03709333809432095,
+        "gasoline_yoy_mbd": 0.10014442271682356,
+        "jet_fuel_yoy_mbd": 0.03709333809432094,
         "diesel_yoy_mbd": 0.1142113743025106,
-        "net_yoy_mbd": 0.2514491351136552
+        "net_yoy_mbd": 0.2514491351136551
       },
       {
         "date": "2021-09-01",
@@ -1309,29 +1309,29 @@
         "jet_fuel_mbd": 0.08546220853722018,
         "diesel_mbd": 1.1409050386111144,
         "gasoline_yoy_mbd": 0.038619544040097376,
-        "jet_fuel_yoy_mbd": 0.025567999621201362,
-        "diesel_yoy_mbd": 0.01736902534192808,
-        "net_yoy_mbd": 0.08155656900322682
+        "jet_fuel_yoy_mbd": 0.02556799962120134,
+        "diesel_yoy_mbd": 0.0173690253419283,
+        "net_yoy_mbd": 0.08155656900322703
       },
       {
         "date": "2021-11-01",
         "gasoline_mbd": 0.7202471411986581,
         "jet_fuel_mbd": 0.09425250136553402,
         "diesel_mbd": 1.0706267369690856,
-        "gasoline_yoy_mbd": 0.045628631747714365,
+        "gasoline_yoy_mbd": 0.045628631747714254,
         "jet_fuel_yoy_mbd": 0.026791333661617553,
-        "diesel_yoy_mbd": 0.043092200140679715,
-        "net_yoy_mbd": 0.11551216555001163
+        "diesel_yoy_mbd": 0.04309220014067994,
+        "net_yoy_mbd": 0.11551216555001174
       },
       {
         "date": "2021-12-01",
         "gasoline_mbd": 0.8254366370277065,
-        "jet_fuel_mbd": 0.10352682182033407,
+        "jet_fuel_mbd": 0.10352682182033408,
         "diesel_mbd": 1.0011970765612221,
-        "gasoline_yoy_mbd": 0.07131547557144668,
-        "jet_fuel_yoy_mbd": 0.024903642010768293,
+        "gasoline_yoy_mbd": 0.0713154755714468,
+        "jet_fuel_yoy_mbd": 0.024903642010768307,
         "diesel_yoy_mbd": 0.05124896120037503,
-        "net_yoy_mbd": 0.14746807878259
+        "net_yoy_mbd": 0.14746807878259013
       },
       {
         "date": "2022-01-01",
@@ -1350,8 +1350,8 @@
         "diesel_mbd": 1.1073044580821212,
         "gasoline_yoy_mbd": 0.1237455248078666,
         "jet_fuel_yoy_mbd": 0.02536201130397009,
-        "diesel_yoy_mbd": 0.10982003629099768,
-        "net_yoy_mbd": 0.25892757240283437
+        "diesel_yoy_mbd": 0.1098200362909979,
+        "net_yoy_mbd": 0.2589275724028346
       },
       {
         "date": "2022-03-01",
@@ -1365,13 +1365,13 @@
       },
       {
         "date": "2022-04-01",
-        "gasoline_mbd": 0.6836351794132661,
-        "jet_fuel_mbd": 0.09653211811188618,
+        "gasoline_mbd": 0.683635179413266,
+        "jet_fuel_mbd": 0.09653211811188617,
         "diesel_mbd": 1.0461703196507892,
-        "gasoline_yoy_mbd": 0.10946165796886898,
-        "jet_fuel_yoy_mbd": 0.046260299622214916,
+        "gasoline_yoy_mbd": 0.10946165796886886,
+        "jet_fuel_yoy_mbd": 0.0462602996222149,
         "diesel_yoy_mbd": -0.02013098091410126,
-        "net_yoy_mbd": 0.13559097667698264
+        "net_yoy_mbd": 0.1355909766769825
       },
       {
         "date": "2022-05-01",
@@ -1379,9 +1379,9 @@
         "jet_fuel_mbd": 0.09879069636777624,
         "diesel_mbd": 1.0845134333722313,
         "gasoline_yoy_mbd": 0.06905418045546585,
-        "jet_fuel_yoy_mbd": 0.03990825160072973,
+        "jet_fuel_yoy_mbd": 0.039908251600729736,
         "diesel_yoy_mbd": 0.06553330568963145,
-        "net_yoy_mbd": 0.17449573774582702
+        "net_yoy_mbd": 0.17449573774582705
       },
       {
         "date": "2022-06-01",
@@ -1395,33 +1395,33 @@
       },
       {
         "date": "2022-07-01",
-        "gasoline_mbd": 0.7235319987959683,
+        "gasoline_mbd": 0.7235319987959681,
         "jet_fuel_mbd": 0.10700249171616441,
         "diesel_mbd": 1.122324566903493,
-        "gasoline_yoy_mbd": 0.010329906168543901,
+        "gasoline_yoy_mbd": 0.010329906168543679,
         "jet_fuel_yoy_mbd": 0.029020314638054212,
         "diesel_yoy_mbd": -0.01745208513370522,
-        "net_yoy_mbd": 0.021898135672892893
+        "net_yoy_mbd": 0.02189813567289267
       },
       {
         "date": "2022-08-01",
         "gasoline_mbd": 0.7786204528368226,
         "jet_fuel_mbd": 0.10229970144909908,
-        "diesel_mbd": 1.1790626538758349,
+        "diesel_mbd": 1.1790626538758346,
         "gasoline_yoy_mbd": 0.08336405346056353,
         "jet_fuel_yoy_mbd": 0.02549405437392091,
-        "diesel_yoy_mbd": 0.017004883037209595,
-        "net_yoy_mbd": 0.12586299087169403
+        "diesel_yoy_mbd": 0.017004883037209373,
+        "net_yoy_mbd": 0.1258629908716938
       },
       {
         "date": "2022-09-01",
-        "gasoline_mbd": 0.7989090292747115,
+        "gasoline_mbd": 0.7989090292747114,
         "jet_fuel_mbd": 0.10376876722343102,
         "diesel_mbd": 1.151606419684903,
-        "gasoline_yoy_mbd": 0.06624002882774882,
+        "gasoline_yoy_mbd": 0.06624002882774871,
         "jet_fuel_yoy_mbd": 0.02223282265851033,
         "diesel_yoy_mbd": 0.015722586937698013,
-        "net_yoy_mbd": 0.10419543842395716
+        "net_yoy_mbd": 0.10419543842395705
       },
       {
         "date": "2022-10-01",
@@ -1449,9 +1449,9 @@
         "jet_fuel_mbd": 0.11465615035812339,
         "diesel_mbd": 1.0221526680613575,
         "gasoline_yoy_mbd": 0.07446326879117837,
-        "jet_fuel_yoy_mbd": 0.01112932853778932,
+        "jet_fuel_yoy_mbd": 0.011129328537789307,
         "diesel_yoy_mbd": 0.020955591500135373,
-        "net_yoy_mbd": 0.10654818882910307
+        "net_yoy_mbd": 0.10654818882910305
       },
       {
         "date": "2023-01-01",
@@ -1488,10 +1488,10 @@
         "gasoline_mbd": 0.7706431027317986,
         "jet_fuel_mbd": 0.10652559841237422,
         "diesel_mbd": 1.0281359435846504,
-        "gasoline_yoy_mbd": 0.08700792331853247,
-        "jet_fuel_yoy_mbd": 0.009993480300488036,
+        "gasoline_yoy_mbd": 0.08700792331853258,
+        "jet_fuel_yoy_mbd": 0.00999348030048805,
         "diesel_yoy_mbd": -0.01803437606613878,
-        "net_yoy_mbd": 0.07896702755288172
+        "net_yoy_mbd": 0.07896702755288185
       },
       {
         "date": "2023-05-01",
@@ -1507,21 +1507,21 @@
         "date": "2023-06-01",
         "gasoline_mbd": 0.8061456731447473,
         "jet_fuel_mbd": 0.1085554805283675,
-        "diesel_mbd": 1.1444944830543624,
+        "diesel_mbd": 1.1444944830543622,
         "gasoline_yoy_mbd": 0.1414594005261448,
         "jet_fuel_yoy_mbd": 0.011100737330476673,
-        "diesel_yoy_mbd": 0.06697610819001243,
-        "net_yoy_mbd": 0.2195362460466339
+        "diesel_yoy_mbd": 0.0669761081900122,
+        "net_yoy_mbd": 0.2195362460466337
       },
       {
         "date": "2023-07-01",
         "gasoline_mbd": 0.7691227645166733,
         "jet_fuel_mbd": 0.11465744017512548,
         "diesel_mbd": 1.1600477502136548,
-        "gasoline_yoy_mbd": 0.04559076572070497,
+        "gasoline_yoy_mbd": 0.045590765720705195,
         "jet_fuel_yoy_mbd": 0.007654948458961072,
         "diesel_yoy_mbd": 0.03772318331016189,
-        "net_yoy_mbd": 0.09096889748982794
+        "net_yoy_mbd": 0.09096889748982816
       },
       {
         "date": "2023-08-01",
@@ -1530,18 +1530,18 @@
         "diesel_mbd": 1.2613387561298488,
         "gasoline_yoy_mbd": 0.011238468319784811,
         "jet_fuel_yoy_mbd": 0.012945426383732861,
-        "diesel_yoy_mbd": 0.08227610225401394,
-        "net_yoy_mbd": 0.10645999695753161
+        "diesel_yoy_mbd": 0.08227610225401416,
+        "net_yoy_mbd": 0.10645999695753183
       },
       {
         "date": "2023-09-01",
         "gasoline_mbd": 0.7746759725715741,
         "jet_fuel_mbd": 0.11178275371098528,
         "diesel_mbd": 1.2080305484396332,
-        "gasoline_yoy_mbd": -0.024233056703137468,
+        "gasoline_yoy_mbd": -0.024233056703137357,
         "jet_fuel_yoy_mbd": 0.008013986487554262,
         "diesel_yoy_mbd": 0.05642412875473024,
-        "net_yoy_mbd": 0.040205058539147034
+        "net_yoy_mbd": 0.040205058539147145
       },
       {
         "date": "2023-10-01",
@@ -1556,22 +1556,22 @@
       {
         "date": "2023-11-01",
         "gasoline_mbd": 0.7701063499887606,
-        "jet_fuel_mbd": 0.11517635443994467,
+        "jet_fuel_mbd": 0.11517635443994466,
         "diesel_mbd": 1.1563953243599117,
         "gasoline_yoy_mbd": -0.017834793661275383,
-        "jet_fuel_yoy_mbd": 0.0061174942755036765,
+        "jet_fuel_yoy_mbd": 0.006117494275503663,
         "diesel_yoy_mbd": 0.05877290301880023,
-        "net_yoy_mbd": 0.04705560363302852
+        "net_yoy_mbd": 0.047055603633028506
       },
       {
         "date": "2023-12-01",
         "gasoline_mbd": 0.8358746242610653,
         "jet_fuel_mbd": 0.11815269146926556,
-        "diesel_mbd": 1.0837146485057418,
+        "diesel_mbd": 1.083714648505742,
         "gasoline_yoy_mbd": -0.06402528155781961,
         "jet_fuel_yoy_mbd": 0.0034965411111421707,
-        "diesel_yoy_mbd": 0.06156198044438432,
-        "net_yoy_mbd": 0.0010332399977068807
+        "diesel_yoy_mbd": 0.061561980444384545,
+        "net_yoy_mbd": 0.0010332399977071027
       },
       {
         "date": "2024-01-01",
@@ -1630,8 +1630,8 @@
         "diesel_mbd": 1.1877563822896169,
         "gasoline_yoy_mbd": -0.06930090108289944,
         "jet_fuel_yoy_mbd": 0.006480949732885918,
-        "diesel_yoy_mbd": 0.043261899235254475,
-        "net_yoy_mbd": -0.019558052114759042
+        "diesel_yoy_mbd": 0.0432618992352547,
+        "net_yoy_mbd": -0.01955805211475882
       },
       {
         "date": "2024-07-01",
@@ -1645,13 +1645,13 @@
       },
       {
         "date": "2024-08-01",
-        "gasoline_mbd": 0.7728468405469058,
+        "gasoline_mbd": 0.7728468405469057,
         "jet_fuel_mbd": 0.11855329438673777,
         "diesel_mbd": 1.2407245765727948,
-        "gasoline_yoy_mbd": -0.017012080609701608,
+        "gasoline_yoy_mbd": -0.01701208060970172,
         "jet_fuel_yoy_mbd": 0.0033081665539058253,
         "diesel_yoy_mbd": -0.020614179557054024,
-        "net_yoy_mbd": -0.034318093612849807
+        "net_yoy_mbd": -0.03431809361284992
       },
       {
         "date": "2024-09-01",
@@ -1667,31 +1667,31 @@
         "date": "2024-10-01",
         "gasoline_mbd": 0.7969014025381937,
         "jet_fuel_mbd": 0.12217024093965581,
-        "diesel_mbd": 1.2722987625559155,
+        "diesel_mbd": 1.2722987625559157,
         "gasoline_yoy_mbd": 0.0429967239919129,
         "jet_fuel_yoy_mbd": 0.01106242524090871,
-        "diesel_yoy_mbd": 0.10341432409097595,
-        "net_yoy_mbd": 0.15747347332379757
+        "diesel_yoy_mbd": 0.10341432409097617,
+        "net_yoy_mbd": 0.1574734733237978
       },
       {
         "date": "2024-11-01",
-        "gasoline_mbd": 0.7835261587905873,
+        "gasoline_mbd": 0.7835261587905875,
         "jet_fuel_mbd": 0.12633160681832706,
         "diesel_mbd": 1.175593101355274,
-        "gasoline_yoy_mbd": 0.013419808801826694,
-        "jet_fuel_yoy_mbd": 0.011155252378382385,
+        "gasoline_yoy_mbd": 0.013419808801826916,
+        "jet_fuel_yoy_mbd": 0.0111552523783824,
         "diesel_yoy_mbd": 0.019197776995362403,
-        "net_yoy_mbd": 0.04377283817557148
+        "net_yoy_mbd": 0.04377283817557172
       },
       {
         "date": "2024-12-01",
-        "gasoline_mbd": 0.8339102891693799,
+        "gasoline_mbd": 0.8339102891693798,
         "jet_fuel_mbd": 0.1282584389268227,
         "diesel_mbd": 1.0255064160623253,
-        "gasoline_yoy_mbd": -0.0019643350916853652,
+        "gasoline_yoy_mbd": -0.0019643350916854763,
         "jet_fuel_yoy_mbd": 0.010105747457557143,
-        "diesel_yoy_mbd": -0.05820823244341655,
-        "net_yoy_mbd": -0.050066820077544774
+        "diesel_yoy_mbd": -0.058208232443416774,
+        "net_yoy_mbd": -0.05006682007754511
       },
       {
         "date": "2025-01-01",
@@ -1747,11 +1747,11 @@
         "date": "2025-06-01",
         "gasoline_mbd": 0.7771436953340588,
         "jet_fuel_mbd": 0.1245399187878919,
-        "diesel_mbd": 1.1825700146180147,
+        "diesel_mbd": 1.1825700146180151,
         "gasoline_yoy_mbd": 0.04029892327221096,
         "jet_fuel_yoy_mbd": 0.009503488526638487,
-        "diesel_yoy_mbd": -0.005186367671602188,
-        "net_yoy_mbd": 0.04461604412724726
+        "diesel_yoy_mbd": -0.005186367671601744,
+        "net_yoy_mbd": 0.044616044127247706
       },
       {
         "date": "2025-07-01",
@@ -1765,7 +1765,7 @@
       },
       {
         "date": "2025-08-01",
-        "gasoline_mbd": 0.785153956846884,
+        "gasoline_mbd": 0.7851539568468839,
         "jet_fuel_mbd": 0.12567394655105923,
         "diesel_mbd": 1.2264119370654438,
         "gasoline_yoy_mbd": 0.012307116299978271,
@@ -1790,38 +1790,38 @@
         "diesel_mbd": 1.3045955861157847,
         "gasoline_yoy_mbd": 0.04415290808018091,
         "jet_fuel_yoy_mbd": 0.006630165213283357,
-        "diesel_yoy_mbd": 0.03229682355986929,
-        "net_yoy_mbd": 0.08307989685333356
+        "diesel_yoy_mbd": 0.03229682355986907,
+        "net_yoy_mbd": 0.08307989685333333
       },
       {
         "date": "2025-11-01",
         "gasoline_mbd": 0.8073573456460459,
         "jet_fuel_mbd": 0.1317388055528565,
         "diesel_mbd": 1.1797102701742341,
-        "gasoline_yoy_mbd": 0.023831186855458597,
+        "gasoline_yoy_mbd": 0.023831186855458375,
         "jet_fuel_yoy_mbd": 0.005407198734529439,
         "diesel_yoy_mbd": 0.004117168818960071,
-        "net_yoy_mbd": 0.03335555440894811
+        "net_yoy_mbd": 0.033355554408947885
       },
       {
         "date": "2025-12-01",
         "gasoline_mbd": 0.9412903815592364,
         "jet_fuel_mbd": 0.13668484444475737,
         "diesel_mbd": 1.1005330583346415,
-        "gasoline_yoy_mbd": 0.10738009238985646,
+        "gasoline_yoy_mbd": 0.10738009238985657,
         "jet_fuel_yoy_mbd": 0.008426405517934665,
         "diesel_yoy_mbd": 0.07502664227231626,
-        "net_yoy_mbd": 0.19083314018010739
+        "net_yoy_mbd": 0.1908331401801075
       },
       {
         "date": "2026-01-01",
         "gasoline_mbd": 0.7949955257593931,
-        "jet_fuel_mbd": 0.14091274040458052,
+        "jet_fuel_mbd": 0.14091274040458054,
         "diesel_mbd": 1.0552067527801896,
         "gasoline_yoy_mbd": 0.015518935938303335,
-        "jet_fuel_yoy_mbd": 0.009252482684943497,
+        "jet_fuel_yoy_mbd": 0.009252482684943525,
         "diesel_yoy_mbd": -0.03566023210148783,
-        "net_yoy_mbd": -0.010888813478241
+        "net_yoy_mbd": -0.010888813478240972
       },
       {
         "date": "2026-02-01",
@@ -1870,8 +1870,8 @@
         "diesel_mbd": 1.2027563223849316,
         "gasoline_yoy_mbd": 0.03558507658640353,
         "jet_fuel_yoy_mbd": 0.001058179313833188,
-        "diesel_yoy_mbd": 0.020186307766916878,
-        "net_yoy_mbd": 0.056829563667153596
+        "diesel_yoy_mbd": 0.020186307766916434,
+        "net_yoy_mbd": 0.05682956366715315
       },
       {
         "date": "2026-07-01",
@@ -1885,13 +1885,23 @@
       },
       {
         "date": "2026-08-01",
-        "gasoline_mbd": 0.7885318410836444,
+        "gasoline_mbd": 0.788525754169996,
         "jet_fuel_mbd": 0.13374696858704616,
-        "diesel_mbd": 1.2501249142453028,
-        "gasoline_yoy_mbd": 0.0033778842367603312,
+        "diesel_mbd": 1.2501238997596946,
+        "gasoline_yoy_mbd": 0.0033717973231121023,
         "jet_fuel_yoy_mbd": 0.008073022035986921,
-        "diesel_yoy_mbd": 0.023712977179858985,
-        "net_yoy_mbd": 0.03516388345260624
+        "diesel_yoy_mbd": 0.0237119626942508,
+        "net_yoy_mbd": 0.03515678205334982
+      },
+      {
+        "date": "2026-09-01",
+        "gasoline_mbd": 0.8122811772450891,
+        "jet_fuel_mbd": 0.1340229677357918,
+        "diesel_mbd": 1.278960157653578,
+        "gasoline_yoy_mbd": -0.015184926994286752,
+        "jet_fuel_yoy_mbd": 0.007222749049063837,
+        "diesel_yoy_mbd": -0.03060985576574704,
+        "net_yoy_mbd": -0.038572033710969955
       }
     ]
   },
@@ -3143,8 +3153,8 @@
     "country": "United Kingdom",
     "measure": "Deliveries for inland consumption",
     "source": "Department for Energy Security and Net Zero (DESNZ)",
-    "source_url": "https://assets.publishing.service.gov.uk/media/6aba696b997a4b2950ccefe3/ET_3.13_SEP_26.xlsx",
-    "vintage": "DESNZ ET 3.13 workbook release date not supplied retrieved 2026-10-01; data through 2026-07.",
+    "source_url": "https://assets.publishing.service.gov.uk/media/6ae0cabc779378370fd80a67/ET_3.13_OCT_26.xlsx",
+    "vintage": "DESNZ ET 3.13 workbook release date not supplied retrieved 2026-10-01; data through 2026-08.",
     "product_mapping": "Petrol; Jet fuel; White diesel + Red diesel.",
     "conversion_note": "kt × 1,000 × product-specific bbl/t ÷ days in month ÷ 1,000,000.",
     "caveat": "June 2026 is provisional; the combined diesel series is affected by red-diesel policy changes.",
@@ -3752,12 +3762,22 @@
       {
         "date": "2026-07-01",
         "gasoline_mbd": 0.27914548387096777,
-        "jet_fuel_mbd": 0.26962902580645165,
-        "diesel_mbd": 0.47451422903225804,
+        "jet_fuel_mbd": 0.2682930870967742,
+        "diesel_mbd": 0.4721819709677419,
         "gasoline_yoy_mbd": 0.005346774193548454,
-        "jet_fuel_yoy_mbd": -0.013690238709677338,
-        "diesel_yoy_mbd": -0.01739398064516129,
-        "net_yoy_mbd": -0.025737445161290173
+        "jet_fuel_yoy_mbd": -0.015026177419354803,
+        "diesel_yoy_mbd": -0.019726238709677435,
+        "net_yoy_mbd": -0.029405641935483784
+      },
+      {
+        "date": "2026-08-01",
+        "gasoline_mbd": 0.2936366129032258,
+        "jet_fuel_mbd": 0.2901267870967742,
+        "diesel_mbd": 0.44944945161290323,
+        "gasoline_yoy_mbd": 0.016451612903225776,
+        "jet_fuel_yoy_mbd": 0.008409145161290321,
+        "diesel_yoy_mbd": -0.062425219354838746,
+        "net_yoy_mbd": -0.03756446129032265
       }
     ]
   },

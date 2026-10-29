@@ -33874,6 +33874,10 @@ YYYYMM,Country,Fuel,Value,source_url
 202609,Nepal,NonPluginHybrid,6.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202609,Nepal,PluginHybrid,8.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202609,Nepal,BatteryElectric,2145.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202610,Nepal,ICE,1195.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202610,Nepal,NonPluginHybrid,6.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202610,Nepal,PluginHybrid,3.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202610,Nepal,BatteryElectric,3802.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201701,Nepal Comtrade,ICE,2109.906,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201701,Nepal Comtrade,NonPluginHybrid,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 201701,Nepal Comtrade,PluginHybrid,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
