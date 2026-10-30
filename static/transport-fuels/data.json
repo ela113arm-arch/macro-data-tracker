@@ -4,7 +4,7 @@
     "measure": "Product supplied (implied-demand proxy)",
     "source": "U.S. Energy Information Administration (EIA)",
     "source_url": "https://www.eia.gov/dnav/pet/xls/PET_CONS_PSUP_DC_NUS_MBBLPD_M.xls",
-    "vintage": "EIA Product Supplied workbook retrieved 2026-10-30; data through 2026-07.",
+    "vintage": "EIA Product Supplied workbook retrieved 2026-10-30; data through 2026-08.",
     "product_mapping": "Finished motor gasoline; Kerosene-type jet fuel; Distillate fuel oil.",
     "conversion_note": "reported daily rate ÷ 1,000.",
     "caveat": "Product supplied measures primary-supply-chain disappearance, not direct retail purchases.",
@@ -618,6 +618,16 @@
         "jet_fuel_yoy_mbd": 0.02299999999999991,
         "diesel_yoy_mbd": -0.1459999999999999,
         "net_yoy_mbd": -0.35399999999999987
+      },
+      {
+        "date": "2026-08-01",
+        "gasoline_mbd": 8.98,
+        "jet_fuel_mbd": 1.797,
+        "diesel_mbd": 3.705,
+        "gasoline_yoy_mbd": -0.2599999999999998,
+        "jet_fuel_yoy_mbd": -0.02300000000000013,
+        "diesel_yoy_mbd": -0.029999999999999805,
+        "net_yoy_mbd": -0.3129999999999997
       }
     ]
   },
@@ -5672,7 +5682,7 @@
     "measure": "Products supplied, disposition",
     "source": "Statistics Canada",
     "source_url": "https://www150.statcan.gc.ca/n1/tbl/csv/25100081-eng.zip",
-    "vintage": "Statistics Canada table 25-10-0081-01 retrieved 2026-10-30; data through 2026-07.",
+    "vintage": "Statistics Canada table 25-10-0081-01 retrieved 2026-10-30; data through 2026-08.",
     "product_mapping": "Finished motor gasoline; Kerosene-type jet fuel; Distillate fuel oil.",
     "conversion_note": "m³ × 6.28981077 bbl/m³ ÷ days in month ÷ 1,000,000.",
     "caveat": "Products supplied is a supply/demand proxy; distillate fuel oil is broader than narrowly defined diesel.",
@@ -6286,6 +6296,16 @@
         "jet_fuel_yoy_mbd": -0.02132144402469191,
         "diesel_yoy_mbd": -0.061092932009010115,
         "net_yoy_mbd": -0.09445774048127917
+      },
+      {
+        "date": "2026-08-01",
+        "gasoline_mbd": 0.7672351756670323,
+        "jet_fuel_mbd": 0.1740861361381142,
+        "diesel_mbd": 0.567031716240662,
+        "gasoline_yoy_mbd": -0.02148497910471192,
+        "jet_fuel_yoy_mbd": -0.012107277040885128,
+        "diesel_yoy_mbd": -0.02976034110681569,
+        "net_yoy_mbd": -0.06335259725241274
       }
     ]
   }
