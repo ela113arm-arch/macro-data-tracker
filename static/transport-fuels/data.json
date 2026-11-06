@@ -636,7 +636,7 @@
     "measure": "Domestic petroleum-product consumption / market demand",
     "source": "Petroleum Planning & Analysis Cell (PPAC), Government of India",
     "source_url": "https://ppac.gov.in/consumption/products-wise",
-    "vintage": "PPAC domestic consumption retrieved 2026-11-06; source modified 02-11-2023, 06-10-2026, 10-03-2026, 10-04-2023, 13-07-2026, 26-10-2023, 30-12-2024; data through 2026-09.",
+    "vintage": "PPAC domestic consumption retrieved 2026-11-06; source modified 02-11-2023, 06-11-2026, 10-03-2026, 10-04-2023, 13-07-2026, 26-10-2023, 30-12-2024; data through 2026-10.",
     "product_mapping": "Motor Spirit; Aviation Turbine Fuel; High-Speed Diesel.",
     "conversion_note": "TMT × 1,000 × product-specific bbl/t ÷ days in month ÷ 1,000,000.",
     "caveat": "PPAC data are provisional market-demand estimates; Motor Spirit includes ethanol blending.",
@@ -1270,6 +1270,16 @@
         "jet_fuel_yoy_mbd": 0.0018129999999999813,
         "diesel_yoy_mbd": 0.0910979999999999,
         "net_yoy_mbd": 0.1694109999999999
+      },
+      {
+        "date": "2026-10-01",
+        "gasoline_mbd": 1.0405645161290322,
+        "jet_fuel_mbd": 0.19450064516129034,
+        "diesel_mbd": 1.9903490322580646,
+        "gasoline_yoy_mbd": 0.03564516129032258,
+        "jet_fuel_yoy_mbd": 0.0007519354838709802,
+        "diesel_yoy_mbd": 0.21316838709677421,
+        "net_yoy_mbd": 0.24956548387096777
       }
     ]
   },
