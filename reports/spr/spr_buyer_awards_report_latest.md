@@ -1,6 +1,6 @@
 # SPR award buyers and delivery windows
 
-Refreshed: 2026-10-08 20:46 UTC
+Refreshed: 2026-11-08 19:53 UTC
 
 This report lists every public FY26 SPR award buyer, the award date, the awarded volume, and the delivery window tied to that award tranche. DOE award PDFs publish buyer volumes, but not buyer-level allocation by site, quality, or month. The delivery windows below are therefore tranche-level windows from the matching RFP.
 
@@ -69,7 +69,6 @@ Total awarded across parsed DOE award PDFs: 133.56 MMbbl across 31 buyer-award r
 | FY26 SPR Oil Release No. 1.b | 2026-05-01       | 2026-06-30     |                    30   | West Hackberry                                       | Sweet       | May-26: West Hackberry sweet 10.000 MMbbl; Jun-26: West Hackberry sweet 20.000 MMbbl                                                                                                                                                                                                                                                                                |
 | FY26 SPR Oil Release No. 2   | 2026-06-01       | 2026-08-31     |                    92.5 | Bryan Mound; Bayou Choctaw; West Hackberry; Big Hill | Sour; Sweet | Jun-26: Bayou Choctaw sour 5.000 MMbbl; Jun-26: Bryan Mound sour 12.000 MMbbl; Jul-26: Bayou Choctaw sour 5.000 MMbbl; Jul-26: Bryan Mound sour 9.000 MMbbl; Jul-26: West Hackberry sweet 13.500 MMbbl; Aug-26: Bayou Choctaw sour 3.500 MMbbl; Aug-26: Big Hill sour 22.000 MMbbl; Aug-26: Bryan Mound sweet 15.000 MMbbl; Aug-26: West Hackberry sour 7.500 MMbbl |
 | FY26 SPR Oil Release No. 3   | 2026-07-01       | 2026-09-30     |                    40   | Bryan Mound; Big Hill                                | Sour        | Jul-26: Bryan Mound sour 8.000 MMbbl; Aug-26: Big Hill sour 11.000 MMbbl; Sep-26: Big Hill sour 14.000 MMbbl; Sep-26: Bryan Mound sour 7.000 MMbbl                                                                                                                                                                                                                  |
-| FY26 SPR Oil Release No. 4   | 2026-11-01       | 2026-12-31     |                    40   | Bryan Mound; Big Hill                                | Sour        | Nov-26: Big Hill sour 10.000 MMbbl; Nov-26: Bryan Mound sour 10.000 MMbbl; Dec-26: Big Hill sour 10.000 MMbbl; Dec-26: Bryan Mound sour 10.000 MMbbl                                                                                                                                                                                                                |
 
 ## Sources and method
 

@@ -1,14 +1,14 @@
 # SPR release tracker - Oct 2026
 
-Refreshed: 2026-10-08 20:46 UTC
+Refreshed: 2026-11-08 19:53 UTC
 
 ## Headline
 
-Public DOE award PDFs total 133.56 MMbbl against the 172.0 MMbbl announced target. The latest EIA SPR inventory is 283.0 MMbbl for week ending 2026-10-02, which EIA would normally publish around 2026-10-07.
+Public DOE award PDFs total 133.56 MMbbl against the 172.0 MMbbl announced target. The latest EIA SPR inventory is 282.2 MMbbl for week ending 2026-10-30, which EIA would normally publish around 2026-11-04.
 
 ## Current Month
 
-Oct 2026: planned RFP rows 0.00 MMbbl, awards 0.00 MMbbl, EIA observed drawdown 0.78 MMbbl.
+Oct 2026: planned RFP rows 0.00 MMbbl, awards 0.00 MMbbl, EIA observed drawdown 1.58 MMbbl.
 
 ## Planned Rows
 
@@ -62,18 +62,18 @@ Oct 2026: planned RFP rows 0.00 MMbbl, awards 0.00 MMbbl, EIA observed drawdown 
 
 ## Latest Announcements
 
-| date       | event_type   | title                                                                                                                                 |   volume_mmbbl | source_url                                                                                                                 |
-|:-----------|:-------------|:--------------------------------------------------------------------------------------------------------------------------------------|---------------:|:---------------------------------------------------------------------------------------------------------------------------|
-| 2026-09-29 | Announcement | The United States Energy Department Continues Execution of Strategic Reserve Release Commitments                                      |           40   | https://www.energy.gov/articles/united-states-energy-department-continues-execution-strategic-reserve-release-commitments  |
-| 2026-06-10 | RFP          | Energy Department Issues RFP to Advance President Trump’s 172-Million-Barrel Strategic Petroleum Reserve Exchange                     |          172   | https://www.energy.gov/hgeo/opr/articles/energy-department-issues-rfp-advance-president-trumps-172-million-barrel          |
-| 2026-05-11 | Award        | Energy Department Awards Contracts from the Strategic Petroleum Reserve, Advancing President Trump’s Historic Emergency Exchange      |           53.3 | https://www.energy.gov/hgeo/opr/articles/energy-department-awards-contracts-strategic-petroleum-reserve-advancing          |
-| 2026-04-30 | RFP          | Energy Department Issues RFP to Continue Swift Execution of President Trump’s 172-Million-Barrel Strategic Petroleum Reserve Exchange |          172   | https://www.energy.gov/hgeo/opr/articles/energy-department-issues-rfp-continue-swift-execution-president-trumps-172        |
-| 2026-04-17 | Award        | Energy Department Awards New Contracts from Strategic Petroleum Reserve, Advancing Emergency Exchange                                 |           26   | https://www.energy.gov/hgeo/opr/articles/energy-department-awards-new-contracts-strategic-petroleum-reserve-advancing      |
-| 2026-04-10 | Award        | Energy Department Awards Contracts for 8.5 Million Barrels from SPR in Second Phase of Emergency Exchange                             |            8.5 | https://www.energy.gov/hgeo/opr/articles/energy-department-awards-contracts-85-million-barrels-spr-second-phase-emergency  |
-| 2026-04-09 | News         | Energy Department Continues Initiating Strategic Petroleum Reserve Emergency Exchanges                                                |           30   | https://www.energy.gov/hgeo/opr/articles/energy-department-continues-initiating-strategic-petroleum-reserve-emergency      |
-| 2026-04-01 | RFP          | Energy Department Initiates Additional Strategic Petroleum Reserve Emergency Exchange to Stabilize Global Oil Supply                  |           10   | https://www.energy.gov/hgeo/articles/energy-department-initiates-additional-strategic-petroleum-reserve-emergency-exchange |
-| 2026-03-20 | News         | Energy Department Begins Delivering SPR Barrels at Record Speeds                                                                      |           45   | https://www.energy.gov/hgeo/articles/energy-department-begins-delivering-spr-barrels-record-speeds                         |
-| 2026-03-13 | RFP          | Energy Department Initiates Strategic Petroleum Reserve Emergency Exchange to Stabilize Global Oil Supply                             |            0   | https://www.energy.gov/articles/energy-department-initiates-strategic-petroleum-reserve-emergency-exchange-stabilize       |
+| date       | event_type   | title                                                                                                                                 |   volume_mmbbl | source_url                                                                                                                |
+|:-----------|:-------------|:--------------------------------------------------------------------------------------------------------------------------------------|---------------:|:--------------------------------------------------------------------------------------------------------------------------|
+| 2026-10-29 | Award        | Energy Department Awards Contracts from the Strategic Petroleum Reserve as Part of President Trump’s Emergency Exchange               |           40   | https://www.energy.gov/hgeo/opr/articles/energy-department-awards-contracts-strategic-petroleum-reserve-part-president    |
+| 2026-10-23 | News         | Energy Department Authorizes Strategic Petroleum Reserve Exchange to Support Fuel Supply Stability                                    |            0   | https://www.energy.gov/articles/energy-department-authorizes-strategic-petroleum-reserve-exchange-support-fuel-supply     |
+| 2026-10-10 | News         | Energy Department Authorizes Strategic Petroleum Reserve Exchange to Address Supply Disruptions Due to Hurricane                      |            4   | https://www.energy.gov/articles/energy-department-authorizes-strategic-petroleum-reserve-exchange-address-supply          |
+| 2026-09-29 | Announcement | The United States Energy Department Continues Execution of Strategic Reserve Release Commitments                                      |           40   | https://www.energy.gov/articles/united-states-energy-department-continues-execution-strategic-reserve-release-commitments |
+| 2026-06-10 | RFP          | Energy Department Issues RFP to Advance President Trump’s 172-Million-Barrel Strategic Petroleum Reserve Exchange                     |          172   | https://www.energy.gov/hgeo/opr/articles/energy-department-issues-rfp-advance-president-trumps-172-million-barrel         |
+| 2026-05-11 | Award        | Energy Department Awards Contracts from the Strategic Petroleum Reserve, Advancing President Trump’s Historic Emergency Exchange      |           53.3 | https://www.energy.gov/hgeo/opr/articles/energy-department-awards-contracts-strategic-petroleum-reserve-advancing         |
+| 2026-04-30 | RFP          | Energy Department Issues RFP to Continue Swift Execution of President Trump’s 172-Million-Barrel Strategic Petroleum Reserve Exchange |          172   | https://www.energy.gov/hgeo/opr/articles/energy-department-issues-rfp-continue-swift-execution-president-trumps-172       |
+| 2026-04-17 | Award        | Energy Department Awards New Contracts from Strategic Petroleum Reserve, Advancing Emergency Exchange                                 |           26   | https://www.energy.gov/hgeo/opr/articles/energy-department-awards-new-contracts-strategic-petroleum-reserve-advancing     |
+| 2026-04-10 | Award        | Energy Department Awards Contracts for 8.5 Million Barrels from SPR in Second Phase of Emergency Exchange                             |            8.5 | https://www.energy.gov/hgeo/opr/articles/energy-department-awards-contracts-85-million-barrels-spr-second-phase-emergency |
+| 2026-04-09 | News         | Energy Department Continues Initiating Strategic Petroleum Reserve Emergency Exchanges                                                |           30   | https://www.energy.gov/hgeo/opr/articles/energy-department-continues-initiating-strategic-petroleum-reserve-emergency     |
 
 ## EIA Timing Note
 
