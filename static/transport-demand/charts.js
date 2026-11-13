@@ -141,10 +141,21 @@
       if (feed.status !== 'ok') warning(card, 'Latest source check failed. Showing the last validated observations; see the linked source for updates.');
       if (ageDays > (weekly ? 14 : 4) || checkAge > 2) warning(card, 'Refresh overdue. Latest observation is ' + ageDays + ' days old; last successful check was ' + dateLabel(feed.last_success_at) + '.');
       if (feed.notice && !weekly) warning(card, feed.notice);
+      const data = seasonalData(rows, weekly, currentYear, smooth);
+      const legend = element('div', 'demand-legend');
+      const legendItems = [[String(currentYear), 'current']];
+      if (data.prior.some(Number.isFinite)) legendItems.push([String(currentYear - 1), 'prior']);
+      if (data.low.some(Number.isFinite)) legendItems.push(['Historical average', 'average'], ['Historical range', 'range']);
+      legendItems.forEach(([label, style]) => {
+        const item = element('span', 'demand-legend-item');
+        const swatch = element('i', 'demand-swatch demand-swatch-' + style);
+        swatch.setAttribute('aria-hidden', 'true');
+        item.append(swatch, document.createTextNode(label)); legend.append(item);
+      });
+      card.append(legend);
       const plot = element('div', 'demand-chart'); plot.id = 'demand-chart-' + id;
       plot.setAttribute('role', 'img'); plot.setAttribute('aria-label', series.title + ', ' + series.unit);
       card.append(plot);
-      const data = seasonalData(rows, weekly, currentYear, smooth);
       const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       const monthDays = [1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335];
       const tickValues = weekly ? monthDays.map(d => 1 + (d - 1) / 7) : monthDays;
@@ -157,11 +168,11 @@
       const annotations = last < 0 ? [] : [{x: data.x[last], y: data.current[last], text: number.format(data.current[last]),
         showarrow: false, xanchor: data.x[last] > (weekly ? 45 : 310) ? 'right' : 'left', yshift: 13,
         bgcolor: 'rgba(255,255,255,0.9)', font: {color: '#c45f13', size: 10}}];
-      Plotly.newPlot(plot, seasonalTraces(data, currentYear), {autosize: true, height: 330, margin: {t: 62, r: 18, b: 42, l: 56},
+      Plotly.newPlot(plot, seasonalTraces(data, currentYear), {autosize: true, height: 330, showlegend: false, margin: {t: 24, r: 18, b: 42, l: 56},
         paper_bgcolor: '#fff', plot_bgcolor: '#fff', font: {family: 'Inter, Arial, sans-serif', size: 11, color: '#475569'},
         xaxis: {type: 'linear', range: weekly ? [1, 53] : [1, 365], tickmode: 'array', tickvals: tickValues, ticktext: monthNames,
           showgrid: false, tickfont: {size: 10}}, yaxis: {gridcolor: '#edf0f4', fixedrange: false, separatethousands: true},
-        annotations, legend: {orientation: 'h', x: 0, y: 1.25, font: {size: 10}}, hovermode: 'x unified'},
+        annotations, hovermode: 'x unified'},
         {responsive: true, displayModeBar: false}).catch(() => { plot.textContent = 'Chart could not be rendered. The CSV download remains available.'; });
       card.append(element('p', 'demand-caption', series.description));
       const source = element('p', 'demand-attribution', feed.attribution + ' ');
