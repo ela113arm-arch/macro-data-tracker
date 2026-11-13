@@ -36,6 +36,71 @@
       return sum / 7;
     });
   }
+  function seasonPosition(value, weekly) {
+    const d = new Date(value + 'T12:00:00Z');
+    if (weekly) {
+      // ISO weeks keep complete Monday–Sunday reports together at New Year.
+      const thursday = new Date(d);
+      thursday.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+      const year = thursday.getUTCFullYear();
+      const start = Date.UTC(year, 0, 1, 12);
+      return {year, position: Math.ceil((((thursday.getTime() - start) / 86400000) + 1) / 7)};
+    }
+    if (d.getUTCMonth() === 1 && d.getUTCDate() === 29) return null;
+    // A non-leap reference calendar keeps March–December aligned in every year.
+    return {year: d.getUTCFullYear(), position: Math.floor((Date.UTC(2001, d.getUTCMonth(), d.getUTCDate()) - Date.UTC(2001, 0, 1)) / 86400000) + 1};
+  }
+  function seasonalData(rows, weekly, currentYear, smooth = true) {
+    const combined = new Map(rows.map(r => [r.date, r]));
+    // References carry their actual observation dates; never relabel them as current data.
+    rows.forEach(r => {
+      if (r.reference_date && Number.isFinite(r.reference_value) && !combined.has(r.reference_date)) {
+        combined.set(r.reference_date, {date: r.reference_date, value: r.reference_value});
+      }
+    });
+    const observations = Array.from(combined.values()).sort((a, b) => a.date.localeCompare(b.date));
+    const values = !weekly && smooth ? sevenDayMean(observations) : observations.map(r => Number(r.value));
+    const years = new Map();
+    observations.forEach((r, i) => {
+      const pos = seasonPosition(r.date, weekly);
+      if (!pos || !Number.isFinite(values[i])) return;
+      if (!years.has(pos.year)) years.set(pos.year, new Map());
+      years.get(pos.year).set(pos.position, {value: values[i], date: r.date});
+    });
+    const count = weekly ? 53 : 365;
+    const x = Array.from({length: count}, (_, i) => i + 1);
+    const historyYears = Array.from(years.keys()).filter(y => y >= currentYear - 5 && y < currentYear).sort();
+    const current = x.map(p => years.get(currentYear)?.get(p)?.value ?? null);
+    const prior = x.map(p => years.get(currentYear - 1)?.get(p)?.value ?? null);
+    const currentDates = x.map(p => years.get(currentYear)?.get(p)?.date ?? '');
+    const priorDates = x.map(p => years.get(currentYear - 1)?.get(p)?.date ?? '');
+    const low = [], high = [], average = [], samples = [];
+    x.forEach(p => {
+      const v = historyYears.map(y => years.get(y).get(p)?.value).filter(Number.isFinite);
+      samples.push(v.length);
+      // One observed year is a comparison line, not a historical range.
+      low.push(v.length >= 2 ? Math.min(...v) : null);
+      high.push(v.length >= 2 ? Math.max(...v) : null);
+      average.push(v.length >= 2 ? v.reduce((a, b) => a + b, 0) / v.length : null);
+    });
+    return {x, current, prior, currentDates, priorDates, low, high, average, samples, historyYears};
+  }
+  function seasonalTraces(data, year) {
+    const traces = [];
+    if (data.low.some(Number.isFinite)) {
+      traces.push({x: data.x, y: data.low, type: 'scatter', mode: 'lines', line: {width: 0}, showlegend: false, hoverinfo: 'skip', connectgaps: false});
+      traces.push({x: data.x, y: data.high, type: 'scatter', mode: 'lines', line: {width: 0}, fill: 'tonexty', fillcolor: 'rgba(148,163,184,0.22)', name: 'Historical range', hoverinfo: 'skip', connectgaps: false});
+      traces.push({x: data.x, y: data.average, type: 'scatter', mode: 'lines', name: 'Historical average',
+        customdata: data.samples, connectgaps: false, line: {color: '#7e8794', width: 1.5, dash: 'dot'},
+        hovertemplate: '%{y:,.0f}<br>%{customdata} historical years<extra>Historical average</extra>'});
+    }
+    if (data.prior.some(Number.isFinite)) traces.push({x: data.x, y: data.prior, customdata: data.priorDates,
+      name: String(year - 1), type: 'scatter', mode: 'lines', connectgaps: false, line: {color: '#2563eb', width: 2},
+      hovertemplate: '%{customdata}<br>%{y:,.0f}<extra>' + (year - 1) + '</extra>'});
+    traces.push({x: data.x, y: data.current, customdata: data.currentDates, name: String(year), type: 'scatter', mode: 'lines',
+      connectgaps: false, line: {color: '#e87b24', width: 2.7}, hovertemplate: '%{customdata}<br>%{y:,.0f}<extra>' + year + '</extra>'});
+    return traces;
+  }
   function warning(card, message) {
     card.append(element('p', 'demand-warning', message));
   }
@@ -44,7 +109,8 @@
     const grid = document.getElementById('demand-grid');
     grid.querySelectorAll('.js-plotly-plot').forEach(el => Plotly.purge(el));
     grid.replaceChildren();
-    const history = document.getElementById('demand-range').value;
+    const smooth = document.getElementById('demand-view').value === 'average';
+    const currentYear = new Date().getUTCFullYear();
     ids.forEach((id, index) => {
       const series = payload.series[id];
       const feed = payload.feeds[series ? series.feed : ['tsa', 'eurocontrol', 'china', 'china'][index]] || {};
@@ -78,29 +144,24 @@
       const plot = element('div', 'demand-chart'); plot.id = 'demand-chart-' + id;
       plot.setAttribute('role', 'img'); plot.setAttribute('aria-label', series.title + ', ' + series.unit);
       card.append(plot);
-      let shown = rows;
-      if (history !== 'all') {
-        const cutoff = new Date(latest.date + 'T12:00:00Z'); cutoff.setUTCDate(cutoff.getUTCDate() - Number(history));
-        shown = rows.filter(r => r.date >= cutoff.toISOString().slice(0, 10));
-      }
-      const traces = [{x: shown.map(r => r.date), y: shown.map(r => r.value), name: weekly ? 'Weekly total' : 'Daily',
-        type: 'scatter', mode: weekly ? 'lines+markers' : 'lines', connectgaps: false,
-        line: {color: weekly ? '#1a465b' : '#a6b5c5', width: weekly ? 2.4 : 1.1}, marker: {size: 4},
-        hovertemplate: '%{x}<br>%{y:,.0f}<extra>' + (weekly ? 'Weekly total' : 'Daily') + '</extra>'}];
-      if (!weekly) {
-        const sevenDayValues = sevenDayMean(rows);
-        const means = new Map(rows.map((r, i) => [r.date, sevenDayValues[i]]));
-        traces.push({x: shown.map(r => r.date), y: shown.map(r => means.get(r.date)), name: '7-day average',
-          type: 'scatter', mode: 'lines', connectgaps: false, line: {color: '#1a465b', width: 2.6}, hovertemplate: '%{x}<br>%{y:,.0f}<extra>7-day average</extra>'});
-      }
-      const reference = shown.filter(r => Number.isFinite(r.reference_value));
-      if (reference.length) traces.push({x: reference.map(r => r.date), y: reference.map(r => r.reference_value),
-        customdata: reference.map(r => r.reference_date), name: 'Prior year · matched weekday', type: 'scatter', mode: 'lines',
-        line: {color: '#c28a35', width: 1.5, dash: 'dot'}, hovertemplate: 'Reference: %{customdata}<br>%{y:,.0f}<extra>Prior year</extra>'});
-      Plotly.newPlot(plot, traces, {autosize: true, height: 300, margin: {t: 8, r: 12, b: 64, l: 56},
+      const data = seasonalData(rows, weekly, currentYear, smooth);
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const monthDays = [1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335];
+      const tickValues = weekly ? monthDays.map(d => 1 + (d - 1) / 7) : monthDays;
+      const windowLabel = data.historyYears.length ? data.historyYears.join(', ') : 'not yet available';
+      const statLabel = data.historyYears.length === 5 ? '5-year range and average: ' : 'Available historical range and average: ';
+      const method = weekly ? 'Weekly totals · ISO week alignment. ' : (smooth ? '7-day averages' : 'Daily values') + ' · Calendar dates aligned; February 29 omitted. ';
+      card.append(element('p', 'demand-caption', method + (data.historyYears.length >= 2 ? statLabel + windowLabel + '.' : 'Prior-year comparison: ' + windowLabel + '; a multi-year range is unavailable.')));
+      if (!data.prior.some(Number.isFinite)) warning(card, 'Prior-year observations are not yet available. The seasonal chart shows the current year only.');
+      const last = data.current.findLastIndex(Number.isFinite);
+      const annotations = last < 0 ? [] : [{x: data.x[last], y: data.current[last], text: number.format(data.current[last]),
+        showarrow: false, xanchor: data.x[last] > (weekly ? 45 : 310) ? 'right' : 'left', yshift: 13,
+        bgcolor: 'rgba(255,255,255,0.9)', font: {color: '#c45f13', size: 10}}];
+      Plotly.newPlot(plot, seasonalTraces(data, currentYear), {autosize: true, height: 330, margin: {t: 62, r: 18, b: 42, l: 56},
         paper_bgcolor: '#fff', plot_bgcolor: '#fff', font: {family: 'Inter, Arial, sans-serif', size: 11, color: '#475569'},
-        xaxis: {type: 'date', showgrid: false, nticks: 5}, yaxis: {rangemode: 'tozero', gridcolor: '#edf0f4', fixedrange: false},
-        legend: {orientation: 'h', x: 0, y: -0.22, font: {size: 10}}, hovermode: 'x unified'},
+        xaxis: {type: 'linear', range: weekly ? [1, 53] : [1, 365], tickmode: 'array', tickvals: tickValues, ticktext: monthNames,
+          showgrid: false, tickfont: {size: 10}}, yaxis: {gridcolor: '#edf0f4', fixedrange: false, separatethousands: true},
+        annotations, legend: {orientation: 'h', x: 0, y: 1.25, font: {size: 10}}, hovermode: 'x unified'},
         {responsive: true, displayModeBar: false}).catch(() => { plot.textContent = 'Chart could not be rendered. The CSV download remains available.'; });
       card.append(element('p', 'demand-caption', series.description));
       const source = element('p', 'demand-attribution', feed.attribution + ' ');
@@ -119,12 +180,12 @@
       if (payload.version !== 1 || !payload.series || !payload.feeds) throw new Error('Unrecognised data format');
       status.textContent = 'Latest pipeline check: ' + dateLabel(payload.last_attempt_at) + ' · Observation dates are shown on each chart.';
       draw();
-      document.getElementById('demand-range').onchange = draw;
+      document.getElementById('demand-view').onchange = draw;
     } catch (error) {
       status.textContent = 'Transport data could not be loaded. Reload the page to retry.';
       document.getElementById('demand-grid').replaceChildren();
     } finally { clearTimeout(timer); }
   };
   // Export only the pure calculation used by the small Node regression test.
-  if (typeof module !== 'undefined' && module.exports) module.exports = {sevenDayMean};
+  if (typeof module !== 'undefined' && module.exports) module.exports = {sevenDayMean, seasonPosition, seasonalData, seasonalTraces};
 })();

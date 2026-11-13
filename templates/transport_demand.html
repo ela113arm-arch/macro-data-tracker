@@ -2,11 +2,11 @@
   <div class="section-header">
     <div>
       <h2 class="section-title" id="transport-demand-title">Transport Demand Monitor</h2>
-      <p class="section-subtitle">Daily aviation activity · China weekly logistics · Checked every day</p>
+      <p class="section-subtitle">Seasonal comparisons · Daily aviation activity · China weekly logistics</p>
     </div>
-    <label class="demand-range">History
-      <select id="demand-range" aria-label="Transport demand chart history">
-        <option value="90">Last 90 days</option><option value="365">Last year</option><option value="all">All available</option>
+    <label class="demand-range">Daily series
+      <select id="demand-view" aria-label="Daily transport seasonal smoothing">
+        <option value="average">7-day average</option><option value="daily">Daily values</option>
       </select>
     </label>
   </div>
@@ -16,7 +16,8 @@
   <details class="demand-method">
     <summary>Sources, refresh schedule & interpretation</summary>
     <p>The pipeline checks sources daily at 15:30 UTC, including weekends, independently of the macro refresh. Each source keeps its own observation and release dates. A failed download retains validated history and displays a warning.</p>
-    <p>Daily charts show observations and an average only when all seven consecutive calendar days are available. EUROCONTROL’s prior-year line follows its matched-weekday reference. China charts show the ministry’s seven-day totals with no daily interpolation.</p>
+    <p>Orange shows the current year and stops at the latest observation; blue shows the prior year. A light-gray band and dotted average use available observations from the five completed years before the current year. Each chart identifies its actual historical coverage. No historical band is drawn where fewer than two years are available.</p>
+    <p>Daily observations align by month and day, with February 29 omitted. The default seven-day averages require seven consecutive calendar days; select Daily values for unsmoothed data. China’s raw seven-day totals align by ISO week, with no daily interpolation. Historical reference observations retain their actual source dates. Holidays that move between calendar dates can shift seasonal patterns.</p>
     <p>TSA screenings exclude cargo flights and do not capture flight distance. EUROCONTROL’s network total includes overflights. China truck passages are not unique vehicles or kilometres; electrification and fuel efficiency change their relationship with diesel consumption.</p>
     <p><a href="https://www.tsa.gov/travel/passenger-volumes" target="_blank" rel="noopener">TSA</a> · <a href="https://passengerindex.com/web/tsa/" target="_blank" rel="noopener">Passenger Index — TSA fallback, CC BY 4.0</a> · <a href="https://www.eurocontrol.int/Economics/DailyTrafficVariation-States.html" target="_blank" rel="noopener">EUROCONTROL</a> · <a href="https://www.mot.gov.cn/zhuanti/wuliubtbc/qingkuangtongbao_wuliu/" target="_blank" rel="noopener">China Ministry of Transport</a></p>
   </details>
@@ -33,7 +34,7 @@
 .demand-badge-weekly{background:#fff3dd;color:#80520d}.demand-value{font-size:28px;font-weight:700;color:var(--navy);margin-top:10px;font-variant-numeric:tabular-nums}
 .demand-dates,.demand-caption,.demand-attribution{font-size:12px;color:var(--text-secondary);line-height:1.55;margin:6px 0;overflow-wrap:anywhere}
 .demand-warning{padding:9px 11px;background:#fff7e6;color:#8a4b08;font-size:12px;line-height:1.5;border-left:3px solid #d97706;margin-top:8px}
-.demand-chart{height:300px;width:100%}.demand-card a{font-size:12px;color:var(--navy)}
+.demand-chart{height:330px;width:100%}.demand-card a{font-size:12px;color:var(--navy)}
 .demand-method summary{cursor:pointer;color:var(--navy);padding:6px 0}.demand-method p{margin:8px 0}
 @media(max-width:850px){ #demand-grid{grid-template-columns:minmax(0,1fr)}.demand-card{padding:12px}.demand-range{white-space:normal}}
 </style>

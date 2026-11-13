@@ -41,6 +41,14 @@ class TransportDemandTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 etl.parse_china(html, 'https://www.mot.gov.cn/a.html')
 
+    def test_china_archive_accepts_explicit_years_and_traffic_volume_wording(self):
+        html = '''<meta name="PubDate" content="2025-01-06"><h1>2024年12月30日-2025年1月5日全国物流保通保畅运行情况</h1>
+        <p>全国高速公路累计货车通行5300万辆</p><p>民航累计保障航班11万班</p>'''
+        rows = etl.parse_china(html, 'https://www.mot.gov.cn/archive.html')
+        self.assertEqual(rows['china_trucks'][0]['date'], '2025-01-05')
+        self.assertEqual(rows['china_trucks'][0]['period_start'], '2024-12-30')
+        self.assertEqual(rows['china_trucks'][0]['value'], 53000000)
+
     def test_invalid_future_zero_and_nan_values_are_rejected(self):
         for row in ({'date': '2026-11-13', 'value': 2000000},
                     {'date': '2026-11-12', 'value': 0},

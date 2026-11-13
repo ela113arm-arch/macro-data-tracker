@@ -13,6 +13,7 @@ from html import unescape
 import json
 import logging
 import math
+from io import BytesIO
 from pathlib import Path
 import re
 import time
@@ -87,7 +88,7 @@ def publication_date(html):
     return None
 
 
-def fetch_tsa(raw_dir=None):
+def fetch_tsa(raw_dir=None, history_years=()):
     errors = []
     for url in (TSA_URL, TSA_COPY):
         try:
@@ -102,6 +103,18 @@ def fetch_tsa(raw_dir=None):
                               notice='Using the public Passenger Index copy because the direct TSA table could not be retrieved.')
             else:
                 result.update(source_name='Transportation Security Administration', attribution='TSA; U.S. public-domain data.', notice='')
+            history_errors = []
+            for year in history_years:
+                archive_url = TSA_URL + '/' + str(year)
+                try:
+                    archive = parse_tsa(download(archive_url, raw_dir).decode('utf-8-sig'))
+                    archive = [dict(r, source_url=archive_url) for r in archive if int(r['date'][:4]) == year]
+                    if len(archive) < 300:
+                        raise ValueError('Annual archive contains fewer than 300 daily observations')
+                    result['series']['tsa_passengers'].extend(archive)
+                except Exception as exc:
+                    history_errors.append(f'{year}: {exc}')
+            result['history_errors'] = history_errors
             return result
         except Exception as exc:
             errors.append(f'{urlsplit(url).hostname}: {exc}')
@@ -131,13 +144,65 @@ def parse_eurocontrol(payload):
     return rows
 
 
-def fetch_eurocontrol(raw_dir=None):
+def fetch_eurocontrol(raw_dir=None, history_years=()):
     body = download(EURO_URL, raw_dir)
-    return {'series': {'europe_flights': parse_eurocontrol(json.loads(body))},
+    result = {'series': {'europe_flights': parse_eurocontrol(json.loads(body))},
             'source_name': 'EUROCONTROL Network Manager', 'source_url': EURO_URL,
             'source_published_date': None, 'snapshot_sha256': hashlib.sha256(body).hexdigest(),
             'attribution': 'EUROCONTROL daily traffic variation; network total.',
             'notice': ''}
+    errors = []
+    for year in history_years:
+        page = urljoin(EURO_URL, f'{year}-DailyTrafficVariation-States.html')
+        try:
+            html = download(page, raw_dir).decode('utf-8')
+            match = re.search(r'["\']([^"\']*tfc_ct_data\.json)["\']', html)
+            workbook = False
+            if not match:
+                match = re.search(r'["\'](https://www\.eurocontrol\.int/[^"\']*States\.xlsx)["\']', html)
+                workbook = True
+            if not match:
+                raise ValueError('Archived network download link not found')
+            archive_url = urljoin(page, match.group(1))
+            if urlsplit(archive_url).hostname != 'www.eurocontrol.int':
+                raise ValueError('Archive URL is outside EUROCONTROL')
+            archive_body = download(archive_url, raw_dir)
+            archive = parse_eurocontrol_workbook(archive_body) if workbook else parse_eurocontrol(json.loads(archive_body))
+            archive = [dict(r, source_url=archive_url) for r in archive if int(r['date'][:4]) == year]
+            if len(archive) < 300:
+                raise ValueError('Annual archive contains fewer than 300 daily observations')
+            result['series']['europe_flights'].extend(archive)
+        except Exception as exc:
+            errors.append(f'{year}: {exc}')
+    result['history_errors'] = errors
+    return result
+
+
+def parse_eurocontrol_workbook(body):
+    """Older official archives use Excel instead of the current JSON format."""
+    from openpyxl import load_workbook
+    book = load_workbook(BytesIO(body), read_only=True, data_only=True)
+    try:
+        sheet = book['Data']
+        sheet.reset_dimensions()  # Some official exports report an incorrect A1:A1 dimension.
+        rows = sheet.iter_rows(values_only=True)
+        header = next(rows)
+        entity, day, flights = (header.index(c) for c in ('Entity', 'Day', 'Flights'))
+        result = []
+        for row in rows:
+            if len(row) <= max(entity, day, flights) or row[entity] != '-Total Network Manager Area':
+                continue
+            observed = row[day]
+            if isinstance(observed, datetime):
+                observed = observed.date().isoformat()
+            elif isinstance(observed, date):
+                observed = observed.isoformat()
+            else:
+                observed = date.fromisoformat(str(observed)[:10]).isoformat()
+            result.append({'date': observed, 'value': float(row[flights])})
+        return result
+    finally:
+        book.close()
 
 
 def china_links(html, base=CHINA_URL):
@@ -159,20 +224,20 @@ def parse_china(html, source_url):
         raise ValueError('China report publication date missing')
     title = re.search(r'<h1[^>]*>(.*?)</h1>', html, re.I | re.S)
     title = text_only(title.group(1)) if title else ''
-    period = re.search(r'(\d{1,2})月(\d{1,2})日[—–－-](?:(\d{1,2})月)?(\d{1,2})日', title)
+    period = re.search(r'(?:(\d{4})年)?(\d{1,2})月(\d{1,2})日\s*[—–－-]\s*(?:(\d{4})年)?(?:(\d{1,2})月)?(\d{1,2})日', title)
     if not period:
         raise ValueError('China report is not a dated weekly report')
-    sm, sd, em, ed = period.groups()
-    year = int(pub[:4])
+    sy, sm, sd, ey, em, ed = period.groups()
+    year = int(ey or pub[:4])
     end = date(year, int(em or sm), int(ed))
     if end > date.fromisoformat(pub):
         end = end.replace(year=year - 1)
-    start = date(end.year - (int(sm) > end.month), int(sm), int(sd))
+    start = date(int(sy) if sy else end.year - (int(sm) > end.month), int(sm), int(sd))
     if (end - start).days != 6:
         raise ValueError('China report does not cover exactly seven days')
     content = text_only(html)
-    patterns = {'china_trucks': r'全国高速公路货车通行\s*([\d,.]+)\s*(万)?辆',
-                'china_flights': r'民航保障航班\s*([\d,.]+)\s*(万)?班'}
+    patterns = {'china_trucks': r'全国高速公路(?:累计)?货车(?:累计)?通行(?:量)?\s*([\d,.]+)\s*(万)?辆',
+                'china_flights': r'民航(?:累计)?保障航班\s*([\d,.]+)\s*(万)?班'}
     out = {}
     for key, pattern in patterns.items():
         found = re.search(pattern, content)
@@ -184,40 +249,68 @@ def parse_china(html, source_url):
     return out
 
 
-def fetch_china(raw_dir=None, backfill=False):
+def fetch_china(raw_dir=None, backfill=False, seasonal_history=False):
     pages = [CHINA_URL]
     # Two listing pages seed about seven months of weekly observations.
-    if backfill:
-        pages.append(urljoin(CHINA_URL, 'index_1.html'))
+    if backfill or seasonal_history:
+        pages.extend(urljoin(CHINA_URL, f'index_{i}.html') for i in range(1, 14 if seasonal_history else 2))
     urls = []
-    for page in pages:
-        urls.extend(china_links(download(page, raw_dir).decode('utf-8'), page))
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        listings = list(pool.map(lambda u: download(u, raw_dir), pages))
+    for page, listing in zip(pages, listings):
+        urls.extend(china_links(listing.decode('utf-8'), page))
     urls = list(dict.fromkeys(urls))
     if not urls:
         raise ValueError('China weekly report list is empty')
     # Refresh the latest three releases for revisions. Backfill only on first run.
-    urls = urls if backfill else urls[:3]
+    urls = urls if backfill or seasonal_history else urls[:3]
     series = {'china_trucks': [], 'china_flights': []}
     snapshots = []
+    def report_body(url):
+        try:
+            return download(url, raw_dir), None
+        except Exception as exc:
+            return None, str(exc)
     with ThreadPoolExecutor(max_workers=3) as pool:
-        bodies = list(pool.map(lambda u: download(u, raw_dir), urls))
-    for url, body in zip(urls, bodies):
-        parsed = parse_china(body.decode('utf-8'), url)
+        bodies = list(pool.map(report_body, urls))
+    skipped = 0
+    for i, (url, (body, error)) in enumerate(zip(urls, bodies)):
+        if error:
+            if i < 3 or not seasonal_history:
+                raise RuntimeError(f'China report unavailable: {error}')
+            skipped += 1
+            LOG.warning('Archived China report unavailable: %s', url)
+            continue
+        try:
+            parsed = parse_china(body.decode('utf-8'), url)
+        except ValueError:
+            if i < 3 or not seasonal_history:
+                raise
+            skipped += 1
+            continue
         for key, values in parsed.items():
             series[key].extend(values)
         snapshots.append(hashlib.sha256(body).hexdigest())
+    # Keep the newest publication if the archive contains revised duplicates.
+    for key in series:
+        unique = {}
+        for row in series[key]:
+            unique.setdefault(row['date'], row)
+        series[key] = list(unique.values())
     return {'series': series, 'source_name': 'China Ministry of Transport',
             'source_url': CHINA_URL, 'source_published_date': max(r['published_date'] for r in series['china_trucks']),
             'snapshot_sha256': hashlib.sha256(''.join(snapshots).encode()).hexdigest(),
             'attribution': 'Ministry of Transport of the People’s Republic of China.',
-            'notice': 'China is the weekly exception: each point is a seven-day total, dated at the week ending.'}
+            'notice': 'China is the weekly exception: each point is a seven-day total, dated at the week ending.',
+            **({'history_backfill_year': datetime.now(timezone.utc).year,
+                'history_archive_reports_skipped': skipped} if seasonal_history else {})}
 
 
 SERIES = {
     'tsa_passengers': {'title': 'U.S. airport passengers', 'unit': 'passengers/day', 'frequency': 'daily', 'fuel': 'Jet fuel',
                        'description': 'TSA checkpoint screenings. Passenger activity; excludes cargo and does not measure fuel uplift.'},
     'europe_flights': {'title': 'European flight activity', 'unit': 'flights/day', 'frequency': 'daily', 'fuel': 'Jet fuel',
-                       'description': 'EUROCONTROL network total, including overflights. Prior-year comparison uses the source’s matched weekday; countries must not be summed.'},
+                       'description': 'EUROCONTROL network total, including overflights. Seasonal charts align actual calendar dates; countries must not be summed.'},
     'china_trucks': {'title': 'China highway truck traffic', 'unit': 'truck passages/week', 'frequency': 'weekly', 'fuel': 'Diesel',
                      'description': 'Highway truck passages, not unique trucks or kilometres. Electric trucks and changing route lengths affect the link to diesel.'},
     'china_flights': {'title': 'China flight activity', 'unit': 'flights/week', 'frequency': 'weekly', 'fuel': 'Jet fuel',
@@ -273,8 +366,17 @@ def refresh(output=OUTPUT, now=None, fetchers=None, raw_dir=None):
     payload = copy.deepcopy(previous)
     payload['last_attempt_at'] = timestamp
     if fetchers is None:
-        fetchers = {'tsa': lambda: fetch_tsa(raw_dir), 'eurocontrol': lambda: fetch_eurocontrol(raw_dir),
-                    'china': lambda: fetch_china(raw_dir, backfill=not previous['series'].get('china_trucks', {}).get('rows'))}
+        def missing_years(key):
+            rows = previous['series'].get(key, {}).get('rows', [])
+            counts = {}
+            for row in rows:
+                y = int(row['date'][:4]); counts[y] = counts.get(y, 0) + 1
+            return [y for y in range(now.year - 5, now.year) if counts.get(y, 0) < 300]
+        fetchers = {'tsa': lambda: fetch_tsa(raw_dir, missing_years('tsa_passengers')),
+                    'eurocontrol': lambda: fetch_eurocontrol(raw_dir, missing_years('europe_flights')),
+                    'china': lambda: fetch_china(raw_dir,
+                        backfill=not previous['series'].get('china_trucks', {}).get('rows'),
+                        seasonal_history=previous['feeds'].get('china', {}).get('history_backfill_year') != now.year)}
     failures = []
     for feed, fetcher in fetchers.items():
         prior_feed = previous['feeds'].get(feed, {})
