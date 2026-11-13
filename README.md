@@ -246,3 +246,20 @@ be committed to this public repository or sent to the public Render service.
 New reports appear automatically in the private view. A numerical X challenger
 requires a substantially longer timestamped history and separate out-of-sample
 validation before it can influence the production dollar forecast.
+
+### Daily transport activity monitor
+
+Energy and EVs & Transport include daily TSA passenger screenings and EUROCONTROL network flights, plus China
+Ministry of Transport weekly truck passages and aviation flights. These are activity indicators, not measured fuel
+consumption. `python scripts/transport_demand_fetcher.py` refreshes the self-contained JSON/CSV bundle under
+`static/transport-demand/`. It needs only Python's standard library. The separate **Refresh daily transport demand**
+GitHub Actions workflow runs every day at 15:30 UTC, including weekends; committed results trigger the existing
+Render auto-deploy. Run the workflow manually to retry without refreshing all macro data.
+
+Sources are schema/date/value validated. Failed or stale sources retain their prior observations and last-success
+timestamps. The workflow still commits usable results and error status before reporting a failing source. TSA
+uses its official table first, falling back to the public Passenger Index copy (CC BY 4.0, attribution on the chart).
+Data accumulate across refreshes, with overlapping dates replaced to pick up revisions. EUROCONTROL carries its
+matched-weekday previous-year reference. China weekly figures are never interpolated into daily observations.
+Raw downloads can be retained locally with `--raw-dir <directory>`. Raw source hashes, source links, observation
+dates, source publication dates when available, and retrieval dates are included in the chart bundle.

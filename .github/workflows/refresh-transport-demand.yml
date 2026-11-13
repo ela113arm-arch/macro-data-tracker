@@ -1,0 +1,51 @@
+name: Refresh daily transport demand
+
+on:
+  schedule:
+    - cron: '30 15 * * *'
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - 'scripts/transport_demand_fetcher.py'
+      - 'tests/test_transport_demand_fetcher.py'
+      - '.github/workflows/refresh-transport-demand.yml'
+
+permissions:
+  contents: write
+
+# Share the macro refresh lock so the two writers never push concurrently.
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify parsing and retained-history behaviour
+        run: python -m unittest discover -s tests -p 'test_transport_demand_fetcher.py'
+      - name: Fetch daily aviation and China weekly logistics
+        id: fetch
+        continue-on-error: true
+        run: python scripts/transport_demand_fetcher.py --raw-dir /tmp/transport-demand-sources
+      - name: Publish validated observations and source status
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add static/transport-demand/data.json static/transport-demand/*.csv
+          if ! git diff --cached --quiet; then
+            git commit -m 'Refresh daily transport activity indicators'
+            git pull --rebase origin master
+            git push
+          fi
+      - name: Report a failed source check
+        if: steps.fetch.outcome == 'failure'
+        run: |
+          echo 'One or more feeds failed; last validated data have been retained and the chart status records the failure.'
+          exit 1

@@ -1121,6 +1121,8 @@
             </div>
         </div>
 
+        {% include 'transport_demand.html' %}
+
         <!-- EV Fleet Dashboard -->
         <div class="section" id="ev-section" data-page="ev">
             <div class="section-header">
@@ -1873,6 +1875,7 @@
                 ['Shipping', 'baltic-section']
             ],
             energy: [
+                ['Daily transport', 'transport-demand'],
                 ['U.S. balances', 'petroleum-balances-section'],
                 ['Upstream', 'upstream-section'],
                 ['Refining', 'refinery-section'],
@@ -1896,6 +1899,7 @@
                 ['CPI & PPI', 'inflation-section']
             ],
             ev: [
+                ['Daily transport', 'transport-demand'],
                 ['Fleet & registrations', 'ev-section'],
                 ['Transport', 'transport-section'],
                 ['Policy timeline', 'ev-policy-section']
@@ -1977,6 +1981,7 @@
                 'loadBalticDry'
             ],
             energy: [
+                'loadTransportDemand',
                 'loadTransportFuels',
                 'loadPetroleumInventories',
                 'loadRefinery',
@@ -1989,6 +1994,7 @@
                 'loadCOTBrentPositioning'
             ],
             ev: [
+                'loadTransportDemand',
                 'loadEVFleet',
                 'loadTransportation'
             ],
