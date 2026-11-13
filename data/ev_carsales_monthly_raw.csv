@@ -33071,6 +33071,11 @@ YYYYMM,Country,Fuel,Value,source_url
 202609,Malaysia,Hybrid,5064.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202609,Malaysia,BatteryElectric,5865.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202609,Malaysia,Others,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202610,Malaysia,Diesel,3834.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202610,Malaysia,Petrol,59079.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202610,Malaysia,Hybrid,4644.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202610,Malaysia,BatteryElectric,4492.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202610,Malaysia,Others,1.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202201,Malta,Diesel,13.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202201,Malta,Petrol,166.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202201,Malta,NonPluginHybrid,76.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
@@ -45580,6 +45585,12 @@ YYYYMM,Country,Fuel,Value,source_url
 202609,Singapore,PluginHybrid,228.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202609,Singapore,BatteryElectric,2827.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202609,Singapore,Others,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202610,Singapore,Diesel,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202610,Singapore,Petrol,247.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202610,Singapore,NonPluginHybrid,1191.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202610,Singapore,PluginHybrid,260.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202610,Singapore,BatteryElectric,2504.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202610,Singapore,Others,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202201,Slovakia,Diesel,1064.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202201,Slovakia,Petrol,3030.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202201,Slovakia,NonPluginHybrid,1290.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
@@ -58822,3 +58833,6 @@ YYYYMM,Country,Fuel,Value,source_url
 202609,Vietnam,ICE,20174.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202609,Vietnam,Hybrid,2168.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
 202609,Vietnam,BatteryElectric,23627.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202610,Vietnam,ICE,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202610,Vietnam,Hybrid,1891.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
+202610,Vietnam,BatteryElectric,0.0,https://robbieandrew.github.io/carsales/data/all_carsales_monthly.csv
