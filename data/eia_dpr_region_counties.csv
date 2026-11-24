@@ -1,0 +1,316 @@
+region,state,county,fips
+Anadarko,OK,Alfalfa,40003
+Anadarko,OK,Beaver,40007
+Anadarko,OK,Beckham,40009
+Anadarko,OK,Blaine,40011
+Anadarko,OK,Caddo,40015
+Anadarko,OK,Canadian,40017
+Anadarko,OK,Carter,40019
+Anadarko,OK,Custer,40039
+Anadarko,OK,Dewey,40043
+Anadarko,OK,Ellis,40045
+Anadarko,OK,Garfield,40047
+Anadarko,OK,Garvin,40049
+Anadarko,OK,Grady,40051
+Anadarko,OK,Kingfisher,40073
+Anadarko,OK,Lincoln,40081
+Anadarko,OK,Logan,40083
+Anadarko,OK,Major,40093
+Anadarko,OK,McClain,40087
+Anadarko,OK,Oklahoma,40109
+Anadarko,OK,Payne,40119
+Anadarko,OK,Roger Mills,40129
+Anadarko,OK,Stephens,40137
+Anadarko,OK,Texas,40139
+Anadarko,OK,Woods,40151
+Anadarko,TX,Hemphill,48211
+Anadarko,TX,Lipscomb,48295
+Anadarko,TX,Ochiltree,48357
+Anadarko,TX,Roberts,48393
+Anadarko,TX,Wheeler,48483
+Appalachia,MD,Allegany,24001
+Appalachia,MD,Garrett,24023
+Appalachia,NY,Allegany,36003
+Appalachia,NY,Broome,36007
+Appalachia,NY,Cattaraugus,36009
+Appalachia,NY,Chautauqua,36013
+Appalachia,NY,Chemung,36015
+Appalachia,NY,Erie,36029
+Appalachia,NY,Livingston,36051
+Appalachia,NY,Schuyler,36097
+Appalachia,NY,Steuben,36101
+Appalachia,NY,Wyoming,36121
+Appalachia,OH,Belmont,39013
+Appalachia,OH,Carroll,39019
+Appalachia,OH,Columbiana,39029
+Appalachia,OH,Coshocton,39031
+Appalachia,OH,Guernsey,39059
+Appalachia,OH,Harrison,39067
+Appalachia,OH,Hocking,39073
+Appalachia,OH,Jefferson,39081
+Appalachia,OH,Mahoning,39099
+Appalachia,OH,Monroe,39111
+Appalachia,OH,Morgan,39115
+Appalachia,OH,Muskingum,39119
+Appalachia,OH,Noble,39121
+Appalachia,OH,Perry,39127
+Appalachia,OH,Portage,39133
+Appalachia,OH,Stark,39151
+Appalachia,OH,Trumbull,39155
+Appalachia,OH,Tuscarawas,39157
+Appalachia,OH,Washington,39167
+Appalachia,OH,Wayne,39169
+Appalachia,PA,Allegheny,42003
+Appalachia,PA,Armstrong,42005
+Appalachia,PA,Beaver,42007
+Appalachia,PA,Bedford,42009
+Appalachia,PA,Blair,42013
+Appalachia,PA,Bradford,42015
+Appalachia,PA,Butler,42019
+Appalachia,PA,Cambria,42021
+Appalachia,PA,Cameron,42023
+Appalachia,PA,Centre,42027
+Appalachia,PA,Clarion,42031
+Appalachia,PA,Clearfield,42033
+Appalachia,PA,Clinton,42035
+Appalachia,PA,Columbia,42037
+Appalachia,PA,Cumberland,42041
+Appalachia,PA,Elk,42047
+Appalachia,PA,Fayette,42051
+Appalachia,PA,Forest,42053
+Appalachia,PA,Franklin,42055
+Appalachia,PA,Greene,42059
+Appalachia,PA,Huntingdon,42061
+Appalachia,PA,Indiana,42063
+Appalachia,PA,Jefferson,42065
+Appalachia,PA,Lackawanna,42069
+Appalachia,PA,Lawrence,42073
+Appalachia,PA,Luzerne,42079
+Appalachia,PA,Lycoming,42081
+Appalachia,PA,McKean,42083
+Appalachia,PA,Mercer,42085
+Appalachia,PA,Pike,42103
+Appalachia,PA,Potter,42105
+Appalachia,PA,Somerset,42111
+Appalachia,PA,Sullivan,42113
+Appalachia,PA,Susquehanna,42115
+Appalachia,PA,Tioga,42117
+Appalachia,PA,Venango,42121
+Appalachia,PA,Warren,42123
+Appalachia,PA,Washington,42125
+Appalachia,PA,Wayne,42127
+Appalachia,PA,Westmoreland,42129
+Appalachia,PA,Wyoming,42131
+Appalachia,WV,Barbour,54001
+Appalachia,WV,Boone,54005
+Appalachia,WV,Braxton,54007
+Appalachia,WV,Brooke,54009
+Appalachia,WV,Cabell,54011
+Appalachia,WV,Calhoun,54013
+Appalachia,WV,Clay,54015
+Appalachia,WV,Doddridge,54017
+Appalachia,WV,Fayette,54019
+Appalachia,WV,Gilmer,54021
+Appalachia,WV,Grant,54023
+Appalachia,WV,Greenbrier,54025
+Appalachia,WV,Hampshire,54027
+Appalachia,WV,Hancock,54029
+Appalachia,WV,Hardy,54031
+Appalachia,WV,Harrison,54033
+Appalachia,WV,Jackson,54035
+Appalachia,WV,Kanawha,54039
+Appalachia,WV,Lewis,54041
+Appalachia,WV,Lincoln,54043
+Appalachia,WV,Logan,54045
+Appalachia,WV,Marion,54049
+Appalachia,WV,Marshall,54051
+Appalachia,WV,Mason,54053
+Appalachia,WV,McDowell,54047
+Appalachia,WV,Mercer,54055
+Appalachia,WV,Mineral,54057
+Appalachia,WV,Mingo,54059
+Appalachia,WV,Monongalia,54061
+Appalachia,WV,Monroe,54063
+Appalachia,WV,Morgan,54065
+Appalachia,WV,Nicholas,54067
+Appalachia,WV,Ohio,54069
+Appalachia,WV,Pendleton,54071
+Appalachia,WV,Pleasants,54073
+Appalachia,WV,Pocahontas,54075
+Appalachia,WV,Preston,54077
+Appalachia,WV,Putnam,54079
+Appalachia,WV,Raleigh,54081
+Appalachia,WV,Randolph,54083
+Appalachia,WV,Ritchie,54085
+Appalachia,WV,Roane,54087
+Appalachia,WV,Summers,54089
+Appalachia,WV,Taylor,54091
+Appalachia,WV,Tucker,54093
+Appalachia,WV,Tyler,54095
+Appalachia,WV,Upshur,54097
+Appalachia,WV,Wayne,54099
+Appalachia,WV,Webster,54101
+Appalachia,WV,Wetzel,54103
+Appalachia,WV,Wirt,54105
+Appalachia,WV,Wood,54107
+Appalachia,WV,Wyoming,54109
+Bakken,MT,Dawson,30021
+Bakken,MT,McCone,30055
+Bakken,MT,Richland,30083
+Bakken,MT,Roosevelt,30085
+Bakken,MT,Sheridan,30091
+Bakken,ND,Billings,38007
+Bakken,ND,Bottineau,38009
+Bakken,ND,Burke,38013
+Bakken,ND,Divide,38023
+Bakken,ND,Dunn,38025
+Bakken,ND,Golden Valley,38033
+Bakken,ND,McHenry,38049
+Bakken,ND,McKenzie,38053
+Bakken,ND,McLean,38055
+Bakken,ND,Mercer,38057
+Bakken,ND,Mountrail,38061
+Bakken,ND,Renville,38075
+Bakken,ND,Stark,38089
+Bakken,ND,Ward,38101
+Bakken,ND,Williams,38105
+Eagle Ford,TX,Atascosa,48013
+Eagle Ford,TX,Bastrop,48021
+Eagle Ford,TX,Bee,48025
+Eagle Ford,TX,Brazos,48041
+Eagle Ford,TX,Burleson,48051
+Eagle Ford,TX,DeWitt,48123
+Eagle Ford,TX,Dimmit,48127
+Eagle Ford,TX,Fayette,48149
+Eagle Ford,TX,Frio,48163
+Eagle Ford,TX,Gonzales,48177
+Eagle Ford,TX,Karnes,48255
+Eagle Ford,TX,La Salle,48283
+Eagle Ford,TX,Lavaca,48285
+Eagle Ford,TX,Lee,48287
+Eagle Ford,TX,Leon,48289
+Eagle Ford,TX,Live Oak,48297
+Eagle Ford,TX,Madison,48313
+Eagle Ford,TX,Maverick,48323
+Eagle Ford,TX,McMullen,48311
+Eagle Ford,TX,Milam,48331
+Eagle Ford,TX,Webb,48479
+Eagle Ford,TX,Wilson,48493
+Eagle Ford,TX,Zavala,48507
+Haynesville,AR,Columbia,05027
+Haynesville,AR,Lafayette,05073
+Haynesville,LA,Bienville,22013
+Haynesville,LA,Bossier,22015
+Haynesville,LA,Caddo,22017
+Haynesville,LA,Claiborne,22027
+Haynesville,LA,De Soto,22031
+Haynesville,LA,Natchitoches,22069
+Haynesville,LA,Red River,22081
+Haynesville,LA,Sabine,22085
+Haynesville,LA,Union,22111
+Haynesville,LA,Webster,22119
+Haynesville,TX,Angelina,48005
+Haynesville,TX,Cherokee,48073
+Haynesville,TX,Gregg,48183
+Haynesville,TX,Harrison,48203
+Haynesville,TX,Marion,48315
+Haynesville,TX,Nacogdoches,48347
+Haynesville,TX,Panola,48365
+Haynesville,TX,Rusk,48401
+Haynesville,TX,Sabine,48403
+Haynesville,TX,San Augustine,48405
+Haynesville,TX,Shelby,48419
+Haynesville,TX,Smith,48423
+Haynesville,TX,Upshur,48459
+Niobrara,CO,Adams,08001
+Niobrara,CO,Arapahoe,08005
+Niobrara,CO,Boulder,08013
+Niobrara,CO,Broomfield,08014
+Niobrara,CO,Cheyenne,08017
+Niobrara,CO,Garfield,08045
+Niobrara,CO,Jackson,08057
+Niobrara,CO,Jefferson,08059
+Niobrara,CO,Kit Carson,08063
+Niobrara,CO,Larimer,08069
+Niobrara,CO,Logan,08075
+Niobrara,CO,Mesa,08077
+Niobrara,CO,Moffat,08081
+Niobrara,CO,Morgan,08087
+Niobrara,CO,Phillips,08095
+Niobrara,CO,Rio Blanco,08103
+Niobrara,CO,Routt,08107
+Niobrara,CO,Sedgwick,08115
+Niobrara,CO,Washington,08121
+Niobrara,CO,Weld,08123
+Niobrara,CO,Yuma,08125
+Niobrara,KS,Cheyenne,20023
+Niobrara,KS,Sherman,20181
+Niobrara,NE,Cheyenne,31033
+Niobrara,NE,Deuel,31049
+Niobrara,NE,Garden,31069
+Niobrara,WY,Albany,56001
+Niobrara,WY,Campbell,56005
+Niobrara,WY,Carbon,56007
+Niobrara,WY,Converse,56009
+Niobrara,WY,Goshen,56015
+Niobrara,WY,Johnson,56019
+Niobrara,WY,Laramie,56021
+Niobrara,WY,Natrona,56025
+Niobrara,WY,Niobrara,56027
+Niobrara,WY,Platte,56031
+Niobrara,WY,Weston,56045
+Permian,NM,Chaves,35005
+Permian,NM,Eddy,35015
+Permian,NM,Lea,35025
+Permian,NM,Roosevelt,35041
+Permian,TX,Andrews,48003
+Permian,TX,Bailey,48017
+Permian,TX,Borden,48033
+Permian,TX,Cochran,48079
+Permian,TX,Coke,48081
+Permian,TX,Concho,48095
+Permian,TX,Crane,48103
+Permian,TX,Crockett,48105
+Permian,TX,Crosby,48107
+Permian,TX,Culberson,48109
+Permian,TX,Dawson,48115
+Permian,TX,Dickens,48125
+Permian,TX,Ector,48135
+Permian,TX,Edwards,48137
+Permian,TX,Fisher,48151
+Permian,TX,Floyd,48153
+Permian,TX,Gaines,48165
+Permian,TX,Garza,48169
+Permian,TX,Glasscock,48173
+Permian,TX,Hale,48189
+Permian,TX,Hockley,48219
+Permian,TX,Howard,48227
+Permian,TX,Irion,48235
+Permian,TX,Kent,48263
+Permian,TX,Kimble,48267
+Permian,TX,Lamb,48279
+Permian,TX,Loving,48301
+Permian,TX,Lubbock,48303
+Permian,TX,Lynn,48305
+Permian,TX,Martin,48317
+Permian,TX,Menard,48327
+Permian,TX,Midland,48329
+Permian,TX,Mitchell,48335
+Permian,TX,Motley,48345
+Permian,TX,Nolan,48353
+Permian,TX,Pecos,48371
+Permian,TX,Reagan,48383
+Permian,TX,Real,48385
+Permian,TX,Reeves,48389
+Permian,TX,Schleicher,48413
+Permian,TX,Scurry,48415
+Permian,TX,Sterling,48431
+Permian,TX,Sutton,48435
+Permian,TX,Terrell,48443
+Permian,TX,Terry,48445
+Permian,TX,Tom Green,48451
+Permian,TX,Upton,48461
+Permian,TX,Val Verde,48465
+Permian,TX,Ward,48475
+Permian,TX,Winkler,48495
+Permian,TX,Yoakum,48501
