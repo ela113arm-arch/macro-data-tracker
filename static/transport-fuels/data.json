@@ -4,7 +4,7 @@
     "measure": "Product supplied (implied-demand proxy)",
     "source": "U.S. Energy Information Administration (EIA)",
     "source_url": "https://www.eia.gov/dnav/pet/xls/PET_CONS_PSUP_DC_NUS_MBBLPD_M.xls",
-    "vintage": "EIA Product Supplied workbook retrieved 2026-11-21; data through 2026-08.",
+    "vintage": "EIA Product Supplied workbook retrieved 2026-11-24; data through 2026-08.",
     "product_mapping": "Finished motor gasoline; Kerosene-type jet fuel; Distillate fuel oil.",
     "conversion_note": "reported daily rate ÷ 1,000.",
     "caveat": "Product supplied measures primary-supply-chain disappearance, not direct retail purchases.",
@@ -636,7 +636,7 @@
     "measure": "Domestic petroleum-product consumption / market demand",
     "source": "Petroleum Planning & Analysis Cell (PPAC), Government of India",
     "source_url": "https://ppac.gov.in/consumption/products-wise",
-    "vintage": "PPAC domestic consumption retrieved 2026-11-21; source modified 02-11-2023, 06-11-2026, 10-03-2026, 10-04-2023, 13-07-2026, 26-10-2023, 30-12-2024; data through 2026-10.",
+    "vintage": "PPAC domestic consumption retrieved 2026-11-24; source modified 02-11-2023, 06-11-2026, 10-03-2026, 10-04-2023, 13-07-2026, 26-10-2023, 30-12-2024; data through 2026-10.",
     "product_mapping": "Motor Spirit; Aviation Turbine Fuel; High-Speed Diesel.",
     "conversion_note": "TMT × 1,000 × product-specific bbl/t ÷ days in month ÷ 1,000,000.",
     "caveat": "PPAC data are provisional market-demand estimates; Motor Spirit includes ethanol blending.",
@@ -5060,7 +5060,7 @@
     "measure": "National petroleum-product consumption",
     "source": "Korea National Oil Corporation (KNOC) Petronet",
     "source_url": "https://www.petronet.co.kr/v4/excel/KDCQ0200_x.jsp?term=m&by=2020&bq=3&bm=07&ay=2026&aq=4&am=10&ProdCDList=B000%2CC000%2CD000%2CE000%2CF000%2CG000%2CH000%2CJ000%2CL000%2CN000%2CI000%2CM000%2CK000%2CO000%2CS000",
-    "vintage": "KNOC Petronet KDCQ0200 retrieved 2026-11-21; data through 2026-09.",
+    "vintage": "KNOC Petronet KDCQ0200 retrieved 2026-11-24; data through 2026-10.",
     "product_mapping": "Gasoline; aviation fuel; diesel (official KNOC product categories).",
     "conversion_note": "thousand bbl ÷ days in month ÷ 1,000.",
     "caveat": "Live statistical system values may be revised.",
@@ -5609,91 +5609,101 @@
         "date": "2026-01-01",
         "gasoline_mbd": 0.2736451612903226,
         "jet_fuel_mbd": 0.0167741935483871,
-        "diesel_mbd": 0.3933870967741936,
+        "diesel_mbd": 0.38987096774193547,
         "gasoline_yoy_mbd": 0.04841935483870971,
         "jet_fuel_yoy_mbd": -0.09454838709677418,
-        "diesel_yoy_mbd": 0.06229032258064521,
-        "net_yoy_mbd": 0.016161290322580735
+        "diesel_yoy_mbd": 0.05877419354838709,
+        "net_yoy_mbd": 0.012645161290322615
       },
       {
         "date": "2026-02-01",
         "gasoline_mbd": 0.2701428571428572,
         "jet_fuel_mbd": 0.023571428571428573,
-        "diesel_mbd": 0.3558571428571428,
+        "diesel_mbd": 0.3523928571428572,
         "gasoline_yoy_mbd": 0.015250000000000041,
         "jet_fuel_yoy_mbd": -0.08299999999999999,
-        "diesel_yoy_mbd": -0.02350000000000002,
-        "net_yoy_mbd": -0.09124999999999997
+        "diesel_yoy_mbd": -0.026964285714285663,
+        "net_yoy_mbd": -0.09471428571428561
       },
       {
         "date": "2026-03-01",
         "gasoline_mbd": 0.2579354838709677,
         "jet_fuel_mbd": 0.02561290322580645,
-        "diesel_mbd": 0.40112903225806457,
+        "diesel_mbd": 0.3970967741935484,
         "gasoline_yoy_mbd": -0.011419354838709705,
         "jet_fuel_yoy_mbd": -0.08019354838709677,
-        "diesel_yoy_mbd": -0.02232258064516124,
-        "net_yoy_mbd": -0.11393548387096772
+        "diesel_yoy_mbd": -0.02635483870967742,
+        "net_yoy_mbd": -0.1179677419354839
       },
       {
         "date": "2026-04-01",
         "gasoline_mbd": 0.2297,
         "jet_fuel_mbd": 0.015166666666666667,
-        "diesel_mbd": 0.3308333333333333,
+        "diesel_mbd": 0.3259,
         "gasoline_yoy_mbd": -0.04523333333333332,
         "jet_fuel_yoy_mbd": -0.09303333333333334,
-        "diesel_yoy_mbd": -0.1259,
-        "net_yoy_mbd": -0.26416666666666666
+        "diesel_yoy_mbd": -0.1308333333333333,
+        "net_yoy_mbd": -0.26909999999999995
       },
       {
         "date": "2026-05-01",
         "gasoline_mbd": 0.2501935483870968,
         "jet_fuel_mbd": 0.0074516129032258065,
-        "diesel_mbd": 0.3301935483870968,
+        "diesel_mbd": 0.325741935483871,
         "gasoline_yoy_mbd": 0.014967741935483891,
         "jet_fuel_yoy_mbd": -0.09661290322580644,
-        "diesel_yoy_mbd": -0.02109677419354833,
-        "net_yoy_mbd": -0.10274193548387088
+        "diesel_yoy_mbd": -0.02554838709677415,
+        "net_yoy_mbd": -0.1071935483870967
       },
       {
         "date": "2026-06-01",
         "gasoline_mbd": 0.2606,
         "jet_fuel_mbd": 0.018433333333333333,
-        "diesel_mbd": 0.3866,
+        "diesel_mbd": 0.38253333333333334,
         "gasoline_yoy_mbd": -0.0030333333333333323,
         "jet_fuel_yoy_mbd": -0.08996666666666667,
-        "diesel_yoy_mbd": -0.03206666666666669,
-        "net_yoy_mbd": -0.1250666666666667
+        "diesel_yoy_mbd": -0.03613333333333335,
+        "net_yoy_mbd": -0.12913333333333335
       },
       {
         "date": "2026-07-01",
         "gasoline_mbd": 0.2858064516129032,
         "jet_fuel_mbd": 0.020516129032258065,
-        "diesel_mbd": 0.4155806451612903,
+        "diesel_mbd": 0.41032258064516125,
         "gasoline_yoy_mbd": 0.0001290322580644876,
         "jet_fuel_yoy_mbd": -0.08970967741935484,
-        "diesel_yoy_mbd": -0.005290322580645157,
-        "net_yoy_mbd": -0.09487096774193551
+        "diesel_yoy_mbd": -0.010548387096774192,
+        "net_yoy_mbd": -0.10012903225806455
       },
       {
         "date": "2026-08-01",
         "gasoline_mbd": 0.27045161290322584,
         "jet_fuel_mbd": 0.021870967741935483,
-        "diesel_mbd": 0.2896451612903226,
+        "diesel_mbd": 0.2847096774193548,
         "gasoline_yoy_mbd": -0.013193548387096743,
         "jet_fuel_yoy_mbd": -0.0923225806451613,
-        "diesel_yoy_mbd": -0.09229032258064518,
-        "net_yoy_mbd": -0.19780645161290322
+        "diesel_yoy_mbd": -0.09722580645161294,
+        "net_yoy_mbd": -0.20274193548387098
       },
       {
         "date": "2026-09-01",
         "gasoline_mbd": 0.2961666666666667,
         "jet_fuel_mbd": 0.0142,
-        "diesel_mbd": 0.3915,
+        "diesel_mbd": 0.38656666666666667,
         "gasoline_yoy_mbd": 0.005766666666666698,
         "jet_fuel_yoy_mbd": -0.09856666666666666,
-        "diesel_yoy_mbd": -0.045533333333333315,
-        "net_yoy_mbd": -0.13833333333333328
+        "diesel_yoy_mbd": -0.05046666666666666,
+        "net_yoy_mbd": -0.14326666666666663
+      },
+      {
+        "date": "2026-10-01",
+        "gasoline_mbd": 0.262,
+        "jet_fuel_mbd": 0.019451612903225807,
+        "diesel_mbd": 0.35906451612903223,
+        "gasoline_yoy_mbd": -0.023967741935483844,
+        "jet_fuel_yoy_mbd": -0.09209677419354839,
+        "diesel_yoy_mbd": -0.04803225806451611,
+        "net_yoy_mbd": -0.16409677419354834
       }
     ]
   },
@@ -5702,7 +5712,7 @@
     "measure": "Products supplied, disposition",
     "source": "Statistics Canada",
     "source_url": "https://www150.statcan.gc.ca/n1/tbl/csv/25100081-eng.zip",
-    "vintage": "Statistics Canada table 25-10-0081-01 retrieved 2026-11-21; data through 2026-08.",
+    "vintage": "Statistics Canada table 25-10-0081-01 retrieved 2026-11-24; data through 2026-08.",
     "product_mapping": "Finished motor gasoline; Kerosene-type jet fuel; Distillate fuel oil.",
     "conversion_note": "m³ × 6.28981077 bbl/m³ ÷ days in month ÷ 1,000,000.",
     "caveat": "Products supplied is a supply/demand proxy; distillate fuel oil is broader than narrowly defined diesel.",
