@@ -1288,7 +1288,7 @@
     "measure": "National fuel sales",
     "source": "Agência Nacional do Petróleo, Gás Natural e Biocombustíveis (ANP)",
     "source_url": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/vdpb/vendas-derivados-petroleo-e-etanol/vendas-combustiveis-m3-1990-2025.csv",
-    "vintage": "ANP fuel-sales CSV retrieved 2026-11-21; data through 2026-09.",
+    "vintage": "ANP fuel-sales CSV retrieved 2026-11-26; data through 2026-09.",
     "product_mapping": "Gasolina C; Querosene de Aviação; Óleo Diesel.",
     "conversion_note": "m³ × 6.28981077 bbl/m³ ÷ days in month ÷ 1,000,000.",
     "caveat": "Sales are not direct final consumption; gasoline and diesel blend composition can change.",
@@ -3173,8 +3173,8 @@
     "country": "United Kingdom",
     "measure": "Deliveries for inland consumption",
     "source": "Department for Energy Security and Net Zero (DESNZ)",
-    "source_url": "https://assets.publishing.service.gov.uk/media/6ae0cabc779378370fd80a67/ET_3.13_OCT_26.xlsx",
-    "vintage": "DESNZ ET 3.13 workbook release date not supplied retrieved 2026-11-01; data through 2026-08.",
+    "source_url": "https://assets.publishing.service.gov.uk/media/6b06ae31c29db7468056bf83/ET_3.13_NOV_26.xlsx",
+    "vintage": "DESNZ ET 3.13 workbook release date not supplied retrieved 2026-11-01; data through 2026-09.",
     "product_mapping": "Petrol; Jet fuel; White diesel + Red diesel.",
     "conversion_note": "kt × 1,000 × product-specific bbl/t ÷ days in month ÷ 1,000,000.",
     "caveat": "June 2026 is provisional; the combined diesel series is affected by red-diesel policy changes.",
@@ -3781,23 +3781,33 @@
       },
       {
         "date": "2026-07-01",
-        "gasoline_mbd": 0.27914548387096777,
+        "gasoline_mbd": 0.29815532258064514,
         "jet_fuel_mbd": 0.2682930870967742,
-        "diesel_mbd": 0.4721819709677419,
-        "gasoline_yoy_mbd": 0.005346774193548454,
+        "diesel_mbd": 0.47277669677419354,
+        "gasoline_yoy_mbd": 0.024356612903225827,
         "jet_fuel_yoy_mbd": -0.015026177419354803,
-        "diesel_yoy_mbd": -0.019726238709677435,
-        "net_yoy_mbd": -0.029405641935483784
+        "diesel_yoy_mbd": -0.01913151290322579,
+        "net_yoy_mbd": -0.009801077419354765
       },
       {
         "date": "2026-08-01",
-        "gasoline_mbd": 0.2936366129032258,
-        "jet_fuel_mbd": 0.2901267870967742,
-        "diesel_mbd": 0.44944945161290323,
-        "gasoline_yoy_mbd": 0.016451612903225776,
-        "jet_fuel_yoy_mbd": 0.008409145161290321,
-        "diesel_yoy_mbd": -0.062425219354838746,
-        "net_yoy_mbd": -0.03756446129032265
+        "gasoline_mbd": 0.28819387096774196,
+        "jet_fuel_mbd": 0.2887933548387097,
+        "diesel_mbd": 0.447676935483871,
+        "gasoline_yoy_mbd": 0.011008870967741946,
+        "jet_fuel_yoy_mbd": 0.007075712903225839,
+        "diesel_yoy_mbd": -0.06419773548387098,
+        "net_yoy_mbd": -0.04611315161290319
+      },
+      {
+        "date": "2026-09-01",
+        "gasoline_mbd": 0.2878978333333333,
+        "jet_fuel_mbd": 0.27587385000000003,
+        "diesel_mbd": 0.48676216000000005,
+        "gasoline_yoy_mbd": -0.0238255,
+        "jet_fuel_yoy_mbd": 0.0018751600000000423,
+        "diesel_yoy_mbd": -0.06064764999999983,
+        "net_yoy_mbd": -0.08259798999999979
       }
     ]
   },
