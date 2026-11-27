@@ -1288,7 +1288,7 @@
     "measure": "National fuel sales",
     "source": "Agência Nacional do Petróleo, Gás Natural e Biocombustíveis (ANP)",
     "source_url": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/vdpb/vendas-derivados-petroleo-e-etanol/vendas-combustiveis-m3-1990-2025.csv",
-    "vintage": "ANP fuel-sales CSV retrieved 2026-11-26; data through 2026-09.",
+    "vintage": "ANP fuel-sales CSV retrieved 2026-11-27; data through 2026-09.",
     "product_mapping": "Gasolina C; Querosene de Aviação; Óleo Diesel.",
     "conversion_note": "m³ × 6.28981077 bbl/m³ ÷ days in month ÷ 1,000,000.",
     "caveat": "Sales are not direct final consumption; gasoline and diesel blend composition can change.",
